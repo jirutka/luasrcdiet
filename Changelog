@@ -1,0 +1,16 @@
+2005-02-15  Kein-Hong Man  <khman@users.sf.net>
+
+	* LuaSrcDiet.lua: preliminary functional script
+	* LuaSrcDiet.lua: preliminary feature-complete
+	* README: written for preliminary release
+	* LuaSrcDiet.lua: finalized for preliminary release
+	* Version: 0.9.0
+
+2005-02-14  Kein-Hong Man  <khman@users.sf.net>
+
+	* LuaSrcDiet.lua: done modifying llex.lua for LuaSrcDiet
+	* LSDTest.lua: created
+
+2005-01-14  Kein-Hong Man  <khman@users.sf.net>
+
+	* started project
