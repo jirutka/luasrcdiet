@@ -1,4 +1,4 @@
-#!/usr/bin/lua
+#!/usr/bin/env lua
 --[[-------------------------------------------------------------------
 
   LuaSrcDiet
@@ -23,7 +23,7 @@
 
 title = [[
 LuaSrcDiet: Puts your Lua 5 source code on a diet
-Version 0.9.0 (20050215)  Copyright (c) 2005 Kein-Hong Man
+Version 0.9.1 (20050816)  Copyright (c) 2005 Kein-Hong Man
 The COPYRIGHT file describes the conditions under which this
 software may be distributed (basically a Lua 5-style license.)
 ]]
@@ -38,6 +38,7 @@ options:
   --read-only       read file and print token stats
   --keep-lines      preserve line numbering
   --maximum         maximize reduction of source
+  --dump            dump raw tokens from lexer
   --                stop handling arguments
 
 example:
@@ -432,11 +433,13 @@ function llex:lex()
         if self.ch == '[' then                          -- block comment
           return "TK_LCOMMENT", self:read_long_string(1) -- long comment
         else                                            -- short comment
+          self.buff = ""
           self.obuff = "--["
           self:readtoeol()
           return "TK_COMMENT", self.obuff
         end
       else                                              -- short comment
+        self.buff = ""
         self.obuff = "--"
         self:readtoeol()
         return "TK_COMMENT", self.obuff
@@ -886,6 +889,30 @@ function ProcessToken(srcfile, destfile)
 end
 
 -----------------------------------------------------------------------
+-- dump token (diagnostic feature)
+-----------------------------------------------------------------------
+function DumpTokens(srcfile)
+  local function Esc(v) return string.format("%q", v) end
+  LoadFile(srcfile)
+  for i = 1, ntokens do
+    local ltok, lorig, lval = ltok[i], lorig[i], lval[i]
+    -- display only necessary information
+    if ltok == "TK_KEYWORD" or ltok == "TK_NAME" or
+       ltok == "TK_NUMBER" or ltok == "TK_STRING" or
+       ltok == "TK_OP" then
+      print(ltok, lorig)
+    elseif ltok == "TK_COMMENT" or ltok == "TK_LCOMMENT" or
+           ltok == "TK_SPACE" then
+      print(ltok, Esc(lorig))
+    elseif ltok == "TK_EOS" or ltok == "TK_EOL" then
+      print(ltok)
+    else
+      error("unknown token type encountered")
+    end
+  end
+end
+
+-----------------------------------------------------------------------
 -- perform per-file handling
 -----------------------------------------------------------------------
 function DoFiles(files)
@@ -907,7 +934,9 @@ function DoFiles(files)
     -------------------------------------------------------------------
     -- perform requested operations
     -------------------------------------------------------------------
-    if config.READ_ONLY then
+    if config.DUMP then
+      DumpTokens(srcfile)
+    elseif config.READ_ONLY then
       DispSrcStats(srcfile)
     else
       ProcessToken(srcfile, destfile)
@@ -941,6 +970,8 @@ function main()
         config.KEEP_LINES = true
       elseif a == "--maximum" then
         config.MAX = true
+      elseif a == "--dump" then
+        config.DUMP = true
       elseif a == "-o" then
         if not b then error("-o option needs a file name") end
         config.OUTPUT_FILE = b
