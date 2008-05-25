@@ -1,0 +1,105 @@
+Tech Notes for LuaSrcDiet
+-------------------------
+
+The following are notes on the optimization process for easy reference.
+
+
+Modified Lexer Output
+---------------------
+
+The lexer is works almost exactly like llex.c in 'normal' Lua. Instead
+of returning one token on each call, the lexer processes the entire
+string (from an entire file) and returns. Two lists (tokens and semantic
+information items) are set up in the module for use by the caller.
+
+For maximum flexibility during processing, the lexer returns non-grammar
+lexical elements as tokens too. Non-grammar elements, such as comments,
+whitespace, line endings, are classified along with 'normal' tokens. The
+lexer classifies 7 kinds of grammar tokens and 4 kinds of non-grammar
+tokens:
+
+---------------------------------------------------------------------
+TOKEN CLASS	DESCRIPTION
+---------------------------------------------------------------------
+"TK_KEYWORD" 	keywords
+"TK_NAME"	identifiers
+"TK_NUMBER" 	numbers (unconverted, kept in original form)
+"TK_STRING" 	strings (no translation is done, includes delimiters)
+"TK_LSTRING" 	long strings (no translation is done, includes delimiters)
+"TK_OP" 	operators and punctuation (most single-char, some double)
+"TK_EOS" 	end-of-stream (there is only one for each file/stream)
+---------------------------------------------------------------------
+"TK_SPACE" 	whitespace (generally, spaces, \t, \v and \f)
+"TK_COMMENT" 	comments (includes delimiters, also includes special
+		first line shbang, which is handled specially in the
+		optimizer)
+"TK_LCOMMENT" 	block comments (includes delimiters)
+"TK_EOL" 	end-of-lines (excludes those embedded in strings)
+---------------------------------------------------------------------
+
+
+Table for Lexer-Based Optimizations
+-----------------------------------
+
+We aim to keep lexer-based optimizations free of parser considerations,
+i.e. we allow for generalized optimization of token sequences. The table
+below considers the requirements for all combinations of significant
+tokens. Other tokens are whitespace-like. Comments can be considered to
+be a special kind of whitespace, e.g. a short comment needs to have a
+following EOL token, if we do not want to optimize away short comments.
+
+FIRST	SECOND TOKEN
+TOKEN	  |
+  |	  V
+  V	Keyword	  Name	Number	String	LString	 Oper
+--------------------------------------------------------
+Keyword	  [S]	  [S]	  [S]	   0	   0	   0
+Name	  [S]	  [S]	  [S]	   0	   0	   0
+Number	  [S]	  [S]	  [S]	   0	   0	  [1]
+String	   0	   0	   0	   0	   0	   0
+LString	   0	   0	   0	   0	   0	   0
+Oper	   0	   0	  [1]	   0	   0	  [2]
+--------------------------------------------------------
+
+[S] = need at least one whitespace (set as either a space or keep EOL)
+
+[1] = need a space if operator is a '.', all others okay; a '+' or '-'
+      is used as part of a floating-point spec, but there does not
+      appear to be any way of creating a float by joining with number
+      with a a '+' or '-' plus another number, because an 'e' has to
+      be somewhere in the first token, this can't be done
+
+[2] = normally there cannot be consecutive operators, but we plan to
+      allow for generalized optimization of token sequences, i.e. even
+      sequences that are grammatically illegal; so disallow adjacent
+      operators if:
+      (a) the first is in [=<>] and the second is '='
+      (b) disallow dot sequences to be adjacent, but "..." first okay
+      (c) disallow '[' followed by '=' or '[' (not optimal)
+
+Also, a minus '-' cannot preceed a Comment or LComment, because comments
+start with a '--' prefix. Apart from that, all Comment or LComment
+tokens can be set abut with a real token.
+
+Sequence of Lexer-Based Optimization Process
+--------------------------------------------
+
+*** TODO ***
+
+
+Description of Locals Optimization
+----------------------------------
+
+*** TODO ***
+
+
+Miscellaneous Ideas, TODO Stuff
+-------------------------------
+
+Spaces to Tabs Conversion:
+
+If running with little optimizations, an option to convert tabs to
+spaces might have some use, but is of little importance beyond feature
+completeness.
+
+END.

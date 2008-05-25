@@ -1,0 +1,250 @@
+Older Notes for LuaSrcDiet < 0.10 for Lua 5.0.2
+-----------------------------------------------
+
+The following is the older README for the Lua 5.0.2 version of
+LuaSrcDiet, which is not maintained anymore.
+
+--
+
+INTRODUCTION
+
+LuaSrcDiet reduces the size of Lua 5 source files by aggressively
+removing all unnecessary whitespace and comments. This is done using a
+work-alike version of the Lua 5.0.2 lexical analyzer which produces
+additional information on whitespace and comments. Token processing is
+then performed and what can be cut, is cut. The script finally verifies
+correctness of the generated file by running the result through its
+internal lexer again.
+
+LuaSrcDiet is written as a single self-contained Lua script.
+LuaSrcDiet_.lua is a sample output file processed at maximum reduction;
+a Lua 5.0.2 command line executable should be able to run it.
+
+WARNING: Whitespace removal is very aggressive but should be valid for
+the Lua 5.0.2 lexer. This is assuming that LuaSrcDiet's lexer behaves
+*exactly* like Lua 5.0.2's lexer. I have not analyzed the current Lua
+5.1wk4 lexer in detail, so the output MAY FAIL on Lua 5.1wk4 (Lua 5.1
+will be supported in the future.)
+
+LuaSrcDiet currently optimizes based on tokens only. It does not
+currently support optimization methods that require the token stream to
+be parsed, e.g. optimizing constant numbers and strings or renaming
+locals. Such methods are future TODOs, but unlikely to be implemented
+anytime soon. Code contributions are welcome.
+
+--
+
+WHAT'S NEW
+
+Major changes for version 0.9.1 (see the ChangeLog as well):
+* Fixed a bug in the lexer
+* Added a --dump option for dumping a raw token list
+
+Major changes for version 0.9.0 (see the ChangeLog as well):
+* Preliminary release, for Lua 5.0.2. Beta quality.
+
+--
+
+USAGE OPTIONS
+
+usage: lua LuaSrcDiet.lua [options] [filenames]
+
+options:
+  -h, --help        prints usage information
+  -o <file>         specify file name to write output
+  --quiet           do not display statistics
+  --read-only       read file and print token stats
+  --keep-lines      preserve line numbering
+  --maximum         maximize reduction of source
+  --dump            dump raw tokens from lexer
+  --                stop handling arguments
+
+example:
+  >lua LuaSrcDiet.lua myscript.lua -o myscript_.lua
+
+--
+
+USING LUASRCDIET
+
+By default, LuaSrcDiet names the output file by adding an underscore to
+the basename of the source file. Some statistical information is shown
+by default. "Total Tokens" is the number of tokens that will be actually
+lexed by the Lua 5.0.2 parser, while "Total Elements" is the total of
+tokens plus whitespace and comment elements.
+
+If you wish to preserve line numbering, use --keep-lines to leave empty
+lines in the output. So if you are debugging, an error message will show
+the same line number as your original uncompressed sources.
+
+To see the token statistics of LuaSrcDiet.lua itself ('...' denote the
+title information normally displayed by LuaSrcDiet) without doing any
+processing or generating an output file:
+
+    >lua LuaSrcDiet.lua LuaSrcDiet.lua --read-only
+    ...
+    Statistics for: LuaSrcDiet.lua
+
+    Elements         Count     Bytes
+    --------------------------------
+    TK_KEYWORD         635      2439
+    TK_NAME           1282      6004
+    TK_NUMBER          103       117
+    TK_STRING          253      3237
+    TK_OP             1515      1657
+    TK_EOS               1         0
+    --------------------------------
+    TK_COMMENT         261     11664
+    TK_LCOMMENT         10      3857
+    TK_EOL             902       902
+    TK_SPACE          2172      5845
+    --------------------------------
+    Total Elements    7134     35722
+    --------------------------------
+    Total Tokens      3789     13454
+    --------------------------------
+
+To compress LuaSrcDiet.lua into LuaSrcDiet_.lua:
+
+    >lua LuaSrcDiet.lua LuaSrcDiet.lua
+    ...
+    Statistics for: LuaSrcDiet.lua -> LuaSrcDiet_.lua
+
+    Lexical          Input     Input  Output    Output
+    Elements         Count     Bytes   Count     Bytes
+    --------------------------------------------------
+    TK_KEYWORD         635      2439     635      2439
+    TK_NAME           1282      6004    1282      6004
+    TK_NUMBER          103       117     103       117
+    TK_STRING          253      3237     253      3237
+    TK_OP             1515      1657    1515      1657
+    TK_EOS               1         0       1         0
+    --------------------------------------------------
+    TK_COMMENT         261     11664       1        14
+    TK_LCOMMENT         10      3857       0         0
+    TK_EOL             902       902     672       672
+    TK_SPACE          2172      5845     334       334
+    --------------------------------------------------
+    Total Elements    7134     35722    4796     14474
+    --------------------------------------------------
+    Total Tokens      3789     13454    3789     13454
+    --------------------------------------------------
+
+Note that 'real' tokens that are lexed by Lua 5.0.2 does not change;
+LuaSrcDiet does not perform any heavy-duty optimizations at the moment.
+The 'before' and 'after' token stream is always compared to ensure that
+the reduction or compression process is correct.
+
+To compress using maximum settings:
+
+    >lua LuaSrcDiet.lua LuaSrcDiet.lua --maximum
+    ...
+    Statistics for: LuaSrcDiet.lua -> LuaSrcDiet_.lua
+
+    Lexical          Input     Input  Output    Output
+    Elements         Count     Bytes   Count     Bytes
+    --------------------------------------------------
+    TK_KEYWORD         635      2439     635      2439
+    TK_NAME           1282      6004    1282      6004
+    TK_NUMBER          103       117     103       117
+    TK_STRING          253      3237     253      3237
+    TK_OP             1515      1657    1515      1657
+    TK_EOS               1         0       1         0
+    --------------------------------------------------
+    TK_COMMENT         261     11664       1        14
+    TK_LCOMMENT         10      3857       0         0
+    TK_EOL             902       902     370       370
+    TK_SPACE          2172      5845     334       334
+    --------------------------------------------------
+    Total Elements    7134     35722    4494     14172
+    --------------------------------------------------
+    Total Tokens      3789     13454    3789     13454
+    --------------------------------------------------
+
+The --maximum option additionally removes unnecessary line endings, at
+the cost of reduced readability.
+
+--
+
+CODE SIZE REDUCTION
+
+There are 3 options for output generation: the default, --keep-lines and
+--maximum. The following table details what each option does:
+
+Reduction Scheme                (default) --keep-lines --maximum
+----------------------------------------------------------------
+Removal of comments                 Y           Y          Y
+Removal of block comments           Y           Y          Y
+Basic space and tab removal         Y           Y          Y
+Delete empty lines                  Y                      Y
+Delete all unnecessary EOLs                                Y
+----------------------------------------------------------------
+*EOL=end-of-line
+
+The default settings keeps your output a little bit more readable than
+the maximum setting while cutting out the majority of the unnecessary
+bytes in your source file. Actual savings will depend on your coding
+style (amount and type of whitespace and comments used.)
+
+--
+
+OTHER OPTIONS
+
+The --dump option performs a complete dump of the raw token list
+generated by the LuaSrcDiet lexer. This token list is somewhat different
+from the token format of the Lua lexer (llex.c); it includes
+non-essential tokens such as EOLs, whitespace and comments, which is
+needed for code size reduction processing. Useful for debugging and
+diagnostic purposes.
+
+--
+
+BEHAVIOUR NOTES
+
+TK_EOS is always 1 and does not occupy any space.
+
+The TK_EOL count doesn't include newlines inside strings, so it will
+probably not be the same as the number of lines in the source file.
+
+For scripts with the 'shell bang' line, the line is preserved unchanged
+and is reflected as a single remaining TK_COMMENT element.
+
+The Lua 5.0.2 lexer reads a file line-by-line, so you might find that
+LuaSrcDiet handles non-LF line endings incorrectly. It should not affect
+the actual token stream, though, so your programs should still work
+correctly. If the byte total reported by LuaSrcDiet is different from
+the original file, it's probably due to conversion of CRLF line endings
+to internal LF line endings. Generated Lua files always have LF line
+endings.
+
+If your editor cannot syntax-highlight a reduced Lua source file
+properly, try the SciTE editor or a Scintilla-based editor -- it
+highlights perfectly.
+
+TODO: For the upcoming Lua 5.1, LuaSrcDiet will later be changed to
+handle CR, LF and CRLF line endings transparently, in sync with the
+lexer changes.
+
+--
+
+ACKNOWLEDGEMENTS
+
+Thanks to the LuaForge people for hosting this.
+Developed on SciTE http://www.scintilla.org/. Two thumbs up.
+
+--
+
+FEEDBACK
+
+Feedback and contributions are welcome. Your name will be acknowledged,
+as long as you are willing to comply with COPYRIGHT. If your material is
+self-contained, you can retain a copyright notice for those material in
+your own name, as long as you use the same Lua 5/MIT-style copyright.
+
+I am on dial-up, so I might not be able to reply immediately. My
+alternative e-mail address is: mkh AT pl DOT jaring DOT my
+
+Enjoy!!
+
+Kein-Hong Man (esq.)
+Kuala Lumpur
+Malaysia 20050815

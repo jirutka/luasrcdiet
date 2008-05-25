@@ -1,3 +1,95 @@
+LuaSrcDiet changelog
+--------------------
+
+2008-05-25  Kein-Hong Man  <khman@users.sf.net>
+
+	* README: updated
+	* Version: 0.10.1
+
+2008-05-25  Kein-Hong Man  <khman@users.sf.net>
+
+	* LuaSrcDiet.lua (process_file): added code to print statistics
+	* LuaSrcDiet.lua: set back executable flag, added #! line
+	* sample/: added directory for samples
+	* sample/Makefile: braindead Makefile to create samples,
+	statistics.txt and *.lua files are Makefile-generated
+	* LuaSrcDiet.lua: formatting adjustments for statistics output
+	* LuaSrcDiet.lua: added version information option
+	* optlex.lua (optimize): done pass 2 (opt-eols) and tested
+	* LuaSrcDiet.lua: removed non-functional options for now
+
+2008-05-25  Kein-Hong Man  <khman@users.sf.net>
+
+	* LuaSrcDiet.lua: updated option description for --opt-eols
+	* LuaSrcDiet.lua: added function to save data
+	* LuaSrcDiet.lua (process_file): preliminary implementation
+	* LuaSrcDiet.lua (main): bug, avoid assigning option.OUTPUT_FILE
+	if it is not set
+	* technotes.txt: updated TK_OP-TK_OP behaviour, and behaviour
+	of '-' followed by comments
+	* optlex.lua (checkpair): fixed TK_OP-TK_OP behaviour
+	* optlex.lua (optimize): fixed bug, option[] lookup wrong
+	* optlex.lua (optimize): added option forcing for --opt-eols
+	* optlex.lua: added support function to repack tokens
+	* optlex.lua (optimize): fixed bug, don't allow reinterpret if
+	current token deleted
+	* optlex.lua: preliminary working version with pass 1 working,
+	optimization calls to be done, pass 2 to be done
+
+2008-05-25  Kein-Hong Man  <khman@users.sf.net>
+
+	* 5.0/README: created for old notes, moved old README to here
+	* README: mostly deleted, to rewrite
+	* optlex.lua: support functions, pass 1/2 skeleton
+	* technotes.txt: updated to reflect optlex.lua work
+	* optlex.lua: added prototypes for optimization functions
+	* optlex.lua: completed pass 1 of lexer-based optimization
+
+2008-05-24  Kein-Hong Man  <khman@users.sf.net>
+
+	* optlex.lua: create file for lexer-based optimization code
+	* test/test_optlex.lua: created file for optlex.lua testing
+	* technotes.txt: updated, cut out some comments from llex.lua
+	* optlex.lua: coding lexer-based optimization code
+
+2008-05-24  Kein-Hong Man  <khman@users.sf.net>
+
+	* LuaSrcDiet.lua (main): fixed a missing return flag
+	* LuaSrcDiet.lua: coded file loader, token dumper
+	* LuaSrcDiet.lua: coded statistics dump feature
+	* technotes.txt: new file detailing optimization tech notes
+
+2008-05-23  Kein-Hong Man  <khman@users.sf.net>
+
+	* LuaSrcDiet.lua: coded messages, part of options handling
+	* LuaSrcDiet.lua: coded argument handling
+	* llex.lua: converted lexer to LuaSrcDiet needs
+	* test/test_llex.lua: copied over from Yueliang for testing
+	* llex.lua (init): reset token, seminfo tables at initialization
+	* test/test_llex.lua: updated for LuaSrcDiet's lexer, testing
+	* llex.lua (read_long_string): re-insert is_str parameter, needed
+	for error message
+	* test/test_llex.lua: adjusted test cases, all tests passes,
+	except a test for accented character identifiers, fails for now
+	* lparser.lua: remove first, work on lexer features first
+	* LuaSrcDiet.lua: ported over file handling code
+
+2008-05-23  Kein-Hong Man  <khman@users.sf.net>
+
+	* LuaSrcDiet.lua: created file for work on 5.1 version
+	* llex.lua: added 5.1.x lexer from Yueliang, to be worked on
+	* lparser.lua: added 5.1.x parser skeleton from Yueliang, to
+	be worked on
+	* COPYRIGHT: updated copyright
+	* COPYRIGHT_Lua51: added Lua 5.1.x copyright for completeness
+
+2008-05-23  Kein-Hong Man  <khman@users.sf.net>
+
+	* 5.0/: created directory for old 5.0 scripts to make way
+	for new 5.1 work
+	* 5.0/LuaSrcDiet.lua, 5.0/LuaSrcDiet_.lua, 5.0/LSDTest.lua:
+	moved from root directory
+
 2005-08-16  Kein-Hong Man  <khman@users.sf.net>
 
 	* Version: 0.9.1
