@@ -37,7 +37,7 @@ local optlex = require "optlex"
 
 local MSG_TITLE = [[
 LuaSrcDiet: Puts your Lua 5.1 source code on a diet
-Version 0.10.1 (20080525)  Copyright (c) 2005-2008 Kein-Hong Man
+Version 0.10.2 (20080527)  Copyright (c) 2005-2008 Kein-Hong Man
 The COPYRIGHT file describes the conditions under which this
 software may be distributed.
 ]]
@@ -75,27 +75,28 @@ local OPTION = [[
 --opt-whitespace,'remove whitespace excluding EOLs'
 --opt-emptylines,'remove empty lines'
 --opt-eols,'all above, plus remove unnecessary EOLs'
+--opt-strings,'optimize strings and long strings'
+--opt-numbers,'optimize numbers'
 ]]
---TODO--opt-strings,'optimize strings and long strings'
---TODO--opt-numbers,'optimize numbers'
 --TODO--opt-locals,'optimize local variable names'
 
 -- preset configuration
 local DEFAULT_CONFIG = [[
   --opt-comments --opt-whitespace --opt-emptylines
+  --opt-numbers
 ]]
---TODO--opt-numbers --opt-locals
+--TODO--opt-locals
 -- override configurations: MUST explicitly enable/disable everything
 local BASIC_CONFIG = [[
   --opt-comments --opt-whitespace --opt-emptylines
-  --noopt-eols
+  --noopt-eols --noopt-strings --noopt-numbers
 ]]
---TODO--noopt-strings --noopt-numbers --noopt-locals
+--TODO--noopt-locals
 local MAXIMUM_CONFIG = [[
   --opt-comments --opt-whitespace --opt-emptylines
-  --opt-eols
+  --opt-eols --opt-strings --opt-numbers
 ]]
---TODO--opt-strings --opt-numbers --opt-locals
+--TODO--opt-locals
 local DEFAULT_SUFFIX = "_"      -- default suffix for file renaming
 
 --[[--------------------------------------------------------------------
@@ -125,6 +126,7 @@ do
     msg = msg..string.rep(" ", WIDTH - #msg)..desc.."\n"
     MSG_OPTIONS = MSG_OPTIONS..msg
     o[op] = true
+    o["--no"..sub(op, 3)] = true
   end
   OPTION = o  -- replace OPTION with lookup table
 end
@@ -321,7 +323,8 @@ local function process_file(srcfl, destfl)
   local z = load_file(srcfl)
   llex.init(z)
   llex.llex()
-  local toklist, seminfolist = llex.tok, llex.seminfo
+  local toklist, seminfolist, toklnlist
+    = llex.tok, llex.seminfo, llex.tokln
   print(MSG_TITLE)
   print("Statistics for: "..srcfl.." -> "..destfl.."\n")
   --------------------------------------------------------------------
@@ -337,8 +340,16 @@ local function process_file(srcfl, destfl)
   --------------------------------------------------------------------
   -- do optimization here, save output file
   --------------------------------------------------------------------
-  toklist, seminfolist = optlex.optimize(option, toklist, seminfolist)
+  toklist, seminfolist
+    = optlex.optimize(option, toklist, seminfolist, toklnlist)
   local dat = table.concat(seminfolist)
+  -- depending on options selected, embedded EOLs in long strings and
+  -- long comments may not have been translated to \n, tack a warning
+  if string.find(dat, "\r\n", 1, 1) or
+     string.find(dat, "\n\r", 1, 1) then
+    optlex.warn.mixedeol = true
+  end
+  -- save optimized source stream to output file
   save_file(destfl, dat)
   --------------------------------------------------------------------
   -- collect 'after' statistics
@@ -376,7 +387,14 @@ local function process_file(srcfl, destfl)
   print(fmt(tabf2, "Total Elements", figures("TOTAL_ALL")))
   print(hl)
   print(fmt(tabf2, "Total Tokens", figures("TOTAL_TOK")))
-  print(hl.."\n")
+  print(hl)
+  -- report warning flags from optimizing process
+  if optlex.warn.lstring then
+    print("* WARNING: "..optlex.warn.lstring)
+  elseif optlex.warn.mixedeol then
+    print("* WARNING: ".."output still contains some CRLF or LFCR line endings")
+  end
+  print()
 end
 
 --[[--------------------------------------------------------------------
@@ -471,6 +489,8 @@ local function main()
         set_options(MAXIMUM_CONFIG)
       elseif o == "--dump" then
         option.DUMP = true
+      elseif OPTION[o] then  -- lookup optimization options
+        set_options(o)
       else
         die("unrecognized option "..o)
       end

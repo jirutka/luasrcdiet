@@ -43,18 +43,24 @@ local nil not or repeat return then true until while]], "%S+") do
   kw[v] = true
 end
 
+-- NOTE: see init() for module variables (externally visible):
+--       tok, seminfo, tokln
+
 local z                 -- source stream
 local sourceid          -- name of source
 local I                 -- position of lexer
 local buff              -- buffer for strings
+local ln                -- line number
 
 ----------------------------------------------------------------------
 -- add information to token listing
 ----------------------------------------------------------------------
 
 local function addtoken(token, info)
-  tok[#tok + 1] = token
-  seminfo[#seminfo + 1] = info
+  local i = #tok + 1
+  tok[i] = token
+  seminfo[i] = info
+  tokln[i] = ln
 end
 
 ----------------------------------------------------------------------
@@ -85,8 +91,10 @@ function init(_z, _sourceid)
   sourceid = _sourceid          -- name of source
   I = 1                         -- lexer's position in source
   ln = 1                        -- line number
-  tok = {}                      -- lexed token list
-  seminfo = {}                  -- lexed semantic information list
+  tok = {}                      -- lexed token list*
+  seminfo = {}                  -- lexed semantic information list*
+  tokln = {}                    -- line numbers for messages*
+                                -- (*) externally visible thru' module
   --------------------------------------------------------------------
   -- initial processing (shbang handling)
   --------------------------------------------------------------------

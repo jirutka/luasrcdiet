@@ -18,28 +18,41 @@ please see the 5.0/README file.
 
 PREVIEW NOTES
 
-This 0.10.1 release of LuaSrcDiet has the same functionality as the old
+The 0.10.1 release of LuaSrcDiet has the same functionality as the old
 Lua 5.0.2 version, except for the missing verification of the output
 file feature by way of comparing the token stream. It is more flexible
 in the way in which optimization options can be enabled or disabled.
 
+Release version 0.10.2 has aggressive optimizations for string and
+number tokens.
+
 For samples, see the sample/ directory. Performance statistics can be
-found in the sample/statistics.txt file.
+found in the sample/statistics.txt file. Preliminary test samples for
+strings and numbers can also be found in the sample/ directory.
 
 Planned near term work:
-(a) seminfo optimizations: string, number, comments
-(b) automatic tests for lexer optimizations
-(c) lexer output comparison for output verification
-(d) integrate Yueliang's parser skeleton
-(e) local variable name optimization using the parser
+(b) automatic tests for lexer optimizations -- 0.10.3 RELEASE HERE
+(c) lexer output comparison for output verification -- 0.10.4 RELEASE?
+(d) integrate Yueliang's parser skeleton (ONGOING)
+(e) local variable name optimization using the parser -- 0.11.0 RELEASE HERE
+(f) paranoid checking, after (c)
 
 --
 
 INTRODUCTION
 
+...
+
+WARNING! Locals optimization does NOT have support for 'arg' vararg
+functions (LUA_COMPAT_VARARG).
+
 --
 
 WHAT'S NEW
+
+Major changes for version 0.10.2 (see the ChangeLog as well):
+* Aggressive optimizations for string and number tokens.
+* Minor bug fixes.
 
 Major changes for version 0.10.1 (see the ChangeLog as well):
 * Totally rewritten for Lua 5.1.x.
@@ -48,21 +61,40 @@ Major changes for version 0.10.1 (see the ChangeLog as well):
 
 USAGE OPTIONS
 
+...
+
 --
 
 USING LUASRCDIET
+
+...
 
 --
 
 CODE SIZE REDUCTION
 
+...
+
 --
 
 OTHER OPTIONS
 
+...
+
 --
 
 BEHAVIOUR NOTES
+
+* embedded line endings in strings and long strings always
+  normalized to LF
+* will not optimize trailing spaces in long strings, only warns
+* scientific notation generated in number optimzation is not in
+  canonical form, this may or may not be a bad thing, so feedback
+  is welcome
+
+POSSIBLE TODOS
+
+* convert long strings to normal strings, vice versa
 
 --
 
@@ -86,4 +118,4 @@ Enjoy!!
 
 Kein-Hong Man (esq.)
 Kuala Lumpur
-Malaysia 20080525
+Malaysia 20080527

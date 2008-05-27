@@ -14,6 +14,8 @@
 --[[--------------------------------------------------------------------
 -- NOTES:
 -- * For lexer-based optimization ideas, see the TODO items
+-- * TODO: general string delimiter conversion optimizer
+-- * TODO: (numbers) warn if overly significant digit
 ----------------------------------------------------------------------]]
 
 local base = _G
@@ -22,6 +24,7 @@ module "optlex"
 local match = string.match
 local sub = string.sub
 local find = string.find
+local rep = string.rep
 
 ------------------------------------------------------------------------
 -- variables and data structures
@@ -30,7 +33,9 @@ local find = string.find
 -- error function, can override by setting own function into module
 error = base.error
 
-local stoks, sinfos             -- source lists
+warn = {}                       -- table for warning flags
+
+local stoks, sinfos, stoklns    -- source lists
 
 local is_realtoken = {          -- significant (grammar) tokens
   TK_KEYWORD = true,
@@ -149,72 +154,415 @@ end
 ------------------------------------------------------------------------
 
 local function repack_tokens()
-  local dtoks, dinfos = {}, {}
+  local dtoks, dinfos, dtoklns = {}, {}, {}
   local j = 1
   for i = 1, #stoks do
     local tok = stoks[i]
     if tok ~= "" then
-      dtoks[j], dinfos[j] = tok, sinfos[i]
+      dtoks[j], dinfos[j], dtoklns[j] = tok, sinfos[i], stoklns[i]
       j = j + 1
     end
   end
-  stoks, sinfos = dtoks, dinfos
+  stoks, sinfos, stoklns = dtoks, dinfos, dtoklns
 end
 
 ------------------------------------------------------------------------
 -- number optimization
--- * TODO leading zeros (before .)
--- * TODO trailing zeros (after .)
--- * TODO remove fractional portion entirely
--- * TODO translate from scientific notation
--- * TODO remove redundant '+'
--- * TODO simplify exponent number
--- * TODO translate from hexadecimal
--- * TODO translate from large normal number
+-- * optimization using string formatting functions is one way of doing
+--   this, but here, we consider all cases and handle them separately
+--   (possibly an idiotic approach...)
+-- * scientific notation being generated is not in canonical form, this
+--   may or may not be a bad thing, feedback welcome
+-- * note: intermediate portions need to fit into a normal number range
+-- * optimizations can be divided based on number patterns:
+-- * hexadecimal:
+--   (1) no need to remove leading zeros, just skip to (2)
+--   (2) convert to integer if size equal or smaller
+--       * change if equal size -> lose the 'x' to reduce entropy
+--   (3) number is then processed as an integer
+--   (4) note: does not make 0[xX] consistent
+-- * integer:
+--   (1) note: includes anything with trailing ".", ".0", ...
+--   (2) remove useless fractional part, if present, e.g. 123.000
+--   (3) remove leading zeros, e.g. 000123
+--   (4) switch to scientific if shorter, e.g. 123000 -> 123e3
+-- * with fraction:
+--   (1) split into digits dot digits
+--   (2) if no integer portion, take as zero (can omit later)
+--   (3) handle degenerate .000 case, after which the fractional part
+--       must be non-zero (if zero, it's matched as an integer)
+--   (4) remove trailing zeros for fractional portion
+--   (5) p.q where p > 0 and q > 0 cannot be shortened any more
+--   (6) otherwise p == 0 and the form is .q, e.g. .000123
+--   (7) if scientific shorter, convert, e.g. .000123 -> 123e-6
+-- * scientific:
+--   (1) split into (digits dot digits) [eE] ([+-] digits)
+--   (2) if significand has ".", shift it out to it becomes an integer
+--   (3) if significand is zero, just use zero
+--   (4) remove leading zeros for significand
+--   (5) shift out trailing zeros for significand
+--   (6) examine exponent and determine which format is best:
+--       integer, with fraction, scientific
 ------------------------------------------------------------------------
 
 local function do_number(i)
+  local before = sinfos[i]      -- 'before'
+  local z = before              -- working representation
+  local y                       -- 'after', if better
+  --------------------------------------------------------------------
+  if match(z, "^0[xX]") then            -- hexadecimal number
+    local v = base.tostring(base.tonumber(z))
+    if #v <= #z then
+      z = v  -- change to integer, AND continue
+    else
+      return  -- no change; stick to hex
+    end
+  end
+  --------------------------------------------------------------------
+  if match(z, "^%d+%.?0*$") then        -- integer or has useless frac
+    z = match(z, "^(%d+)%.?0*$")  -- int portion only
+    if z + 0 > 0 then
+      z = match(z, "^0*([1-9]%d*)$")  -- remove leading zeros
+      local v = #match(z, "0*$")
+      local nv = base.tostring(v)
+      if v > #nv + 1 then  -- scientific is shorter
+        z = sub(z, 1, #z - v).."e"..nv
+      end
+      y = z
+    else
+      y = "0"  -- basic zero
+    end
+  --------------------------------------------------------------------
+  elseif not match(z, "[eE]") then      -- number with fraction part
+    local p, q = match(z, "^(%d*)%.(%d+)$")  -- split
+    if p == "" then p = 0 end  -- int part zero
+    if q + 0 == 0 and p == 0 then
+      y = "0"  -- degenerate .000 case
+    else
+      -- now, q > 0 holds and p is a number
+      local v = #match(q, "0*$")  -- remove trailing zeros
+      if v > 0 then
+        q = sub(q, 1, #q - v)
+      end
+      -- if p > 0, nothing else we can do to simplify p.q case
+      if p + 0 > 0 then
+        y = p.."."..q
+      else
+        y = "."..q  -- tentative, e.g. .000123
+        local v = #match(q, "^0*")  -- # leading spaces
+        local w = #q - v            -- # significant digits
+        local nv = base.tostring(#q)
+        -- e.g. compare 123e-6 versus .000123
+        if w + 2 + #nv < 1 + #q then
+          y = sub(q, -w).."e-"..nv
+        end
+      end
+    end
+  --------------------------------------------------------------------
+  else                                  -- scientific number
+    local sig, ex = match(z, "^([^eE]+)[eE]([%+%-]?%d+)$")
+    ex = base.tonumber(ex)
+    -- if got ".", shift out fractional portion of significand
+    local p, q = match(sig, "^(%d*)%.(%d*)$")
+    if p then
+      ex = ex - #q
+      sig = p..q
+    end
+    if sig + 0 == 0 then
+      y = "0"  -- basic zero
+    else
+      local v = #match(sig, "^0*")  -- remove leading zeros
+      sig = sub(sig, v + 1)
+      v = #match(sig, "0*$") -- shift out trailing zeros
+      if v > 0 then
+        sig = sub(sig, 1, #sig - v)
+        ex = ex + v
+      end
+      -- examine exponent and determine which format is best
+      local nex = base.tostring(ex)
+      if ex == 0 then  -- it's just an integer
+        y = sig
+      elseif ex > 0 and (ex <= 1 + #nex) then  -- a number
+        y = sig..rep("0", ex)
+      elseif ex < 0 and (ex >= -#sig) then  -- fraction, e.g. .123
+        v = #sig + ex
+        y = sub(sig, 1, v).."."..sub(sig, v + 1)
+      elseif ex < 0 and (#nex >= -ex - #sig) then
+        -- e.g. compare 1234e-5 versus .01234
+        -- gives: #sig + 1 + #nex >= 1 + (-ex - #sig) + #sig
+        --     -> #nex >= -ex - #sig
+        v = -ex - #sig
+        y = "."..rep("0", v)..sig
+      else  -- non-canonical scientific representation
+        y = sig.."e"..ex
+      end
+    end--if sig
+  end
+  --------------------------------------------------------------------
+  if y then sinfos[i] = y end
 end
 
 ------------------------------------------------------------------------
 -- string optimization
--- * TODO normalize embedded newlines
--- * TODO undo unnecessary escapes
--- * TODO switch delimiters if shorter
--- * TODO translate some \xxx escape sequences
--- * TODO convert to long string?
+-- * note: works on well-formed strings only!
+-- * optimizations on characters can be summarized as follows:
+--   \a\b\f\n\r\t\v -- no change
+--   \\ -- no change
+--   \"\' -- depends on delim, other can remove \
+--   \[\] -- remove \
+--   \<char> -- general escape, remove \
+--   \<eol> -- normalize the EOL only
+--   \ddd -- if \a\b\f\n\r\t\v, change to latter
+--           if other < ascii 32, keep ddd but zap leading zeros
+--           if >= ascii 32, translate it into the literal, then also
+--                           do escapes for \\,\",\' cases
+--   <other> -- no change
+-- * switch delimiters if string becomes shorter
 ------------------------------------------------------------------------
 
-local function do_string(i)
+local function do_string(I)
+  local info = sinfos[I]
+  local delim = sub(info, 1, 1)                 -- delimiter used
+  local ndelim = (delim == "'") and '"' or "'"  -- opposite " <-> '
+  local z = sub(info, 2, -2)                    -- actual string
+  local i = 1
+  local c_delim, c_ndelim = 0, 0                -- "/' counts
+  --------------------------------------------------------------------
+  while i <= #z do
+    local c = sub(z, i, i)
+    ----------------------------------------------------------------
+    if c == "\\" then                   -- escaped stuff
+      local j = i + 1
+      local d = sub(z, j, j)
+      local p = find("abfnrtv\\\n\r\"\'0123456789", d, 1, true)
+      ------------------------------------------------------------
+      if not p then                     -- \<char> -- remove \
+        z = sub(z, 1, i - 1)..sub(z, j)
+        i = i + 1
+      ------------------------------------------------------------
+      elseif p <= 8 then                -- \a\b\f\n\r\t\v\\
+        i = i + 2                       -- no change
+      ------------------------------------------------------------
+      elseif p <= 10 then               -- \<eol> -- normalize EOL
+        local eol = sub(z, j, j + 1)
+        if eol == "\r\n" or eol == "\n\r" then
+          z = sub(z, 1, i).."\n"..sub(z, j + 2)
+        elseif p == 10 then  -- \r case
+          z = sub(z, 1, i).."\n"..sub(z, j + 1)
+        end
+        i = i + 2
+      ------------------------------------------------------------
+      elseif p <= 12 then               -- \"\' -- remove \ for ndelim
+        if d == delim then
+          c_delim = c_delim + 1
+          i = i + 2
+        else
+          c_ndelim = c_ndelim + 1
+          z = sub(z, 1, i - 1)..sub(z, j)
+          i = i + 1
+        end
+      ------------------------------------------------------------
+      else                              -- \ddd -- various steps
+        local s = match(z, "^(%d%d?%d?)", j)
+        j = i + 1 + #s                  -- skip to location
+        local cv = s + 0
+        local cc = string.char(cv)
+        local p = find("\a\b\f\n\r\t\v", cc, 1, true)
+        if p then                       -- special escapes
+          s = "\\"..sub("abfnrtv", p, p)
+        elseif cv < 32 then             -- normalized \ddd
+          s = "\\"..cv
+        elseif cc == delim then         -- \<delim>
+          s = "\\"..cc
+          c_delim = c_delim + 1
+        elseif cc == "\\" then          -- \\
+          s = "\\\\"
+        else                            -- literal character
+          s = cc
+          if cc == ndelim then
+            c_ndelim = c_ndelim + 1
+          end
+        end
+        z = sub(z, 1, i - 1)..s..sub(z, j)
+        i = i + #s
+      ------------------------------------------------------------
+      end--if p
+    ----------------------------------------------------------------
+    else-- c ~= "\\"                    -- <other> -- no change
+      i = i + 1
+      if c == ndelim then  -- count ndelim, for switching delimiters
+        c_ndelim = c_ndelim + 1
+      end
+    ----------------------------------------------------------------
+    end--if c
+  end--while
+  --------------------------------------------------------------------
+  -- switching delimiters, a long-winded derivation:
+  -- (1) delim takes 2+2*c_delim bytes, ndelim takes c_ndelim bytes
+  -- (2) delim becomes c_delim bytes, ndelim becomes 2+2*c_ndelim bytes
+  -- simplifying the condition (1)>(2) --> c_delim > c_ndelim
+  if c_delim > c_ndelim then
+    i = 1
+    while i <= #z do
+      local p, q, r = find(z, "([\'\"])", i)
+      if not p then break end
+      if r == delim then                -- \<delim> -> <delim>
+        z = sub(z, 1, p - 2)..sub(z, p)
+        i = p
+      else-- r == ndelim                -- <ndelim> -> \<ndelim>
+        z = sub(z, 1, p - 1).."\\"..sub(z, p)
+        i = p + 2
+      end
+    end--while
+    delim = ndelim  -- actually change delimiters
+  end
+  --------------------------------------------------------------------
+  sinfos[I] = delim..z..delim
 end
 
 ------------------------------------------------------------------------
 -- long string optimization
--- * TODO remove first redundant newline
--- * TODO normalize embedded newlines
--- * TODO reduce '=' separators if possible
--- * TODO convert to normal string?
+-- * note: warning flagged if trailing whitespace found, not trimmed
+-- * remove first optional newline
+-- * normalize embedded newlines
+-- * reduce '=' separators in delimiters if possible
 ------------------------------------------------------------------------
 
-local function do_lstring(i)
+local function do_lstring(I)
+  local info = sinfos[I]
+  local delim1 = match(info, "^%[=*%[")  -- cut out delimiters
+  local sep = #delim1
+  local delim2 = sub(info, -sep, -1)
+  local z = sub(info, sep + 1, -(sep + 1))  -- lstring without delims
+  local y = ""
+  local i = 1
+  --------------------------------------------------------------------
+  while true do
+    local p, q, r, s = find(z, "([\r\n])([\r\n]?)", i)
+    -- deal with a single line
+    local ln
+    if not p then
+      ln = sub(z, i)
+    elseif p >= i then
+      ln = sub(z, i, p - 1)
+    end
+    if ln ~= "" then
+      -- flag a warning if there are trailing spaces, won't optimize!
+      if match(ln, "%s+$") then
+        warn.lstring = "trailing whitespace in long string near line "..stoklns[I]
+      end
+      y = y..ln
+    end
+    if not p then  -- done if no more EOLs
+      break
+    end
+    -- deal with line endings, normalize them
+    i = p + 1
+    if p then
+      if #s > 0 and r ~= s then  -- skip CRLF or LFCR
+        i = i + 1
+      end
+      -- skip first newline, which can be safely deleted
+      if not(i == 1 and i == p) then
+        y = y.."\n"
+      end
+    end
+  end--while
+  --------------------------------------------------------------------
+  -- handle possible deletion of one or more '=' separators
+  if sep >= 3 then
+    local chk, okay = sep - 1
+    -- loop to test ending delimiter with less of '=' down to zero
+    while chk >= 2 do
+      local delim = "%]"..rep("=", chk - 2).."%]"
+      if not match(y, delim) then okay = chk end
+      chk = chk - 1
+    end
+    if okay then  -- change delimiters
+      sep = rep("=", okay - 2)
+      delim1, delim2 = "["..sep.."[", "]"..sep.."]"
+    end
+  end
+  --------------------------------------------------------------------
+  sinfos[I] = delim1..y..delim2
 end
 
 ------------------------------------------------------------------------
 -- long comment optimization
--- * TODO trim trailing whitespace
--- * TODO normalize embedded newlines
+-- * note: does not remove first optional newline
+-- * trim trailing whitespace
+-- * normalize embedded newlines
+-- * reduce '=' separators in delimiters if possible
 ------------------------------------------------------------------------
 
-local function do_comment(i)
+local function do_lcomment(I)
+  local info = sinfos[I]
+  local delim1 = match(info, "^%-%-%[=*%[")  -- cut out delimiters
+  local sep = #delim1
+  local delim2 = sub(info, -sep, -1)
+  local z = sub(info, sep + 1, -(sep - 1))  -- comment without delims
+  local y = ""
+  local i = 1
+  --------------------------------------------------------------------
+  while true do
+    local p, q, r, s = find(z, "([\r\n])([\r\n]?)", i)
+    -- deal with a single line, extract and check trailing whitespace
+    local ln
+    if not p then
+      ln = sub(z, i)
+    elseif p >= i then
+      ln = sub(z, i, p - 1)
+    end
+    if ln ~= "" then
+      -- trim trailing whitespace if non-empty line
+      local ws = match(ln, "%s*$")
+      if #ws > 0 then ln = sub(ln, 1, -(ws + 1)) end
+      y = y..ln
+    end
+    if not p then  -- done if no more EOLs
+      break
+    end
+    -- deal with line endings, normalize them
+    i = p + 1
+    if p then
+      if #s > 0 and r ~= s then  -- skip CRLF or LFCR
+        i = i + 1
+      end
+      y = y.."\n"
+    end
+  end--while
+  --------------------------------------------------------------------
+  -- handle possible deletion of one or more '=' separators
+  sep = sep - 2
+  if sep >= 3 then
+    local chk, okay = sep - 1
+    -- loop to test ending delimiter with less of '=' down to zero
+    while chk >= 2 do
+      local delim = "%]"..rep("=", chk - 2).."%]"
+      if not match(y, delim) then okay = chk end
+      chk = chk - 1
+    end
+    if okay then  -- change delimiters
+      sep = rep("=", okay - 2)
+      delim1, delim2 = "--["..sep.."[", "]"..sep.."]"
+    end
+  end
+  --------------------------------------------------------------------
+  sinfos[I] = delim1..y..delim2
 end
 
 ------------------------------------------------------------------------
--- comment optimization
--- * TODO trim trailing whitespace
--- * TODO normalize embedded newlines
+-- short comment optimization
+-- * trim trailing whitespace
 ------------------------------------------------------------------------
 
 local function do_comment(i)
+  local info = sinfos[i]
+  local ws = match(info, "%s*$")        -- just look from end of string
+  if #ws > 0 then
+    info = sub(info, 1, -(ws + 1))      -- trim trailing whitespace
+  end
+  sinfos[i] = info
 end
 
 ------------------------------------------------------------------------
@@ -226,7 +574,7 @@ end
 --   processing is a little messy or convoluted
 ------------------------------------------------------------------------
 
-function optimize(option, toklist, semlist)
+function optimize(option, toklist, semlist, toklnlist)
   --------------------------------------------------------------------
   -- set option flags
   --------------------------------------------------------------------
@@ -244,7 +592,8 @@ function optimize(option, toklist, semlist)
   --------------------------------------------------------------------
   -- variable initialization
   --------------------------------------------------------------------
-  stoks, sinfos = toklist, semlist      -- set source lists
+  stoks, sinfos, stoklns                -- set source lists
+    = toklist, semlist, toklnlist
   local i = 1                           -- token position
   local tok                             -- current token
   local prev    -- position of last grammar token
@@ -326,7 +675,7 @@ function optimize(option, toklist, semlist)
         -- if there are embedded EOLs to keep and opt_emptylines is
         -- disabled, then switch the token into one or more EOLs
         if not opt_emptylines and eols > 0 then
-          settoken("TK_EOL", string.rep("\n", eols))
+          settoken("TK_EOL", rep("\n", eols))
         end
         ------------------------------------------------------------
         -- if optimizing whitespaces, force reinterpretation of the
@@ -407,9 +756,10 @@ function optimize(option, toklist, semlist)
   if opt_eols then
     i = 1
     -- aggressive EOL removal only works with most non-grammar tokens
-    -- optimized away, so basically it checks token pairs around EOLs
-    -- first comment still existing must be an shbang, skip it & EOL
+    -- optimized away because it is a rather simple scheme -- basically
+    -- it just checks 'real' token pairs around EOLs
     if stoks[1] == "TK_COMMENT" then
+      -- first comment still existing must be shbang, skip whole line
       i = 3
     end
     while true do
@@ -433,5 +783,5 @@ function optimize(option, toklist, semlist)
     repack_tokens()
   end
   --------------------------------------------------------------------
-  return stoks, sinfos
+  return stoks, sinfos, stoklns
 end

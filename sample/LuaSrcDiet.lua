@@ -35,14 +35,17 @@ default settings:
 --opt-whitespace,'remove whitespace excluding EOLs'
 --opt-emptylines,'remove empty lines'
 --opt-eols,'all above, plus remove unnecessary EOLs'
+--opt-strings,'optimize strings and long strings'
+--opt-numbers,'optimize numbers'
 ]]local DEFAULT_CONFIG=[[
   --opt-comments --opt-whitespace --opt-emptylines
+  --opt-numbers
 ]]local BASIC_CONFIG=[[
   --opt-comments --opt-whitespace --opt-emptylines
-  --noopt-eols
+  --noopt-eols --noopt-strings --noopt-numbers
 ]]local MAXIMUM_CONFIG=[[
   --opt-comments --opt-whitespace --opt-emptylines
-  --opt-eols
+  --opt-eols --opt-strings --opt-numbers
 ]]local DEFAULT_SUFFIX="_"local function die(msg)print("LuaSrcDiet: "..msg);os.exit()end
 if not string.match(_VERSION,"5.1",1,1)then
 die("requires Lua 5.1 to run")end
@@ -52,6 +55,7 @@ local o={}for op,desc in gmatch(OPTION,"%s*([^,]+),'([^']+)'")do
 local msg="  "..op
 msg=msg..string.rep(" ",WIDTH-#msg)..desc.."\n"MSG_OPTIONS=MSG_OPTIONS..msg
 o[op]=true
+o["--no"..sub(op,3)]=true
 end
 OPTION=o
 end
@@ -67,12 +71,12 @@ end
 end
 end
 local TTYPES={"TK_KEYWORD","TK_NAME","TK_NUMBER","TK_STRING","TK_LSTRING","TK_OP","TK_EOS","TK_COMMENT","TK_LCOMMENT","TK_EOL","TK_SPACE",}local TTYPE_GRAMMAR=7
-local EOLTYPES={["\n"]="LF",["\r"]="CR",["\n\r"]="LFCR",["\r\n"]="CRLF",}local function load_file(fname)local INF=io.open(fname,"rb")if not INF then die("cannot open \""..fname.."\" for reading")end
-local dat=INF:read("*a")if not dat then die("cannot read from \""..fname.."\"")end
+local EOLTYPES={["\n"]="LF",["\r"]="CR",["\n\r"]="LFCR",["\r\n"]="CRLF",}local function load_file(fname)local INF=io.open(fname,"rb")if not INF then die('cannot open "'..fname..'" for reading')end
+local dat=INF:read("*a")if not dat then die('cannot read from "'..fname..'"')end
 INF:close()return dat
 end
-local function save_file(fname,dat)local OUTF=io.open(fname,"wb")if not OUTF then die("cannot open \""..fname.."\" for writing")end
-local status=OUTF:write(dat)if not status then die("cannot write to \""..fname.."\"")end
+local function save_file(fname,dat)local OUTF=io.open(fname,"wb")if not OUTF then die('cannot open "'..fname..'" for writing')end
+local status=OUTF:write(dat)if not status then die('cannot write to "'..fname..'"')end
 OUTF:close()end
 local function stat_init()stat_c,stat_l={},{}for i=1,#TTYPES do
 local ttype=TTYPES[i]stat_c[ttype],stat_l[ttype]=0,0
@@ -113,18 +117,25 @@ end
 print(hl)print(fmt(tabf2,"Total Elements",figures("TOTAL_ALL")))print(hl)print(fmt(tabf2,"Total Tokens",figures("TOTAL_TOK")))print(hl.."\n")end
 local function process_file(srcfl,destfl)local function print(...)if option.QUIET then return end
 _G.print(...)end
-local z=load_file(srcfl)llex.init(z)llex.llex()local toklist,seminfolist=llex.tok,llex.seminfo
+local z=load_file(srcfl)llex.init(z)llex.llex()local toklist,seminfolist,toklnlist=llex.tok,llex.seminfo,llex.tokln
 print(MSG_TITLE)print("Statistics for: "..srcfl.." -> "..destfl.."\n")stat_init()for i=1,#toklist do
 local tok,seminfo=toklist[i],seminfolist[i]stat_add(tok,seminfo)end
 local stat1_a=stat_calc()local stat1_c,stat1_l=stat_c,stat_l
-toklist,seminfolist=optlex.optimize(option,toklist,seminfolist)local dat=table.concat(seminfolist)save_file(destfl,dat)stat_init()for i=1,#toklist do
+toklist,seminfolist=optlex.optimize(option,toklist,seminfolist,toklnlist)local dat=table.concat(seminfolist)if string.find(dat,"\r\n",1,1)or
+string.find(dat,"\n\r",1,1)then
+optlex.warn.mixedeol=true
+end
+save_file(destfl,dat)stat_init()for i=1,#toklist do
 local tok,seminfo=toklist[i],seminfolist[i]stat_add(tok,seminfo)end
 local stat_a=stat_calc()local fmt=string.format
 local function figures(tt)return stat1_c[tt],stat1_l[tt],stat1_a[tt],stat_c[tt],stat_l[tt],stat_a[tt]end
 local tabf1,tabf2="%-16s%8s%8s%10s%8s%8s%10s","%-16s%8d%8d%10.2f%8d%8d%10.2f"local hl=string.rep("-",68)print(fmt(tabf1,"Lexical","Input","Input","Input","Output","Output","Output"))print(fmt(tabf1,"Elements","Count","Bytes","Average","Count","Bytes","Average"))print(hl)for i=1,#TTYPES do
 local ttype=TTYPES[i]print(fmt(tabf2,ttype,figures(ttype)))if ttype=="TK_EOS"then print(hl)end
 end
-print(hl)print(fmt(tabf2,"Total Elements",figures("TOTAL_ALL")))print(hl)print(fmt(tabf2,"Total Tokens",figures("TOTAL_TOK")))print(hl.."\n")end
+print(hl)print(fmt(tabf2,"Total Elements",figures("TOTAL_ALL")))print(hl)print(fmt(tabf2,"Total Tokens",figures("TOTAL_TOK")))print(hl)if optlex.warn.lstring then
+print("* WARNING: "..optlex.warn.lstring)elseif optlex.warn.mixedeol then
+print("* WARNING: ".."output still contains some CRLF or LFCR line endings")end
+print()end
 local arg={...}local fspec={}set_options(DEFAULT_CONFIG)local function do_files(fspec)for _,srcfl in ipairs(fspec)do
 local destfl
 local extb,exte=string.find(srcfl,"%.[^%.%\\%/]*$")local basename,extension=srcfl,""if extb and extb>1 then
@@ -176,7 +187,8 @@ elseif o=="--basic"then
 set_options(BASIC_CONFIG)elseif o=="--maximum"then
 set_options(MAXIMUM_CONFIG)elseif o=="--dump"then
 option.DUMP=true
-else
+elseif OPTION[o]then
+set_options(o)else
 die("unrecognized option "..o)end
 else
 fspec[#fspec+1]=o

@@ -11,8 +11,11 @@ local z
 local sourceid
 local I
 local buff
-local function addtoken(token,info)tok[#tok+1]=token
-seminfo[#seminfo+1]=info
+local ln
+local function addtoken(token,info)local i=#tok+1
+tok[i]=token
+seminfo[i]=info
+tokln[i]=ln
 end
 local function inclinenumber(i,is_tok)local sub=sub
 local old=sub(z,i,i)i=i+1
@@ -29,7 +32,7 @@ function init(_z,_sourceid)z=_z
 sourceid=_sourceid
 I=1
 ln=1
-tok={}seminfo={}local p,_,q,r=find(z,"^(#[^\r\n]*)(\r?\n?)")if p then
+tok={}seminfo={}tokln={}local p,_,q,r=find(z,"^(#[^\r\n]*)(\r?\n?)")if p then
 I=I+#q
 addtoken("TK_COMMENT",q)if#r>0 then inclinenumber(I,true)end
 end
@@ -68,7 +71,7 @@ local function read_string(del)local i=I
 local find=find
 local sub=sub
 while true do
-local p,q,r=find(z,"([\n\r\\\"\'])",i)if p then
+local p,q,r=find(z,"([\n\r\\\"'])",i)if p then
 if r=="\n"or r=="\r"then
 errorline("unfinished string")end
 i=p
@@ -132,7 +135,7 @@ break
 end
 local r=match(z,"^%p",i)if r then
 buff=i
-local p=find("-[\"\'.=<>~",r,1,true)if p then
+local p=find("-[\"'.=<>~",r,1,true)if p then
 if p<=2 then
 if p==1 then
 local c=match(z,"^%-%-(%[?)",i)if c then

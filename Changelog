@@ -1,6 +1,77 @@
 LuaSrcDiet changelog
 --------------------
 
+2008-05-27  Kein-Hong Man  <khman@users.sf.net>
+
+	* README: updated
+	* Version: 0.10.2
+
+2008-05-27  Kein-Hong Man  <khman@users.sf.net>
+
+	* sample/numbers_original.lua: adding number samples
+	* optlex.lua (do_number): fixed trying to compare string variable
+	and constant number in if statements
+	* optlex.lua (do_number): mistake in scientific number regex,
+	+/- sign must be optional
+	* optlex.lua (do_number): mistake in taking substring, forgot
+	first position index parameter
+	* sample/numbers_original.lua: completed basic samples
+	* optlex.lua (do_number): mostly works
+
+2008-05-27  Kein-Hong Man  <khman@users.sf.net>
+
+	* optlex.lua (do_number): coded number optimizer
+	* sample/strings_original.lua: adding string samples
+	* sample/Makefile: added entry to build string samples
+	* optlex.lua (do_string): bug, used string.byte instead of
+	string.char in /ddd tests
+	* LuaSrcDiet.lua: bug, missing handling for --opt*, --noopt*
+	optimization options
+	* optlex.lua (do_string): bug, incomplete code for handling
+	\ddd for \\ and translation to literal char
+	* sample/strings_original.lua: completed basic samples
+	* optlex.lua (do_string): mostly works
+
+2008-05-27  Kein-Hong Man  <khman@users.sf.net>
+
+	* lparser.lua: added, from Yueliang 0.4.0, removed log() calls
+	* optparser.lua: added placeholder, parser-based optimizer file
+	* test/test_optparser.lua: placeholder for optparser.lua testing
+
+2008-05-27  Kein-Hong Man  <khman@users.sf.net>
+
+	* optlex.lua (optimize): fixed missing parameter for toklnlist
+	* optlex.lua (do_string): forgot to initialize c_delim, c_ndelim
+	to zero
+	* optlex.lua (do_lstring): bad regex (missing '%' to escape '['),
+	mistake in editing
+	* optlex.lua (do_lstring, do_lcomment): attempted to use p from
+	a string.find when it is nil
+	* optlex.lua (do_lstring, do_lcomment): rearranged to allow a nil
+	position variable p to break out of loop
+	* optlex.lua (do_string): missing i update for \<delim> case
+	* LuaSrcDiet.lua: enabled relevant command-line options
+	* optlex.lua (do_string, do_lstring): seem to work
+
+2008-05-27  Kein-Hong Man  <khman@users.sf.net>
+
+	* llex.lua: added tokln table for keeping line numbers
+	* optlex.lua: added management of token line number list
+	* optlex.lua (do_lstring): changed trailing whitespace warning
+	message to include approximate line number
+	* LuaSrcDiet.lua (process_file): adjusted warning handling
+	* optlex.lua: comment updates, minor improvements
+	* LuaSrcDiet.lua (process_file): added warning for when settings
+	cause some CRLF or LFCR line endings to still exist
+	* optlex.lua (do_string): coded string optimizer
+	* optlex.lua: updated notes for number optimization
+
+2008-05-26  Kein-Hong Man  <khman@users.sf.net>
+
+	* optlex.lua (do_comment): coded short comment optimizer
+	* optlex.lua (do_lcomment): coded long comment optimizer
+	* optlex.lua (do_lstring): coded long string optimizer
+
 2008-05-25  Kein-Hong Man  <khman@users.sf.net>
 
 	* README: updated
