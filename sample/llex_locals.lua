@@ -25,73 +25,73 @@
 -- * Please read technotes.txt for more technical details.
 ----------------------------------------------------------------------]]
 
-local base = _G
-local string = require "string"
+local f = _G
+local l = require "string"
 module "llex"
 
-local find = string.find
-local match = string.match
-local sub = string.sub
+local c = l.find
+local w = l.match
+local i = l.sub
 
 ----------------------------------------------------------------------
 -- initialize keyword list, variables
 ----------------------------------------------------------------------
 
-local kw = {}
-for v in string.gmatch([[
+local y = {}
+for e in l.gmatch([[
 and break do else elseif end false for function if in
 local nil not or repeat return then true until while]], "%S+") do
-  kw[v] = true
+  y[e] = true
 end
 
 -- NOTE: see init() for module variables (externally visible):
 --       tok, seminfo, tokln
 
-local z,                -- source stream
-      sourceid,         -- name of source
-      I,                -- position of lexer
-      buff,             -- buffer for strings
-      ln                -- line number
+local e,                -- source stream
+      m,         -- name of source
+      a,                -- position of lexer
+      n,             -- buffer for strings
+      u                -- line number
 
 ----------------------------------------------------------------------
 -- add information to token listing
 ----------------------------------------------------------------------
 
-local function addtoken(token, info)
-  local i = #tok + 1
-  tok[i] = token
-  seminfo[i] = info
-  tokln[i] = ln
+local function o(t, a)
+  local e = #tok + 1
+  tok[e] = t
+  seminfo[e] = a
+  tokln[e] = u
 end
 
 ----------------------------------------------------------------------
 -- handles line number incrementation and end-of-line characters
 ----------------------------------------------------------------------
 
-local function inclinenumber(i, is_tok)
-  local sub = sub
-  local old = sub(z, i, i)
-  i = i + 1  -- skip '\n' or '\r'
-  local c = sub(z, i, i)
-  if (c == "\n" or c == "\r") and (c ~= old) then
-    i = i + 1  -- skip '\n\r' or '\r\n'
-    old = old..c
+local function r(t, s)
+  local n = i
+  local i = n(e, t, t)
+  t = t + 1  -- skip '\n' or '\r'
+  local e = n(e, t, t)
+  if (e == "\n" or e == "\r") and (e ~= i) then
+    t = t + 1  -- skip '\n\r' or '\r\n'
+    i = i..e
   end
-  if is_tok then addtoken("TK_EOL", old) end
-  ln = ln + 1
-  I = i
-  return i
+  if s then o("TK_EOL", i) end
+  u = u + 1
+  a = t
+  return t
 end
 
 ----------------------------------------------------------------------
 -- initialize lexer for given source _z and source name _sourceid
 ----------------------------------------------------------------------
 
-function init(_z, _sourceid)
-  z = _z                        -- source
-  sourceid = _sourceid          -- name of source
-  I = 1                         -- lexer's position in source
-  ln = 1                        -- line number
+function init(i, t)
+  e = i                        -- source
+  m = t          -- name of source
+  a = 1                         -- lexer's position in source
+  u = 1                        -- line number
   tok = {}                      -- lexed token list*
   seminfo = {}                  -- lexed semantic information list*
   tokln = {}                    -- line numbers for messages*
@@ -99,11 +99,11 @@ function init(_z, _sourceid)
   --------------------------------------------------------------------
   -- initial processing (shbang handling)
   --------------------------------------------------------------------
-  local p, _, q, r = find(z, "^(#[^\r\n]*)(\r?\n?)")
-  if p then                             -- skip first line
-    I = I + #q
-    addtoken("TK_COMMENT", q)
-    if #r > 0 then inclinenumber(I, true) end
+  local t, n, e, i = c(e, "^(#[^\r\n]*)(\r?\n?)")
+  if t then                             -- skip first line
+    a = a + #e
+    o("TK_COMMENT", e)
+    if #i > 0 then r(a, true) end
   end
 end
 
@@ -112,8 +112,8 @@ end
 ----------------------------------------------------------------------
 
 function chunkid()
-  if sourceid and match(sourceid, "^[=@]") then
-    return sub(sourceid, 2)  -- remove first char
+  if m and w(m, "^[=@]") then
+    return i(m, 2)  -- remove first char
   end
   return "[string]"
 end
@@ -123,54 +123,54 @@ end
 -- * a simplified version, does not report what token was responsible
 ----------------------------------------------------------------------
 
-function errorline(s, line)
-  local e = error or base.error
-  e(string.format("%s:%d: %s", chunkid(), line or ln, s))
+function errorline(e, a)
+  local t = error or f.error
+  t(l.format("%s:%d: %s", chunkid(), a or u, e))
 end
 
 ------------------------------------------------------------------------
 -- count separators ("=") in a long string delimiter
 ------------------------------------------------------------------------
 
-local function skip_sep(i)
-  local sub = sub
-  local s = sub(z, i, i)
-  i = i + 1
-  local count = #match(z, "=*", i)  -- note, take the length
-  i = i + count
-  I = i
-  return (sub(z, i, i) == s) and count or (-count) - 1
+local function u(t)
+  local i = i
+  local n = i(e, t, t)
+  t = t + 1
+  local o = #w(e, "=*", t)  -- note, take the length
+  t = t + o
+  a = t
+  return (i(e, t, t) == n) and o or (-o) - 1
 end
 
 ----------------------------------------------------------------------
 -- reads a long string or long comment
 ----------------------------------------------------------------------
 
-local function read_long_string(is_str, sep)
-  local i = I + 1  -- skip 2nd '['
-  local sub = sub
-  local c = sub(z, i, i)
-  if c == "\r" or c == "\n" then  -- string starts with a newline?
-    i = inclinenumber(i)  -- skip it
+local function m(d, h)
+  local t = a + 1  -- skip 2nd '['
+  local s = i
+  local i = s(e, t, t)
+  if i == "\r" or i == "\n" then  -- string starts with a newline?
+    t = r(t)  -- skip it
   end
-  local j = i
+  local l = t
   while true do
-    local p, q, r = find(z, "([\r\n%]])", i) -- (long range)
-    if not p then
-      errorline(is_str and "unfinished long string" or
+    local o, l, i = c(e, "([\r\n%]])", t) -- (long range)
+    if not o then
+      errorline(d and "unfinished long string" or
                 "unfinished long comment")
     end
-    i = p
-    if r == "]" then                    -- delimiter test
-      if skip_sep(i) == sep then
-        buff = sub(z, buff, I)
-        I = I + 1  -- skip 2nd ']'
-        return buff
+    t = o
+    if i == "]" then                    -- delimiter test
+      if u(t) == h then
+        n = s(e, n, a)
+        a = a + 1  -- skip 2nd ']'
+        return n
       end
-      i = I
+      t = a
     else                                -- newline
-      buff = buff.."\n"
-      i = inclinenumber(i)
+      n = n.."\n"
+      t = r(t)
     end
   end--while
 end
@@ -179,46 +179,46 @@ end
 -- reads a string
 ----------------------------------------------------------------------
 
-local function read_string(del)
-  local i = I
-  local find = find
-  local sub = sub
+local function p(d)
+  local t = a
+  local s = c
+  local h = i
   while true do
-    local p, q, r = find(z, "([\n\r\\\"\'])", i) -- (long range)
-    if p then
-      if r == "\n" or r == "\r" then
+    local i, l, o = s(e, "([\n\r\\\"\'])", t) -- (long range)
+    if i then
+      if o == "\n" or o == "\r" then
         errorline("unfinished string")
       end
-      i = p
-      if r == "\\" then                         -- handle escapes
-        i = i + 1
-        r = sub(z, i, i)
-        if r == "" then break end -- (EOZ error)
-        p = find("abfnrtv\n\r", r, 1, true)
+      t = i
+      if o == "\\" then                         -- handle escapes
+        t = t + 1
+        o = h(e, t, t)
+        if o == "" then break end -- (EOZ error)
+        i = s("abfnrtv\n\r", o, 1, true)
         ------------------------------------------------------
-        if p then                               -- special escapes
-          if p > 7 then
-            i = inclinenumber(i)
+        if i then                               -- special escapes
+          if i > 7 then
+            t = r(t)
           else
-            i = i + 1
+            t = t + 1
           end
         ------------------------------------------------------
-        elseif find(r, "%D") then               -- other non-digits
-          i = i + 1
+        elseif s(o, "%D") then               -- other non-digits
+          t = t + 1
         ------------------------------------------------------
         else                                    -- \xxx sequence
-          local p, q, s = find(z, "^(%d%d?%d?)", i)
-          i = q + 1
-          if s + 1 > 256 then -- UCHAR_MAX
+          local o, e, a = s(e, "^(%d%d?%d?)", t)
+          t = e + 1
+          if a + 1 > 256 then -- UCHAR_MAX
             errorline("escape sequence too large")
           end
         ------------------------------------------------------
         end--if p
       else
-        i = i + 1
-        if r == del then                        -- ending delimiter
-          I = i
-          return sub(z, buff, i - 1)            -- return string
+        t = t + 1
+        if o == d then                        -- ending delimiter
+          a = t
+          return h(e, n, t - 1)            -- return string
         end
       end--if r
     else
@@ -233,122 +233,122 @@ end
 ------------------------------------------------------------------------
 
 function llex()
-  local find = find
-  local match = match
+  local h = c
+  local d = w
   while true do--outer
-    local i = I
+    local t = a
     -- inner loop allows break to be used to nicely section tests
     while true do--inner
       ----------------------------------------------------------------
-      local p, _, r = find(z, "^([_%a][_%w]*)", i)
-      if p then
-        I = i + #r
-        if kw[r] then
-          addtoken("TK_KEYWORD", r)             -- reserved word (keyword)
+      local v, b, l = h(e, "^([_%a][_%w]*)", t)
+      if v then
+        a = t + #l
+        if y[l] then
+          o("TK_KEYWORD", l)             -- reserved word (keyword)
         else
-          addtoken("TK_NAME", r)                -- identifier
+          o("TK_NAME", l)                -- identifier
         end
         break -- (continue)
       end
       ----------------------------------------------------------------
-      local p, _, r = find(z, "^(%.?)%d", i)
-      if p then                                 -- numeral
-        if r == "." then i = i + 1 end
-        local _, q, r = find(z, "^%d*[%.%d]*([eE]?)", i)
-        i = q + 1
-        if #r == 1 then                         -- optional exponent
-          if match(z, "^[%+%-]", i) then        -- optional sign
-            i = i + 1
+      local c, y, w = h(e, "^(%.?)%d", t)
+      if c then                                 -- numeral
+        if w == "." then t = t + 1 end
+        local r, s, n = h(e, "^%d*[%.%d]*([eE]?)", t)
+        t = s + 1
+        if #n == 1 then                         -- optional exponent
+          if d(e, "^[%+%-]", t) then        -- optional sign
+            t = t + 1
           end
         end
-        local _, q = find(z, "^[_%w]*", i)
-        I = q + 1
-        local v = sub(z, p, q)                  -- string equivalent
-        if not base.tonumber(v) then            -- handles hex test also
+        local n, t = h(e, "^[_%w]*", t)
+        a = t + 1
+        local e = i(e, c, t)                  -- string equivalent
+        if not f.tonumber(e) then            -- handles hex test also
           errorline("malformed number")
         end
-        addtoken("TK_NUMBER", v)
+        o("TK_NUMBER", e)
         break -- (continue)
       end
       ----------------------------------------------------------------
-      local p, q, r, t = find(z, "^((%s)[ \t\v\f]*)", i)
-      if p then
-        if t == "\n" or t == "\r" then          -- newline
-          inclinenumber(i, true)
+      local f, c, w, l = h(e, "^((%s)[ \t\v\f]*)", t)
+      if f then
+        if l == "\n" or l == "\r" then          -- newline
+          r(t, true)
         else
-          I = q + 1                             -- whitespace
-          addtoken("TK_SPACE", r)
+          a = c + 1                             -- whitespace
+          o("TK_SPACE", w)
         end
         break -- (continue)
       end
       ----------------------------------------------------------------
-      local r = match(z, "^%p", i)
-      if r then
-        buff = i
-        local p = find("-[\"\'.=<>~", r, 1, true)
-        if p then
+      local s = d(e, "^%p", t)
+      if s then
+        n = t
+        local r = h("-[\"\'.=<>~", s, 1, true)
+        if r then
           -- two-level if block for punctuation/symbols
           --------------------------------------------------------
-          if p <= 2 then
-            if p == 1 then                      -- minus
-              local c = match(z, "^%-%-(%[?)", i)
-              if c then
-                i = i + 2
-                local sep = -1
-                if c == "[" then
-                  sep = skip_sep(i)
+          if r <= 2 then
+            if r == 1 then                      -- minus
+              local r = d(e, "^%-%-(%[?)", t)
+              if r then
+                t = t + 2
+                local s = -1
+                if r == "[" then
+                  s = u(t)
                 end
-                if sep >= 0 then                -- long comment
-                  addtoken("TK_LCOMMENT", read_long_string(false, sep))
+                if s >= 0 then                -- long comment
+                  o("TK_LCOMMENT", m(false, s))
                 else                            -- short comment
-                  I = find(z, "[\n\r]", i) or (#z + 1)
-                  addtoken("TK_COMMENT", sub(z, buff, I - 1))
+                  a = h(e, "[\n\r]", t) or (#e + 1)
+                  o("TK_COMMENT", i(e, n, a - 1))
                 end
                 break -- (continue)
               end
               -- (fall through for "-")
             else                                -- [ or long string
-              local sep = skip_sep(i)
-              if sep >= 0 then
-                addtoken("TK_LSTRING", read_long_string(true, sep))
-              elseif sep == -1 then
-                addtoken("TK_OP", "[")
+              local e = u(t)
+              if e >= 0 then
+                o("TK_LSTRING", m(true, e))
+              elseif e == -1 then
+                o("TK_OP", "[")
               else
                 errorline("invalid long string delimiter")
               end
               break -- (continue)
             end
           --------------------------------------------------------
-          elseif p <= 5 then
-            if p < 5 then                       -- strings
-              I = i + 1
-              addtoken("TK_STRING", read_string(r))
+          elseif r <= 5 then
+            if r < 5 then                       -- strings
+              a = t + 1
+              o("TK_STRING", p(s))
               break -- (continue)
             end
-            r = match(z, "^%.%.?%.?", i)        -- .|..|... dots
+            s = d(e, "^%.%.?%.?", t)        -- .|..|... dots
             -- (fall through)
           --------------------------------------------------------
           else                                  -- relational
-            r = match(z, "^%p=?", i)
+            s = d(e, "^%p=?", t)
             -- (fall through)
           end
         end
-        I = i + #r
-        addtoken("TK_OP", r)  -- for other symbols, fall through
+        a = t + #s
+        o("TK_OP", s)  -- for other symbols, fall through
         break -- (continue)
       end
       ----------------------------------------------------------------
-      local r = sub(z, i, i)
-      if r ~= "" then
-        I = i + 1
-        addtoken("TK_OP", r)                    -- other single-char tokens
+      local e = i(e, t, t)
+      if e ~= "" then
+        a = t + 1
+        o("TK_OP", e)                    -- other single-char tokens
         break
       end
-      addtoken("TK_EOS", "")                    -- end of stream,
+      o("TK_EOS", "")                    -- end of stream,
       return                                    -- exit here
       ----------------------------------------------------------------
     end--while inner
   end--while outer
 end
 
-return base.getfenv()
+return f.getfenv()

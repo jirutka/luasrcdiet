@@ -15,21 +15,14 @@
 -- NOTES:
 -- * This is a version of the native 5.1.x parser from Yueliang 0.4.0,
 --   with significant modifications to handle LuaSrcDiet's needs:
---   (1) ... TODO
+--   (1) needs pre-built token tables instead of a module.method
+--   (2) lparser.error is an optional error handler (from llex)
+--   (3) not full parsing, currently fakes raw/unlexed constants
+--   (4) parser() returns globalinfo, localinfo tables
 -- * Please read technotes.txt for more technical details.
 -- * NO support for 'arg' vararg functions (LUA_COMPAT_VARARG)
---
--- Usage example:
--- * init(llex) needs one parameter, a lexer module that implements:
---     llex.lex() - returns appropriate [token, semantic info] pairs
---     llex.ln - current line number
---     llex.errorline(s, [line]) - dies with error message
--- * example calling process:
---   local llex = require("llex_mk2")
---   local lparser = require("lparser_mk2")
---   llex.init(source_code, source_code_name)
---   lparser.init(llex)
---   local fs = lparser.parser()
+-- * A lot of the parser is unused, but might later be useful for
+--   full-on parsing and analysis for a few measly bytes saved.
 ----------------------------------------------------------------------]]
 
 local base = _G
@@ -45,13 +38,24 @@ local _G = base.getfenv()
 -- initialization: main variables
 ----------------------------------------------------------------------
 
-local llex, llex_lex            -- references lexer module, function
-local line                      -- start line # for error messages
-local lastln                    -- last line # for ambiguous syntax chk
-local tok, seminfo              -- token, semantic info pair
-local peek_tok, peek_sem        -- ditto, for lookahead
-local fs                        -- current function state
-local top_fs                    -- top-level function state
+local toklist,                  -- grammar-only token tables (token table,
+      seminfolist,              -- semantic information table, line number
+      toklnlist,                -- table, cross-reference table)
+      xreflist,
+      tpos,                     -- token position
+
+      line,                     -- start line # for error messages
+      lastln,                   -- last line # for ambiguous syntax chk
+      tok, seminfo, ln, xref,   -- token, semantic info, line
+      nameref,                  -- proper position of <name> token
+      fs,                       -- current function state
+      top_fs,                   -- top-level function state
+
+      globalinfo,               -- global variable information table
+      globallookup,             -- global variable name lookup table
+      localinfo,                -- local variable information table
+      ilocalinfo,               -- inactive locals (prior to activation)
+      ilocalrefs                -- corresponding references to activate
 
 -- forward references for local functions
 local explist1, expr, block, exp1, body
@@ -75,15 +79,18 @@ end
 local binopr_left = {}          -- binary operators, left priority
 local binopr_right = {}         -- binary operators, right priority
 for op, lt, rt in gmatch([[
-{+ 6 6}{- 6 6}{* 7 7}{/ 7 7}{^ 10 9}{.. 5 4}
-{~= 3 3}{== 3 3}{< 3 3}{<= 3 3}{> 3 3}{>= 3 3}
+{+ 6 6}{- 6 6}{* 7 7}{/ 7 7}{% 7 7}
+{^ 10 9}{.. 5 4}
+{~= 3 3}{== 3 3}
+{< 3 3}{<= 3 3}{> 3 3}{>= 3 3}
 {and 2 2}{or 1 1}
 ]], "{(%S+)%s(%d+)%s(%d+)}") do
   binopr_left[op] = lt + 0
   binopr_right[op] = rt + 0
 end
 
-local unopr = { ["not"] = true, ["-"] = true, } -- unary operators
+local unopr = { ["not"] = true, ["-"] = true,
+                ["#"] = true, } -- unary operators
 local UNARY_PRIORITY = 8        -- priority for unary operators
 
 --[[--------------------------------------------------------------------
@@ -91,27 +98,31 @@ local UNARY_PRIORITY = 8        -- priority for unary operators
 ----------------------------------------------------------------------]]
 
 ----------------------------------------------------------------------
--- handles incoming token, semantic information pairs; these two
--- functions are from llex, they are put here because keeping the
--- tok, seminfo variables here as locals is more convenient
+-- formats error message and throws error (duplicated from llex)
+-- * a simplified version, does not report what token was responsible
+----------------------------------------------------------------------
+
+local function errorline(s, line)
+  local e = error or base.error
+  e(string.format("(source):%d: %s", line or ln, s))
+end
+
+----------------------------------------------------------------------
+-- handles incoming token, semantic information pairs
 -- * NOTE: 'nextt' is named 'next' originally
 ----------------------------------------------------------------------
 
 -- reads in next token
 local function nextt()
-  lastln = llex.ln
-  if peek_tok then  -- is there a look-ahead token? if yes, use it
-    tok, seminfo = peek_tok, peek_sem
-    peek_tok = nil
-  else
-    tok, seminfo = llex_lex()  -- read next token
-  end
+  lastln = toklnlist[tpos]
+  tok, seminfo, ln, xref
+    = toklist[tpos], seminfolist[tpos], toklnlist[tpos], xreflist[tpos]
+  tpos = tpos + 1
 end
 
 -- peek at next token (single lookahead for table constructor)
 local function lookahead()
-  peek_tok, peek_sem = llex_lex()
-  return peek_tok
+  return toklist[tpos]
 end
 
 ----------------------------------------------------------------------
@@ -124,7 +135,7 @@ local function syntaxerror(msg)
     if tok == "<name>" then tok = seminfo end
     tok = "'"..tok.."'"
   end
-  llex.errorline(msg.." near "..tok)
+  errorline(msg.." near "..tok)
 end
 
 local function error_expected(token)
@@ -170,7 +181,7 @@ end
 
 local function check_match(what, who, where)
   if not testnext(what) then
-    if where == llex.ln then
+    if where == ln then
       error_expected(what)
     else
       syntaxerror("'"..what.."' expected (to close '"..who.."' at line "..where..")")
@@ -185,6 +196,7 @@ end
 local function str_checkname()
   check("<name>")
   local ts = seminfo
+  nameref = xref
   nextt()
   return ts
 end
@@ -203,6 +215,196 @@ end
 
 local function checkname(e)
   codestring(e, str_checkname())
+end
+
+--[[--------------------------------------------------------------------
+-- variable (global|local|upvalue) handling
+-- * to track locals and globals, we can extend Yueliang's minimal
+--   variable management code with little trouble
+-- * entry point is singlevar() for variable lookups
+-- * lookup tables (bl.locallist) are maintained awkwardly in the basic
+--   block data structures, PLUS the function data structure (this is
+--   an inelegant hack, since bl is nil for the top level of a function)
+----------------------------------------------------------------------]]
+
+----------------------------------------------------------------------
+-- register a local variable, create local variable object, set in
+-- to-activate variable list
+-- * used in new_localvarliteral(), parlist(), fornum(), forlist(),
+--   localfunc(), localstat()
+----------------------------------------------------------------------
+
+local function new_localvar(name, special)
+  local bl = fs.bl
+  local locallist
+  -- locate locallist in current block object or function root object
+  if bl then
+    locallist = bl.locallist
+  else
+    locallist = fs.locallist
+  end
+  -- build local variable information object and set localinfo
+  local id = #localinfo + 1
+  localinfo[id] = {             -- new local variable object
+    name = name,                -- local variable name
+    xref = { nameref },         -- xref, first value is declaration
+    decl = nameref,             -- location of declaration, = xref[1]
+  }
+  if special then               -- "self" must be not be changed
+    localinfo[id].isself = true
+  end
+  -- this can override a local with the same name in the same scope
+  -- but first, keep it inactive until it gets activated
+  local i = #ilocalinfo + 1
+  ilocalinfo[i] = id
+  ilocalrefs[i] = locallist
+end
+
+----------------------------------------------------------------------
+-- actually activate the variables so that they are visible
+-- * remember Lua semantics, e.g. RHS is evaluated first, then LHS
+-- * used in parlist(), forbody(), localfunc(), localstat(), body()
+----------------------------------------------------------------------
+
+local function adjustlocalvars(nvars)
+  local sz = #ilocalinfo
+  -- i goes from left to right, in order of local allocation, because
+  -- of something like: local a,a,a = 1,2,3 which gives a = 3
+  while nvars > 0 do
+    nvars = nvars - 1
+    local i = sz - nvars
+    local id = ilocalinfo[i]            -- local's id
+    local obj = localinfo[id]
+    local name = obj.name               -- name of local
+    obj.act = xref                      -- set activation location
+    ilocalinfo[i] = nil
+    local locallist = ilocalrefs[i]     -- ref to lookup table to update
+    ilocalrefs[i] = nil
+    local existing = locallist[name]    -- if existing, remove old first!
+    if existing then                    -- do not overlap, set special
+      obj = localinfo[existing]         -- form of rem, as -id
+      obj.rem = -id
+    end
+    locallist[name] = id                -- activate, now visible to Lua
+  end
+end
+
+----------------------------------------------------------------------
+-- remove (deactivate) variables in current scope (before scope exits)
+-- * zap entire locallist tables since we are not allocating registers
+-- * used in leaveblock(), close_func()
+----------------------------------------------------------------------
+
+local function removevars()
+  local bl = fs.bl
+  local locallist
+  -- locate locallist in current block object or function root object
+  if bl then
+    locallist = bl.locallist
+  else
+    locallist = fs.locallist
+  end
+  -- enumerate the local list at current scope and deactivate 'em
+  for name, id in base.pairs(locallist) do
+    local obj = localinfo[id]
+    obj.rem = xref                      -- set deactivation location
+  end
+end
+
+----------------------------------------------------------------------
+-- creates a new local variable given a name
+-- * skips internal locals (those starting with '('), so internal
+--   locals never needs a corresponding adjustlocalvars() call
+-- * special is true for "self" which must not be optimized
+-- * used in fornum(), forlist(), parlist(), body()
+----------------------------------------------------------------------
+
+local function new_localvarliteral(name, special)
+  if string.sub(name, 1, 1) == "(" then  -- can skip internal locals
+    return
+  end
+  new_localvar(name, special)
+end
+
+----------------------------------------------------------------------
+-- search the local variable namespace of the given fs for a match
+-- * returns localinfo index
+-- * used only in singlevaraux()
+----------------------------------------------------------------------
+
+local function searchvar(fs, n)
+  local bl = fs.bl
+  if bl then
+    locallist = bl.locallist
+    while locallist do
+      if locallist[n] then return locallist[n] end  -- found
+      bl = bl.prev
+      locallist = bl and bl.locallist
+    end
+  end
+  locallist = fs.locallist
+  return locallist[n] or -1  -- found or not found (-1)
+end
+
+----------------------------------------------------------------------
+-- handle locals, globals and upvalues and related processing
+-- * search mechanism is recursive, calls itself to search parents
+-- * used only in singlevar()
+----------------------------------------------------------------------
+
+local function singlevaraux(fs, n, var)
+  if fs == nil then  -- no more levels?
+    var.k = "VGLOBAL"  -- default is global variable
+    return "VGLOBAL"
+  else
+    local v = searchvar(fs, n)  -- look up at current level
+    if v >= 0 then
+      var.k = "VLOCAL"
+      var.id = v
+      --  codegen may need to deal with upvalue here
+      return "VLOCAL"
+    else  -- not found at current level; try upper one
+      if singlevaraux(fs.prev, n, var) == "VGLOBAL" then
+        return "VGLOBAL"
+      end
+      -- else was LOCAL or UPVAL, handle here
+      var.k = "VUPVAL"  -- upvalue in this level
+      return "VUPVAL"
+    end--if v
+  end--if fs
+end
+
+----------------------------------------------------------------------
+-- consume a name token, creates a variable (global|local|upvalue)
+-- * used in prefixexp(), funcname()
+----------------------------------------------------------------------
+
+local function singlevar(v)
+  local name = str_checkname()
+  singlevaraux(fs, name, v)
+  ------------------------------------------------------------------
+  -- variable tracking
+  ------------------------------------------------------------------
+  if v.k == "VGLOBAL" then
+    -- if global being accessed, keep track of it by creating an object
+    local id = globallookup[name]
+    if not id then
+      id = #globalinfo + 1
+      globalinfo[id] = {                -- new global variable object
+        name = name,                    -- global variable name
+        xref = { nameref },             -- xref, first value is declaration
+      }
+      globallookup[name] = id           -- remember it
+    else
+      local obj = globalinfo[id].xref
+      obj[#obj + 1] = nameref           -- add xref
+    end
+  else
+    -- local/upvalue is being accessed, keep track of it
+    local id = v.id
+    local obj = localinfo[id].xref
+    obj[#obj + 1] = nameref             -- add xref
+  end
 end
 
 --[[--------------------------------------------------------------------
@@ -227,6 +429,7 @@ end
 
 local function leaveblock()
   local bl = fs.bl
+  removevars()
   fs.bl = bl.prev
 end
 
@@ -256,107 +459,8 @@ end
 ----------------------------------------------------------------------
 
 local function close_func()
+  removevars()
   fs = fs.prev
-end
-
---[[--------------------------------------------------------------------
--- variable (global|local|upvalue) handling
--- * a pure parser does not really need this, but if we want to produce
---   useful output, might as well write minimal code to manage this...
--- * entry point is singlevar() for variable lookups
--- * three entry points for local variable creation, in order to keep
---   to original C calls, but the extra arguments such as positioning
---   are removed as we are not allocating registers -- we are only
---   doing simple classification
--- * lookup tables (bl.locallist) are maintained awkwardly in the basic
---   block data structures, PLUS the function data structure (this is
---   an inelegant hack, since bl is nil for the top level of a function)
-----------------------------------------------------------------------]]
-
-----------------------------------------------------------------------
--- register a local variable, set in active variable list
--- * code for a simple lookup only
--- * used in new_localvarliteral(), parlist(), fornum(), forlist(),
---   localfunc(), localstat()
-----------------------------------------------------------------------
-
-local function new_localvar(name)
-  local bl = fs.bl
-  local locallist
-  if bl then
-    locallist = bl.locallist
-  else
-    locallist = fs.locallist
-  end
-  locallist[name] = true
-end
-
-----------------------------------------------------------------------
--- creates a new local variable given a name
--- * used in fornum(), forlist(), parlist(), body()
-----------------------------------------------------------------------
-
-local function new_localvarliteral(name)
-  new_localvar(name)
-end
-
-----------------------------------------------------------------------
--- search the local variable namespace of the given fs for a match
--- * a simple lookup only, no active variable list kept, so no useful
---   index value can be returned by this function
--- * used only in singlevaraux()
-----------------------------------------------------------------------
-
-local function searchvar(fs, n)
-  local bl = fs.bl
-  if bl then
-    locallist = bl.locallist
-    while locallist do
-      if locallist[n] then return 1 end  -- found
-      bl = bl.prev
-      locallist = bl and bl.locallist
-    end
-  end
-  locallist = fs.locallist
-  if locallist[n] then return 1 end  -- found
-  return -1  -- not found
-end
-
-----------------------------------------------------------------------
--- handle locals, globals and upvalues and related processing
--- * search mechanism is recursive, calls itself to search parents
--- * used only in singlevar()
-----------------------------------------------------------------------
-
-local function singlevaraux(fs, n, var, base)
-  if fs == nil then  -- no more levels?
-    var.k = "VGLOBAL"  -- default is global variable
-    return "VGLOBAL"
-  else
-    local v = searchvar(fs, n)  -- look up at current level
-    if v >= 0 then
-      var.k = "VLOCAL"
-      --  codegen may need to deal with upvalue here
-      return "VLOCAL"
-    else  -- not found at current level; try upper one
-      if singlevaraux(fs.prev, n, var, 0) == "VGLOBAL" then
-        return "VGLOBAL"
-      end
-      -- else was LOCAL or UPVAL, handle here
-      var.k = "VUPVAL"  -- upvalue in this level
-      return "VUPVAL"
-    end--if v
-  end--if fs
-end
-
-----------------------------------------------------------------------
--- consume a name token, creates a variable (global|local|upvalue)
--- * used in prefixexp(), funcname()
-----------------------------------------------------------------------
-
-local function singlevar(v)
-  local varname = str_checkname()
-  singlevaraux(fs, varname, v, 1)
 end
 
 --[[--------------------------------------------------------------------
@@ -435,7 +539,7 @@ local function constructor(t)
   -- constructor -> '{' [ field { fieldsep field } [ fieldsep ] ] '}'
   -- field -> recfield | listfield
   -- fieldsep -> ',' | ';'
-  local line = llex.ln
+  local line = ln
   local cc = {}
   cc.v = {}
   cc.t = t
@@ -469,11 +573,13 @@ end
 
 local function parlist()
   -- parlist -> [ param { ',' param } ]
+  local nparams = 0
   if tok ~= ")" then  -- is 'parlist' not empty?
     repeat
       local c = tok
       if c == "<name>" then  -- param -> NAME
         new_localvar(str_checkname())
+        nparams = nparams + 1
       elseif c == "..." then
         nextt()
         fs.is_vararg = true
@@ -482,6 +588,7 @@ local function parlist()
       end
     until fs.is_vararg or not testnext(",")
   end--if
+  adjustlocalvars(nparams)
 end
 
 ----------------------------------------------------------------------
@@ -492,7 +599,7 @@ end
 
 local function funcargs(f)
   local args = {}
-  local line = llex.ln
+  local line = ln
   local c = tok
   if c == "(" then  -- funcargs -> '(' [ explist1 ] ')'
     if line ~= lastln then
@@ -530,7 +637,7 @@ local function prefixexp(v)
   -- prefixexp -> NAME | '(' expr ')'
   local c = tok
   if c == "(" then
-    local line = llex.ln
+    local line = ln
     nextt()
     expr(v)
     check_match(")", "(", line)
@@ -599,7 +706,7 @@ local function simpleexp(v)
     return
   elseif c == "function" then
     nextt()
-    body(v, false, llex.ln)
+    body(v, false, ln)
     return
   else
     primaryexp(v)
@@ -689,13 +796,14 @@ end
 
 ----------------------------------------------------------------------
 -- parse a for loop body for both versions of the for loop
--- * used in forbody(), forlist()
+-- * used in fornum(), forlist()
 ----------------------------------------------------------------------
 
-local function forbody(isnum)
+local function forbody(nvars, isnum)
   -- forbody -> DO block
   checknext("do")
   enterblock(false)  -- scope for declared variables
+  adjustlocalvars(nvars)
   block()
   leaveblock()  -- end of scope for declared variables
 end
@@ -721,7 +829,7 @@ local function fornum(varname)
   else
     -- default step = 1
   end
-  forbody(true)
+  forbody(1, true)
 end
 
 ----------------------------------------------------------------------
@@ -738,13 +846,15 @@ local function forlist(indexname)
   new_localvarliteral("(for control)")
   -- create declared variables
   new_localvar(indexname)
+  local nvars = 1
   while testnext(",") do
     new_localvar(str_checkname())
+    nvars = nvars + 1
   end
   checknext("in")
   local line = line
   explist1(e)
-  forbody(false)
+  forbody(nvars, false)
 end
 
 ----------------------------------------------------------------------
@@ -812,7 +922,8 @@ local function localfunc()
   local v, b = {}
   new_localvar(str_checkname())
   v.k = "VLOCAL"
-  body(b, false, llex.ln)
+  adjustlocalvars(1)
+  body(b, false, ln)
 end
 
 ----------------------------------------------------------------------
@@ -822,15 +933,18 @@ end
 
 local function localstat()
   -- localstat -> NAME {',' NAME} ['=' explist1]
+  local nvars = 0
   local e = {}
   repeat
     new_localvar(str_checkname())
+    nvars = nvars + 1
   until not testnext(",")
   if testnext("=") then
     explist1(e)
   else
     e.k = "VVOID"
   end
+  adjustlocalvars(nvars)
 end
 
 ----------------------------------------------------------------------
@@ -859,7 +973,8 @@ function body(e, needself, line)
   open_func()
   checknext("(")
   if needself then
-    new_localvarliteral("self")
+    new_localvarliteral("self", true)
+    adjustlocalvars(1)
   end
   parlist()
   checknext(")")
@@ -1085,7 +1200,7 @@ local function stat()
   -- stat -> if_stat while_stat do_stat for_stat repeat_stat
   --         function_stat local_stat return_stat break_stat
   --         expr_stat
-  line = llex.ln  -- may be needed for error messages
+  line = ln  -- may be needed for error messages
   local c = tok
   local fn = stat_call[c]
   -- handles: if while do for repeat function local return break
@@ -1124,17 +1239,55 @@ function parser()
   chunk()
   check("<eof>")
   close_func()
-  return top_fs
+  return globalinfo, localinfo
 end
 
 ----------------------------------------------------------------------
 -- initialization function
 ----------------------------------------------------------------------
 
-function init(lexer)
-  llex = lexer                  -- set lexer (assume user-initialized)
-  llex_lex = llex.llex
+function init(tokorig, seminfoorig, toklnorig)
+  tpos = 1                      -- token position
   top_fs = {}                   -- reset top level function state
+  ------------------------------------------------------------------
+  -- set up grammar-only token tables; impedance-matching...
+  -- note that constants returned by the lexer is source-level, so
+  -- for now, fake(!) constant tokens (TK_NUMBER|TK_STRING|TK_LSTRING)
+  ------------------------------------------------------------------
+  local j = 1
+  toklist, seminfolist, toklnlist, xreflist = {}, {}, {}, {}
+  for i = 1, #tokorig do
+    local tok = tokorig[i]
+    local yep = true
+    if tok == "TK_KEYWORD" or tok == "TK_OP" then
+      tok = seminfoorig[i]
+    elseif tok == "TK_NAME" then
+      tok = "<name>"
+      seminfolist[j] = seminfoorig[i]
+    elseif tok == "TK_NUMBER" then
+      tok = "<number>"
+      seminfolist[j] = 0  -- fake!
+    elseif tok == "TK_STRING" or tok == "TK_LSTRING" then
+      tok = "<string>"
+      seminfolist[j] = ""  -- fake!
+    elseif tok == "TK_EOS" then
+      tok = "<eof>"
+    else
+      -- non-grammar tokens; ignore them
+      yep = false
+    end
+    if yep then  -- set rest of the information
+      toklist[j] = tok
+      toklnlist[j] = toklnorig[i]
+      xreflist[j] = i
+      j = j + 1
+    end
+  end--for
+  ------------------------------------------------------------------
+  -- initialize data structures for variable tracking
+  ------------------------------------------------------------------
+  globalinfo, globallookup, localinfo = {}, {}, {}
+  ilocalinfo, ilocalrefs = {}, {}
 end
 
 return _G

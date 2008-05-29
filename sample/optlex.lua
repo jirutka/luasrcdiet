@@ -1,344 +1,355 @@
-local base=_G
-local string=require"string"module"optlex"local match=string.match
-local sub=string.sub
-local find=string.find
-local rep=string.rep
-error=base.error
-warn={}local stoks,sinfos,stoklns
-local is_realtoken={TK_KEYWORD=true,TK_NAME=true,TK_NUMBER=true,TK_STRING=true,TK_LSTRING=true,TK_OP=true,TK_EOS=true,}local is_faketoken={TK_COMMENT=true,TK_LCOMMENT=true,TK_EOL=true,TK_SPACE=true,}local function atlinestart(i)local tok=stoks[i-1]if i<=1 or tok=="TK_EOL"then
+local r=_G
+local c=require"string"module"optlex"local o=c.match
+local e=c.sub
+local l=c.find
+local d=c.rep
+error=r.error
+warn={}local n,i,u
+local v={TK_KEYWORD=true,TK_NAME=true,TK_NUMBER=true,TK_STRING=true,TK_LSTRING=true,TK_OP=true,TK_EOS=true,}local w={TK_COMMENT=true,TK_LCOMMENT=true,TK_EOL=true,TK_SPACE=true,}local function p(e)local t=n[e-1]if e<=1 or t=="TK_EOL"then
 return true
-elseif tok==""then
-return atlinestart(i-1)end
+elseif t==""then
+return p(e-1)end
 return false
 end
-local function atlineend(i)local tok=stoks[i+1]if i>=#stoks or tok=="TK_EOL"or tok=="TK_EOS"then
+local function g(t)local e=n[t+1]if t>=#n or e=="TK_EOL"or e=="TK_EOS"then
 return true
-elseif tok==""then
-return atlineend(i+1)end
+elseif e==""then
+return g(t+1)end
 return false
 end
-local function commenteols(lcomment)local sep=#match(lcomment,"^%-%-%[=*%[")local z=sub(lcomment,sep+1,-(sep-1))local i,c=1,0
+local function T(i)local o=#o(i,"^%-%-%[=*%[")local i=e(i,o+1,-(o-1))local e,t=1,0
 while true do
-local p,q,r,s=find(z,"([\r\n])([\r\n]?)",i)if not p then break end
-i=p+1
-c=c+1
-if#s>0 and r~=s then
-i=i+1
+local a,n,i,o=l(i,"([\r\n])([\r\n]?)",e)if not a then break end
+e=a+1
+t=t+1
+if#o>0 and i~=o then
+e=e+1
 end
 end
-return c
+return t
 end
-local function checkpair(i,j)local match=match
-local t1,t2=stoks[i],stoks[j]if t1=="TK_STRING"or t1=="TK_LSTRING"or
-t2=="TK_STRING"or t2=="TK_LSTRING"then
-return""elseif t1=="TK_OP"or t2=="TK_OP"then
-if(t1=="TK_OP"and(t2=="TK_KEYWORD"or t2=="TK_NAME"))or(t2=="TK_OP"and(t1=="TK_KEYWORD"or t1=="TK_NAME"))then
+local function b(h,s)local a=o
+local t,e=n[h],n[s]if t=="TK_STRING"or t=="TK_LSTRING"or
+e=="TK_STRING"or e=="TK_LSTRING"then
+return""elseif t=="TK_OP"or e=="TK_OP"then
+if(t=="TK_OP"and(e=="TK_KEYWORD"or e=="TK_NAME"))or(e=="TK_OP"and(t=="TK_KEYWORD"or t=="TK_NAME"))then
 return""end
-if t1=="TK_OP"and t2=="TK_OP"then
-local op,op2=sinfos[i],sinfos[j]if(match(op,"^%.%.?$")and match(op2,"^%."))or(match(op,"^[~=<>]$")and op2=="=")or(op=="["and(op2=="["or op2=="="))then
+if t=="TK_OP"and e=="TK_OP"then
+local t,e=i[h],i[s]if(a(t,"^%.%.?$")and a(e,"^%."))or(a(t,"^[~=<>]$")and e=="=")or(t=="["and(e=="["or e=="="))then
 return" "end
 return""end
-local op=sinfos[i]if t2=="TK_OP"then op=sinfos[j]end
-if match(op,"^%.%.?%.?$")then
+local t=i[h]if e=="TK_OP"then t=i[s]end
+if a(t,"^%.%.?%.?$")then
 return" "end
 return""else
 return" "end
 end
-local function repack_tokens()local dtoks,dinfos,dtoklns={},{},{}local j=1
-for i=1,#stoks do
-local tok=stoks[i]if tok~=""then
-dtoks[j],dinfos[j],dtoklns[j]=tok,sinfos[i],stoklns[i]j=j+1
+local function k()local s,h,o={},{},{}local e=1
+for t=1,#n do
+local a=n[t]if a~=""then
+s[e],h[e],o[e]=a,i[t],u[t]e=e+1
 end
 end
-stoks,sinfos,stoklns=dtoks,dinfos,dtoklns
+n,i,u=s,h,o
 end
-local function do_number(i)local before=sinfos[i]local z=before
-local y
-if match(z,"^0[xX]")then
-local v=base.tostring(base.tonumber(z))if#v<=#z then
-z=v
+local function z(l)local u=i[l]local a=u
+local n
+if o(a,"^0[xX]")then
+local e=r.tostring(r.tonumber(a))if#e<=#a then
+a=e
 else
 return
 end
 end
-if match(z,"^%d+%.?0*$")then
-z=match(z,"^(%d+)%.?0*$")if z+0>0 then
-z=match(z,"^0*([1-9]%d*)$")local v=#match(z,"0*$")local nv=base.tostring(v)if v>#nv+1 then
-z=sub(z,1,#z-v).."e"..nv
+if o(a,"^%d+%.?0*$")then
+a=o(a,"^(%d+)%.?0*$")if a+0>0 then
+a=o(a,"^0*([1-9]%d*)$")local t=#o(a,"0*$")local o=r.tostring(t)if t>#o+1 then
+a=e(a,1,#a-t).."e"..o
 end
-y=z
+n=a
 else
-y="0"end
-elseif not match(z,"[eE]")then
-local p,q=match(z,"^(%d*)%.(%d+)$")if p==""then p=0 end
-if q+0==0 and p==0 then
-y="0"else
-local v=#match(q,"0*$")if v>0 then
-q=sub(q,1,#q-v)end
-if p+0>0 then
-y=p.."."..q
+n="0"end
+elseif not o(a,"[eE]")then
+local a,t=o(a,"^(%d*)%.(%d+)$")if a==""then a=0 end
+if t+0==0 and a==0 then
+n="0"else
+local i=#o(t,"0*$")if i>0 then
+t=e(t,1,#t-i)end
+if a+0>0 then
+n=a.."."..t
 else
-y="."..q
-local v=#match(q,"^0*")local w=#q-v
-local nv=base.tostring(#q)if w+2+#nv<1+#q then
-y=sub(q,-w).."e-"..nv
+n="."..t
+local i=#o(t,"^0*")local a=#t-i
+local o=r.tostring(#t)if a+2+#o<1+#t then
+n=e(t,-a).."e-"..o
 end
 end
-end
-else
-local sig,ex=match(z,"^([^eE]+)[eE]([%+%-]?%d+)$")ex=base.tonumber(ex)local p,q=match(sig,"^(%d*)%.(%d*)$")if p then
-ex=ex-#q
-sig=p..q
-end
-if sig+0==0 then
-y="0"else
-local v=#match(sig,"^0*")sig=sub(sig,v+1)v=#match(sig,"0*$")if v>0 then
-sig=sub(sig,1,#sig-v)ex=ex+v
-end
-local nex=base.tostring(ex)if ex==0 then
-y=sig
-elseif ex>0 and(ex<=1+#nex)then
-y=sig..rep("0",ex)elseif ex<0 and(ex>=-#sig)then
-v=#sig+ex
-y=sub(sig,1,v).."."..sub(sig,v+1)elseif ex<0 and(#nex>=-ex-#sig)then
-v=-ex-#sig
-y="."..rep("0",v)..sig
-else
-y=sig.."e"..ex
-end
-end
-end
-if y then sinfos[i]=y end
-end
-local function do_string(I)local info=sinfos[I]local delim=sub(info,1,1)local ndelim=(delim=="'")and'"'or"'"local z=sub(info,2,-2)local i=1
-local c_delim,c_ndelim=0,0
-while i<=#z do
-local c=sub(z,i,i)if c=="\\"then
-local j=i+1
-local d=sub(z,j,j)local p=find("abfnrtv\\\n\r\"'0123456789",d,1,true)if not p then
-z=sub(z,1,i-1)..sub(z,j)i=i+1
-elseif p<=8 then
-i=i+2
-elseif p<=10 then
-local eol=sub(z,j,j+1)if eol=="\r\n"or eol=="\n\r"then
-z=sub(z,1,i).."\n"..sub(z,j+2)elseif p==10 then
-z=sub(z,1,i).."\n"..sub(z,j+1)end
-i=i+2
-elseif p<=12 then
-if d==delim then
-c_delim=c_delim+1
-i=i+2
-else
-c_ndelim=c_ndelim+1
-z=sub(z,1,i-1)..sub(z,j)i=i+1
 end
 else
-local s=match(z,"^(%d%d?%d?)",j)j=i+1+#s
-local cv=s+0
-local cc=string.char(cv)local p=find("\a\b\f\n\r\t\v",cc,1,true)if p then
-s="\\"..sub("abfnrtv",p,p)elseif cv<32 then
-s="\\"..cv
-elseif cc==delim then
-s="\\"..cc
-c_delim=c_delim+1
-elseif cc=="\\"then
-s="\\\\"else
-s=cc
-if cc==ndelim then
-c_ndelim=c_ndelim+1
+local t,a=o(a,"^([^eE]+)[eE]([%+%-]?%d+)$")a=r.tonumber(a)local h,s=o(t,"^(%d*)%.(%d*)$")if h then
+a=a-#s
+t=h..s
+end
+if t+0==0 then
+n="0"else
+local i=#o(t,"^0*")t=e(t,i+1)i=#o(t,"0*$")if i>0 then
+t=e(t,1,#t-i)a=a+i
+end
+local o=r.tostring(a)if a==0 then
+n=t
+elseif a>0 and(a<=1+#o)then
+n=t..d("0",a)elseif a<0 and(a>=-#t)then
+i=#t+a
+n=e(t,1,i).."."..e(t,i+1)elseif a<0 and(#o>=-a-#t)then
+i=-a-#t
+n="."..d("0",i)..t
+else
+n=t.."e"..a
 end
 end
-z=sub(z,1,i-1)..s..sub(z,j)i=i+#s
+end
+if n then i[l]=n end
+end
+local function I(f)local w=i[f]local s=e(w,1,1)local u=(s=="'")and'"'or"'"local t=e(w,2,-2)local a=1
+local d,n=0,0
+while a<=#t do
+local f=e(t,a,a)if f=="\\"then
+local i=a+1
+local f=e(t,i,i)local r=l("abfnrtv\\\n\r\"'0123456789",f,1,true)if not r then
+t=e(t,1,a-1)..e(t,i)a=a+1
+elseif r<=8 then
+a=a+2
+elseif r<=10 then
+local o=e(t,i,i+1)if o=="\r\n"or o=="\n\r"then
+t=e(t,1,a).."\n"..e(t,i+2)elseif r==10 then
+t=e(t,1,a).."\n"..e(t,i+1)end
+a=a+2
+elseif r<=12 then
+if f==s then
+d=d+1
+a=a+2
+else
+n=n+1
+t=e(t,1,a-1)..e(t,i)a=a+1
 end
 else
-i=i+1
-if c==ndelim then
-c_ndelim=c_ndelim+1
+local o=o(t,"^(%d%d?%d?)",i)i=a+1+#o
+local m=o+0
+local h=c.char(m)local r=l("\a\b\f\n\r\t\v",h,1,true)if r then
+o="\\"..e("abfnrtv",r,r)elseif m<32 then
+o="\\"..m
+elseif h==s then
+o="\\"..h
+d=d+1
+elseif h=="\\"then
+o="\\\\"else
+o=h
+if h==u then
+n=n+1
 end
 end
+t=e(t,1,a-1)..o..e(t,i)a=a+#o
 end
-if c_delim>c_ndelim then
-i=1
-while i<=#z do
-local p,q,r=find(z,"(['\"])",i)if not p then break end
-if r==delim then
-z=sub(z,1,p-2)..sub(z,p)i=p
 else
-z=sub(z,1,p-1).."\\"..sub(z,p)i=p+2
+a=a+1
+if f==u then
+n=n+1
 end
 end
-delim=ndelim
 end
-sinfos[I]=delim..z..delim
+if d>n then
+a=1
+while a<=#t do
+local o,n,i=l(t,"(['\"])",a)if not o then break end
+if i==s then
+t=e(t,1,o-2)..e(t,o)a=o
+else
+t=e(t,1,o-1).."\\"..e(t,o)a=o+2
 end
-local function do_lstring(I)local info=sinfos[I]local delim1=match(info,"^%[=*%[")local sep=#delim1
-local delim2=sub(info,-sep,-1)local z=sub(info,sep+1,-(sep+1))local y=""local i=1
+end
+s=u
+end
+i[f]=s..t..s
+end
+local function O(r)local c=i[r]local h=o(c,"^%[=*%[")local a=#h
+local m=e(c,-a,-1)local s=e(c,a+1,-(a+1))local n=""local t=1
 while true do
-local p,q,r,s=find(z,"([\r\n])([\r\n]?)",i)local ln
-if not p then
-ln=sub(z,i)elseif p>=i then
-ln=sub(z,i,p-1)end
-if ln~=""then
-if match(ln,"%s+$")then
-warn.lstring="trailing whitespace in long string near line "..stoklns[I]end
-y=y..ln
+local a,l,d,h=l(s,"([\r\n])([\r\n]?)",t)local i
+if not a then
+i=e(s,t)elseif a>=t then
+i=e(s,t,a-1)end
+if i~=""then
+if o(i,"%s+$")then
+warn.lstring="trailing whitespace in long string near line "..u[r]end
+n=n..i
 end
-if not p then
+if not a then
 break
 end
-i=p+1
-if p then
-if#s>0 and r~=s then
-i=i+1
+t=a+1
+if a then
+if#h>0 and d~=h then
+t=t+1
 end
-if not(i==1 and i==p)then
-y=y.."\n"end
+if not(t==1 and t==a)then
+n=n.."\n"end
 end
 end
-if sep>=3 then
-local chk,okay=sep-1
-while chk>=2 do
-local delim="%]"..rep("=",chk-2).."%]"if not match(y,delim)then okay=chk end
-chk=chk-1
+if a>=3 then
+local e,t=a-1
+while e>=2 do
+local a="%]"..d("=",e-2).."%]"if not o(n,a)then t=e end
+e=e-1
 end
-if okay then
-sep=rep("=",okay-2)delim1,delim2="["..sep.."[","]"..sep.."]"end
+if t then
+a=d("=",t-2)h,m="["..a.."[","]"..a.."]"end
 end
-sinfos[I]=delim1..y..delim2
+i[r]=h..n..m
 end
-local function do_lcomment(I)local info=sinfos[I]local delim1=match(info,"^%-%-%[=*%[")local sep=#delim1
-local delim2=sub(info,-sep,-1)local z=sub(info,sep+1,-(sep-1))local y=""local i=1
+local function f(u)local r=i[u]local h=o(r,"^%-%-%[=*%[")local t=#h
+local c=e(r,-t,-1)local s=e(r,t+1,-(t-1))local n=""local a=1
 while true do
-local p,q,r,s=find(z,"([\r\n])([\r\n]?)",i)local ln
-if not p then
-ln=sub(z,i)elseif p>=i then
-ln=sub(z,i,p-1)end
-if ln~=""then
-local ws=match(ln,"%s*$")if#ws>0 then ln=sub(ln,1,-(ws+1))end
-y=y..ln
+local i,d,r,h=l(s,"([\r\n])([\r\n]?)",a)local t
+if not i then
+t=e(s,a)elseif i>=a then
+t=e(s,a,i-1)end
+if t~=""then
+local a=o(t,"%s*$")if#a>0 then t=e(t,1,-(a+1))end
+n=n..t
 end
-if not p then
+if not i then
 break
 end
-i=p+1
-if p then
-if#s>0 and r~=s then
-i=i+1
+a=i+1
+if i then
+if#h>0 and r~=h then
+a=a+1
 end
-y=y.."\n"end
+n=n.."\n"end
 end
-sep=sep-2
-if sep>=3 then
-local chk,okay=sep-1
-while chk>=2 do
-local delim="%]"..rep("=",chk-2).."%]"if not match(y,delim)then okay=chk end
-chk=chk-1
+t=t-2
+if t>=3 then
+local e,a=t-1
+while e>=2 do
+local t="%]"..d("=",e-2).."%]"if not o(n,t)then a=e end
+e=e-1
 end
-if okay then
-sep=rep("=",okay-2)delim1,delim2="--["..sep.."[","]"..sep.."]"end
+if a then
+t=d("=",a-2)h,c="--["..t.."[","]"..t.."]"end
 end
-sinfos[I]=delim1..y..delim2
+i[u]=h..n..c
 end
-local function do_comment(i)local info=sinfos[i]local ws=match(info,"%s*$")if#ws>0 then
-info=sub(info,1,-(ws+1))end
-sinfos[i]=info
+local function y(n)local t=i[n]local a=o(t,"%s*$")if#a>0 then
+t=e(t,1,-(a+1))end
+i[n]=t
 end
-function optimize(option,toklist,semlist,toklnlist)local opt_comments=option["opt-comments"]local opt_whitespace=option["opt-whitespace"]local opt_emptylines=option["opt-emptylines"]local opt_eols=option["opt-eols"]local opt_strings=option["opt-strings"]local opt_numbers=option["opt-numbers"]if opt_eols then
-opt_comments=true
-opt_whitespace=true
-opt_emptylines=true
+local function N(i,t)if not i then return false end
+local o=o(t,"^%-%-%[=*%[")local a=#o
+local o=e(t,-a,-1)local e=e(t,a+1,-(a-1))if l(e,i,1,true)then
+return true
 end
-stoks,sinfos,stoklns=toklist,semlist,toklnlist
-local i=1
-local tok
-local prev
-local function settoken(tok,info,I)I=I or i
-stoks[I]=tok or""sinfos[I]=info or""end
+end
+function optimize(h,E,A,_)local l=h["opt-comments"]local r=h["opt-whitespace"]local c=h["opt-emptylines"]local m=h["opt-eols"]local j=h["opt-strings"]local q=h["opt-numbers"]local x=h.KEEP
+if m then
+l=true
+r=true
+c=true
+end
+n,i,u=E,A,_
+local t=1
+local a
+local s
+local function o(a,o,e)e=e or t
+n[e]=a or""i[e]=o or""end
 while true do
-tok,info=stoks[i],sinfos[i]local atstart=atlinestart(i)if atstart then prev=nil end
-if tok=="TK_EOS"then
+a,info=n[t],i[t]local h=p(t)if h then s=nil end
+if a=="TK_EOS"then
 break
-elseif tok=="TK_KEYWORD"or
-tok=="TK_NAME"or
-tok=="TK_OP"then
-prev=i
-elseif tok=="TK_NUMBER"then
-if opt_numbers then
-do_number(i)end
-prev=i
-elseif tok=="TK_STRING"or
-tok=="TK_LSTRING"then
-if opt_strings then
-if tok=="TK_STRING"then
-do_string(i)else
-do_lstring(i)end
+elseif a=="TK_KEYWORD"or
+a=="TK_NAME"or
+a=="TK_OP"then
+s=t
+elseif a=="TK_NUMBER"then
+if q then
+z(t)end
+s=t
+elseif a=="TK_STRING"or
+a=="TK_LSTRING"then
+if j then
+if a=="TK_STRING"then
+I(t)else
+O(t)end
 end
-prev=i
-elseif tok=="TK_COMMENT"then
-if opt_comments then
-if i==1 and sub(info,1,1)=="#"then
-do_comment(i)else
-settoken()end
-elseif opt_whitespace then
-do_comment(i)end
-elseif tok=="TK_LCOMMENT"then
-if opt_comments then
-local eols=commenteols(info)if is_faketoken[stoks[i+1]]then
-settoken()tok=""else
-settoken("TK_SPACE"," ")end
-if not opt_emptylines and eols>0 then
-settoken("TK_EOL",rep("\n",eols))end
-if opt_whitespace and tok~=""then
-i=i-1
+s=t
+elseif a=="TK_COMMENT"then
+if l then
+if t==1 and e(info,1,1)=="#"then
+y(t)else
+o()end
+elseif r then
+y(t)end
+elseif a=="TK_LCOMMENT"then
+if N(x,info)then
+if r then
+f(t)end
+s=t
+elseif l then
+local e=T(info)if w[n[t+1]]then
+o()a=""else
+o("TK_SPACE"," ")end
+if not c and e>0 then
+o("TK_EOL",d("\n",e))end
+if r and a~=""then
+t=t-1
 end
 else
-if opt_whitespace then
-do_lcomment(i)end
-prev=i
+if r then
+f(t)end
+s=t
 end
-elseif tok=="TK_EOL"then
-if atstart and opt_emptylines then
-settoken()elseif info=="\r\n"or info=="\n\r"then
-settoken("TK_EOL","\n")end
-elseif tok=="TK_SPACE"then
-if opt_whitespace then
-if atstart or atlineend(i)then
-settoken()else
-local ptok=stoks[prev]if ptok=="TK_LCOMMENT"then
-settoken()else
-local ntok=stoks[i+1]if is_faketoken[ntok]then
-if(ntok=="TK_COMMENT"or ntok=="TK_LCOMMENT")and
-ptok=="TK_OP"and sinfos[prev]=="-"then
+elseif a=="TK_EOL"then
+if h and c then
+o()elseif info=="\r\n"or info=="\n\r"then
+o("TK_EOL","\n")end
+elseif a=="TK_SPACE"then
+if r then
+if h or g(t)then
+o()else
+local a=n[s]if a=="TK_LCOMMENT"then
+o()else
+local e=n[t+1]if w[e]then
+if(e=="TK_COMMENT"or e=="TK_LCOMMENT")and
+a=="TK_OP"and i[s]=="-"then
 else
-settoken()end
+o()end
 else
-local s=checkpair(prev,i+1)if s==""then
-settoken()else
-settoken("TK_SPACE"," ")end
+local e=b(s,t+1)if e==""then
+o()else
+o("TK_SPACE"," ")end
 end
 end
 end
 end
 else
 error("unidentified token encountered")end
-i=i+1
+t=t+1
 end
-repack_tokens()if opt_eols then
-i=1
-if stoks[1]=="TK_COMMENT"then
-i=3
+k()if m then
+t=1
+if n[1]=="TK_COMMENT"then
+t=3
 end
 while true do
-tok,info=stoks[i],sinfos[i]if tok=="TK_EOS"then
+a,info=n[t],i[t]if a=="TK_EOS"then
 break
-elseif tok=="TK_EOL"then
-local t1,t2=stoks[i-1],stoks[i+1]if is_realtoken[t1]and is_realtoken[t2]then
-local s=checkpair(i-1,i+1)if s==""then
-settoken()end
+elseif a=="TK_EOL"then
+local a,i=n[t-1],n[t+1]if v[a]and v[i]then
+local e=b(t-1,t+1)if e==""then
+o()end
 end
 end
-i=i+1
+t=t+1
 end
-repack_tokens()end
-return stoks,sinfos,stoklns
+k()end
+return n,i,u
 end

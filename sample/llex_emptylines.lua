@@ -10,7 +10,6 @@
   See the ChangeLog for more information.
 
 ----------------------------------------------------------------------]]
-
 --[[--------------------------------------------------------------------
 -- NOTES:
 -- * This is a version of the native 5.1.x lexer from Yueliang 0.4.0,
@@ -24,50 +23,40 @@
 -- * NO support for compatible long strings (LUA_COMPAT_LSTR)
 -- * Please read technotes.txt for more technical details.
 ----------------------------------------------------------------------]]
-
 local base = _G
 local string = require "string"
 module "llex"
-
 local find = string.find
 local match = string.match
 local sub = string.sub
-
 ----------------------------------------------------------------------
 -- initialize keyword list, variables
 ----------------------------------------------------------------------
-
 local kw = {}
 for v in string.gmatch([[
 and break do else elseif end false for function if in
 local nil not or repeat return then true until while]], "%S+") do
   kw[v] = true
 end
-
 -- NOTE: see init() for module variables (externally visible):
 --       tok, seminfo, tokln
-
 local z,                -- source stream
       sourceid,         -- name of source
       I,                -- position of lexer
       buff,             -- buffer for strings
       ln                -- line number
-
 ----------------------------------------------------------------------
 -- add information to token listing
 ----------------------------------------------------------------------
-
 local function addtoken(token, info)
   local i = #tok + 1
   tok[i] = token
   seminfo[i] = info
   tokln[i] = ln
 end
-
 ----------------------------------------------------------------------
 -- handles line number incrementation and end-of-line characters
 ----------------------------------------------------------------------
-
 local function inclinenumber(i, is_tok)
   local sub = sub
   local old = sub(z, i, i)
@@ -82,11 +71,9 @@ local function inclinenumber(i, is_tok)
   I = i
   return i
 end
-
 ----------------------------------------------------------------------
 -- initialize lexer for given source _z and source name _sourceid
 ----------------------------------------------------------------------
-
 function init(_z, _sourceid)
   z = _z                        -- source
   sourceid = _sourceid          -- name of source
@@ -106,32 +93,26 @@ function init(_z, _sourceid)
     if #r > 0 then inclinenumber(I, true) end
   end
 end
-
 ----------------------------------------------------------------------
 -- returns a chunk name or id, no truncation for long names
 ----------------------------------------------------------------------
-
 function chunkid()
   if sourceid and match(sourceid, "^[=@]") then
     return sub(sourceid, 2)  -- remove first char
   end
   return "[string]"
 end
-
 ----------------------------------------------------------------------
 -- formats error message and throws error
 -- * a simplified version, does not report what token was responsible
 ----------------------------------------------------------------------
-
 function errorline(s, line)
   local e = error or base.error
   e(string.format("%s:%d: %s", chunkid(), line or ln, s))
 end
-
 ------------------------------------------------------------------------
 -- count separators ("=") in a long string delimiter
 ------------------------------------------------------------------------
-
 local function skip_sep(i)
   local sub = sub
   local s = sub(z, i, i)
@@ -141,11 +122,9 @@ local function skip_sep(i)
   I = i
   return (sub(z, i, i) == s) and count or (-count) - 1
 end
-
 ----------------------------------------------------------------------
 -- reads a long string or long comment
 ----------------------------------------------------------------------
-
 local function read_long_string(is_str, sep)
   local i = I + 1  -- skip 2nd '['
   local sub = sub
@@ -174,11 +153,9 @@ local function read_long_string(is_str, sep)
     end
   end--while
 end
-
 ----------------------------------------------------------------------
 -- reads a string
 ----------------------------------------------------------------------
-
 local function read_string(del)
   local i = I
   local find = find
@@ -227,11 +204,9 @@ local function read_string(del)
   end--while
   errorline("unfinished string")
 end
-
 ------------------------------------------------------------------------
 -- main lexer function
 ------------------------------------------------------------------------
-
 function llex()
   local find = find
   local match = match
@@ -350,5 +325,4 @@ function llex()
     end--while inner
   end--while outer
 end
-
 return base.getfenv()

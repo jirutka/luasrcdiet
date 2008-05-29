@@ -18,24 +18,36 @@ please see the 5.0/README file.
 
 PREVIEW NOTES
 
-The 0.10.1 release of LuaSrcDiet has the same functionality as the old
-Lua 5.0.2 version, except for the missing verification of the output
-file feature by way of comparing the token stream. It is more flexible
-in the way in which optimization options can be enabled or disabled.
+The 0.11.0 release of LuaSrcDiet has a local variable name optimizer.
+Local variable names are renamed into the shortest possible names. In
+addition, variable names are reused whenever possible, reducing the
+number of unique variable names. Several hundred local variable names
+can be reduced into 53 or less unique names, which allows all locals
+to be single-character in length.
 
-Release version 0.10.2 has aggressive optimizations for string and
-number tokens.
+The local variable name optimizer uses a full parser of Lua 5.1 source
+code, thus it can rename all local variables, including function
+parameters. It should handle the implicit "self" parameter gracefully.
+The optimizer needs more testing, but is already able to optimize the
+LuaSrcDiet sources itself and generate correct Lua output.
+
+String and number token optimizations are also performed, apart from the
+usual whitespace, line ending and comment removal. Numbers can switch
+between different formats. Strings can be simplified and can switch
+delimiters between " or ' characters.
+
+Most options can also be enabled or disabled separately, for maximum
+flexibility. If you need to keep a copyright message in the optimized
+output, the --keep option can keep block comments that contain a certain
+string.
 
 For samples, see the sample/ directory. Performance statistics can be
 found in the sample/statistics.txt file. Preliminary test samples for
 strings and numbers can also be found in the sample/ directory.
 
-Planned near term work:
-(b) automatic tests for lexer optimizations -- 0.10.3 RELEASE HERE
-(c) lexer output comparison for output verification -- 0.10.4 RELEASE?
-(d) integrate Yueliang's parser skeleton (ONGOING)
-(e) local variable name optimization using the parser -- 0.11.0 RELEASE HERE
-(f) paranoid checking, after (c)
+Priority for future work:
+(a) automatic tests for lexer/parser optimizations
+(b) integrity checking, token stream check or binary chunk check
 
 --
 
@@ -50,6 +62,10 @@ functions (LUA_COMPAT_VARARG).
 
 WHAT'S NEW
 
+Major changes for version 0.11.0 (see the ChangeLog as well):
+* Local variable name optimization.
+* Many options and sample output added.
+
 Major changes for version 0.10.2 (see the ChangeLog as well):
 * Aggressive optimizations for string and number tokens.
 * Minor bug fixes.
@@ -63,11 +79,54 @@ USAGE OPTIONS
 
 ...
 
+Example of summary data display:
+
+Statistics for: LuaSrcDiet.lua -> sample/LuaSrcDiet.lua
+
+*** local variable optimization summary ***
+----------------------------------------------------------
+Variable          Unique   Decl.   Token    Size   Average
+Types              Names   Count   Count   Bytes     Bytes
+----------------------------------------------------------
+Global                10       0      19      95      5.00
+----------------------------------------------------------
+Local (in)            88     153     683    3340      4.89
+TOTAL (in)            98     153     702    3435      4.89
+----------------------------------------------------------
+Local (out)           32     153     683     683      1.00
+TOTAL (out)           42     153     702     778      1.11
+----------------------------------------------------------
+
+*** lexer-based optimizations summary ***
+--------------------------------------------------------------------
+Lexical            Input   Input     Input  Output  Output    Output
+Elements           Count   Bytes   Average   Count   Bytes   Average
+--------------------------------------------------------------------
+TK_KEYWORD           374    1531      4.09     374    1531      4.09
+TK_NAME              795    3963      4.98     795    1306      1.64
+TK_NUMBER             54      59      1.09      54      59      1.09
+TK_STRING            152    1725     11.35     152    1717     11.30
+TK_LSTRING             7    1976    282.29       7    1976    282.29
+TK_OP                997    1092      1.10     997    1092      1.10
+TK_EOS                 1       0      0.00       1       0      0.00
+--------------------------------------------------------------------
+TK_COMMENT           140    6884     49.17       1      18     18.00
+TK_LCOMMENT            7    1723    246.14       0       0      0.00
+TK_EOL               543     543      1.00     197     197      1.00
+TK_SPACE            1270    2465      1.94     263     263      1.00
+--------------------------------------------------------------------
+Total Elements      4340   21961      5.06    2841    8159      2.87
+--------------------------------------------------------------------
+Total Tokens        2380   10346      4.35    2380    7681      3.23
+--------------------------------------------------------------------
+
 --
 
 USING LUASRCDIET
 
 ...
+
+Please see the command line help or see sample/Makefile for examples.
 
 --
 
@@ -92,10 +151,6 @@ BEHAVIOUR NOTES
   canonical form, this may or may not be a bad thing, so feedback
   is welcome
 
-POSSIBLE TODOS
-
-* convert long strings to normal strings, vice versa
-
 --
 
 ACKNOWLEDGEMENTS
@@ -118,4 +173,4 @@ Enjoy!!
 
 Kein-Hong Man (esq.)
 Kuala Lumpur
-Malaysia 20080527
+Malaysia 20080529

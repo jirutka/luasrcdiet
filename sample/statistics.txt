@@ -1,84 +1,220 @@
 LuaSrcDiet: Puts your Lua 5.1 source code on a diet
-Version 0.10.1 (20080525)  Copyright (c) 2005-2008 Kein-Hong Man
+Version 0.11.0 (20080529)  Copyright (c) 2005-2008 Kein-Hong Man
 The COPYRIGHT file describes the conditions under which this
 software may be distributed.
 
 Statistics for: LuaSrcDiet.lua -> sample/LuaSrcDiet.lua
 
+*** local variable optimization summary ***
+----------------------------------------------------------
+Variable          Unique   Decl.   Token    Size   Average
+Types              Names   Count   Count   Bytes     Bytes
+----------------------------------------------------------
+Global                10       0      19      95      5.00
+----------------------------------------------------------
+Local (in)            88     153     683    3340      4.89
+TOTAL (in)            98     153     702    3435      4.89
+----------------------------------------------------------
+Local (out)           32     153     683     683      1.00
+TOTAL (out)           42     153     702     778      1.11
+----------------------------------------------------------
+
+*** lexer-based optimizations summary ***
+--------------------------------------------------------------------
 Lexical            Input   Input     Input  Output  Output    Output
 Elements           Count   Bytes   Average   Count   Bytes   Average
 --------------------------------------------------------------------
-TK_KEYWORD           321    1315      4.10     321    1315      4.10
-TK_NAME              651    3229      4.96     651    3229      4.96
-TK_NUMBER             48      52      1.08      48      52      1.08
-TK_STRING            126    1368     10.86     126    1360     10.79
-TK_LSTRING             6    1469    244.83       6    1469    244.83
-TK_OP                841     907      1.08     841     907      1.08
+TK_KEYWORD           374    1531      4.09     374    1531      4.09
+TK_NAME              795    3963      4.98     795    1306      1.64
+TK_NUMBER             54      59      1.09      54      59      1.09
+TK_STRING            152    1725     11.35     152    1717     11.30
+TK_LSTRING             7    1976    282.29       7    1976    282.29
+TK_OP                997    1092      1.10     997    1092      1.10
 TK_EOS                 1       0      0.00       1       0      0.00
 --------------------------------------------------------------------
-TK_COMMENT           111    5121     46.14       1      18     18.00
-TK_LCOMMENT            7    1658    236.86       0       0      0.00
-TK_EOL               454     454      1.00     169     169      1.00
-TK_SPACE            1054    2058      1.95     222     222      1.00
+TK_COMMENT           140    6884     49.17       1      18     18.00
+TK_LCOMMENT            7    1723    246.14       0       0      0.00
+TK_EOL               543     543      1.00     197     197      1.00
+TK_SPACE            1270    2465      1.94     263     263      1.00
 --------------------------------------------------------------------
-Total Elements      3620   17631      4.87    2386    8741      3.66
+Total Elements      4340   21961      5.06    2841    8159      2.87
 --------------------------------------------------------------------
-Total Tokens        1994    8340      4.18    1994    8332      4.18
+Total Tokens        2380   10346      4.35    2380    7681      3.23
 --------------------------------------------------------------------
 
 LuaSrcDiet: Puts your Lua 5.1 source code on a diet
-Version 0.10.1 (20080525)  Copyright (c) 2005-2008 Kein-Hong Man
+Version 0.11.0 (20080529)  Copyright (c) 2005-2008 Kein-Hong Man
 The COPYRIGHT file describes the conditions under which this
 software may be distributed.
 
 Statistics for: llex.lua -> sample/llex.lua
 
+*** local variable optimization summary ***
+----------------------------------------------------------
+Variable          Unique   Decl.   Token    Size   Average
+Types              Names   Count   Count   Bytes     Bytes
+----------------------------------------------------------
+Global                11       0      22     138      6.27
+----------------------------------------------------------
+Local (in)            38      82     393    1020      2.60
+TOTAL (in)            49      82     415    1158      2.79
+----------------------------------------------------------
+Local (out)           20      82     393     393      1.00
+TOTAL (out)           31      82     415     531      1.28
+----------------------------------------------------------
+
+*** lexer-based optimizations summary ***
+--------------------------------------------------------------------
 Lexical            Input   Input     Input  Output  Output    Output
 Elements           Count   Bytes   Average   Count   Bytes   Average
 --------------------------------------------------------------------
-TK_KEYWORD           253     976      3.86     253     976      3.86
-TK_NAME              423    1202      2.84     423    1202      2.84
+TK_KEYWORD           249     956      3.84     249     956      3.84
+TK_NAME              423    1202      2.84     423     575      1.36
 TK_NUMBER             42      44      1.05      42      44      1.05
 TK_STRING             63     630     10.00      63     628      9.97
 TK_LSTRING             1     111    111.00       1     111    111.00
-TK_OP                463     490      1.06     463     490      1.06
+TK_OP                467     494      1.06     467     494      1.06
 TK_EOS                 1       0      0.00       1       0      0.00
 --------------------------------------------------------------------
 TK_COMMENT           125    4262     34.10       0       0      0.00
 TK_LCOMMENT            2    1188    594.00       0       0      0.00
-TK_EOL               323     323      1.00     174     174      1.00
-TK_SPACE             897    3189      3.56     156     156      1.00
+TK_EOL               329     329      1.00     170     170      1.00
+TK_SPACE             897    3205      3.57     152     152      1.00
 --------------------------------------------------------------------
-Total Elements      2593   12415      4.79    1576    3781      2.40
+Total Elements      2599   12421      4.78    1568    3130      2.00
 --------------------------------------------------------------------
-Total Tokens        1246    3453      2.77    1246    3451      2.77
+Total Tokens        1246    3437      2.76    1246    2808      2.25
 --------------------------------------------------------------------
 
 LuaSrcDiet: Puts your Lua 5.1 source code on a diet
-Version 0.10.1 (20080525)  Copyright (c) 2005-2008 Kein-Hong Man
+Version 0.11.0 (20080529)  Copyright (c) 2005-2008 Kein-Hong Man
 The COPYRIGHT file describes the conditions under which this
 software may be distributed.
 
 Statistics for: optlex.lua -> sample/optlex.lua
 
+*** local variable optimization summary ***
+----------------------------------------------------------
+Variable          Unique   Decl.   Token    Size   Average
+Types              Names   Count   Count   Bytes     Bytes
+----------------------------------------------------------
+Global                 7       0      15      69      4.60
+----------------------------------------------------------
+Local (in)            81     156     910    3007      3.30
+TOTAL (in)            88     156     925    3076      3.33
+----------------------------------------------------------
+Local (out)           33     156     910     910      1.00
+TOTAL (out)           40     156     925     979      1.06
+----------------------------------------------------------
+
+*** lexer-based optimizations summary ***
+--------------------------------------------------------------------
 Lexical            Input   Input     Input  Output  Output    Output
 Elements           Count   Bytes   Average   Count   Bytes   Average
 --------------------------------------------------------------------
-TK_KEYWORD           583    2217      3.80     583    2217      3.80
-TK_NAME              918    3076      3.35     918    3076      3.35
-TK_NUMBER            141     145      1.03     141     145      1.03
-TK_STRING            159    1182      7.43     159    1180      7.42
+TK_KEYWORD           608    2323      3.82     608    2323      3.82
+TK_NAME              950    3250      3.42     950    1153      1.21
+TK_NUMBER            145     149      1.03     145     149      1.03
+TK_STRING            160    1195      7.47     160    1193      7.46
 TK_LSTRING             0       0      0.00       0       0      0.00
-TK_OP               1112    1256      1.13    1112    1256      1.13
+TK_OP               1151    1295      1.13    1151    1295      1.13
 TK_EOS                 1       0      0.00       1       0      0.00
 --------------------------------------------------------------------
-TK_COMMENT           343   14963     43.62       0       0      0.00
-TK_LCOMMENT            2     747    373.50       0       0      0.00
-TK_EOL               771     771      1.00     344     344      1.00
-TK_SPACE            2176    5588      2.57     372     372      1.00
+TK_COMMENT           355   15482     43.61       0       0      0.00
+TK_LCOMMENT            2     783    391.50       0       0      0.00
+TK_EOL               796     796      1.00     355     355      1.00
+TK_SPACE            2244    5736      2.56     390     390      1.00
 --------------------------------------------------------------------
-Total Elements      6206   29945      4.83    3630    8590      2.37
+Total Elements      6412   31009      4.84    3760    6858      1.82
 --------------------------------------------------------------------
-Total Tokens        2914    7876      2.70    2914    7874      2.70
+Total Tokens        3015    8212      2.72    3015    6113      2.03
+--------------------------------------------------------------------
+
+LuaSrcDiet: Puts your Lua 5.1 source code on a diet
+Version 0.11.0 (20080529)  Copyright (c) 2005-2008 Kein-Hong Man
+The COPYRIGHT file describes the conditions under which this
+software may be distributed.
+
+Statistics for: lparser.lua -> sample/lparser.lua
+
+*** local variable optimization summary ***
+----------------------------------------------------------
+Variable          Unique   Decl.   Token    Size   Average
+Types              Names   Count   Count   Bytes     Bytes
+----------------------------------------------------------
+Global                18       0      29     223      7.69
+----------------------------------------------------------
+Local (in)           132     226     897    4640      5.17
+TOTAL (in)           150     226     926    4863      5.25
+----------------------------------------------------------
+Local (out)           57     226     897     907      1.01
+TOTAL (out)           75     226     926    1130      1.22
+----------------------------------------------------------
+
+*** lexer-based optimizations summary ***
+--------------------------------------------------------------------
+Lexical            Input   Input     Input  Output  Output    Output
+Elements           Count   Bytes   Average   Count   Bytes   Average
+--------------------------------------------------------------------
+TK_KEYWORD           626    2696      4.31     626    2696      4.31
+TK_NAME             1012    5169      5.11    1012    1436      1.42
+TK_NUMBER             30      30      1.00      30      30      1.00
+TK_STRING            163    1314      8.06     163    1314      8.06
+TK_LSTRING             1     124    124.00       1     124    124.00
+TK_OP               1247    1324      1.06    1247    1324      1.06
+TK_EOS                 1       0      0.00       1       0      0.00
+--------------------------------------------------------------------
+TK_COMMENT           491   22352     45.52       0       0      0.00
+TK_LCOMMENT           11    3604    327.64       0       0      0.00
+TK_EOL              1234    1234      1.00     356     356      1.00
+TK_SPACE            1895    3910      2.06     386     386      1.00
+--------------------------------------------------------------------
+Total Elements      6711   41757      6.22    3822    7666      2.01
+--------------------------------------------------------------------
+Total Tokens        3080   10657      3.46    3080    6924      2.25
+--------------------------------------------------------------------
+
+LuaSrcDiet: Puts your Lua 5.1 source code on a diet
+Version 0.11.0 (20080529)  Copyright (c) 2005-2008 Kein-Hong Man
+The COPYRIGHT file describes the conditions under which this
+software may be distributed.
+
+Statistics for: optparser.lua -> sample/optparser.lua
+
+*** local variable optimization summary ***
+----------------------------------------------------------
+Variable          Unique   Decl.   Token    Size   Average
+Types              Names   Count   Count   Bytes     Bytes
+----------------------------------------------------------
+Global                 5       0       6      35      5.83
+----------------------------------------------------------
+Local (in)            85     115     496    2518      5.08
+TOTAL (in)            90     115     502    2553      5.09
+----------------------------------------------------------
+Local (out)           32     115     496     496      1.00
+TOTAL (out)           37     115     502     531      1.06
+----------------------------------------------------------
+
+*** lexer-based optimizations summary ***
+--------------------------------------------------------------------
+Lexical            Input   Input     Input  Output  Output    Output
+Elements           Count   Bytes   Average   Count   Bytes   Average
+--------------------------------------------------------------------
+TK_KEYWORD           206     778      3.78     206     778      3.78
+TK_NAME              568    2842      5.00     568     820      1.44
+TK_NUMBER             70      71      1.01      70      71      1.01
+TK_STRING             28     401     14.32      28     401     14.32
+TK_LSTRING             0       0      0.00       0       0      0.00
+TK_OP                586     597      1.02     586     597      1.02
+TK_EOS                 1       0      0.00       1       0      0.00
+--------------------------------------------------------------------
+TK_COMMENT           152    7469     49.14       0       0      0.00
+TK_LCOMMENT            2    1462    731.00       0       0      0.00
+TK_EOL               366     366      1.00     175     175      1.00
+TK_SPACE            1047    2525      2.41     157     157      1.00
+--------------------------------------------------------------------
+Total Elements      3026   16511      5.46    1791    2999      1.67
+--------------------------------------------------------------------
+Total Tokens        1459    4689      3.21    1459    2667      1.83
 --------------------------------------------------------------------
 

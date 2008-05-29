@@ -13,7 +13,8 @@
 
 --[[--------------------------------------------------------------------
 -- NOTES:
--- * For lexer-based optimization ideas, see the TODO items
+-- * For more lexer-based optimization ideas, see the TODO items or
+--   look at technotes.txt.
 -- * TODO: general string delimiter conversion optimizer
 -- * TODO: (numbers) warn if overly significant digit
 ----------------------------------------------------------------------]]
@@ -197,7 +198,7 @@ end
 --   (7) if scientific shorter, convert, e.g. .000123 -> 123e-6
 -- * scientific:
 --   (1) split into (digits dot digits) [eE] ([+-] digits)
---   (2) if significand has ".", shift it out to it becomes an integer
+--   (2) if significand has ".", shift it out so it becomes an integer
 --   (3) if significand is zero, just use zero
 --   (4) remove leading zeros for significand
 --   (5) shift out trailing zeros for significand
@@ -566,6 +567,22 @@ local function do_comment(i)
 end
 
 ------------------------------------------------------------------------
+-- returns true if string found in long comment
+-- * this is a feature to keep copyright or license texts
+------------------------------------------------------------------------
+
+local function keep_lcomment(opt_keep, info)
+  if not opt_keep then return false end  -- option not set
+  local delim1 = match(info, "^%-%-%[=*%[")  -- cut out delimiters
+  local sep = #delim1
+  local delim2 = sub(info, -sep, -1)
+  local z = sub(info, sep + 1, -(sep - 1))  -- comment without delims
+  if find(z, opt_keep, 1, true) then  -- try to match
+    return true
+  end
+end
+
+------------------------------------------------------------------------
 -- main entry point
 -- * currently, lexer processing has 2 passes
 -- * processing is done on a line-oriented basis, which is easier to
@@ -584,6 +601,7 @@ function optimize(option, toklist, semlist, toklnlist)
   local opt_eols = option["opt-eols"]
   local opt_strings = option["opt-strings"]
   local opt_numbers = option["opt-numbers"]
+  local opt_keep = option.KEEP
   if opt_eols then  -- forced settings, otherwise won't work properly
     opt_comments = true
     opt_whitespace = true
@@ -658,7 +676,15 @@ function optimize(option, toklist, semlist, toklnlist)
       end
     ----------------------------------------------------------------
     elseif tok == "TK_LCOMMENT" then    -- long comments
-      if opt_comments then
+      if keep_lcomment(opt_keep, info) then
+        ------------------------------------------------------------
+        -- if --keep, we keep a long comment if <msg> is found;
+        -- this is a feature to keep copyright or license texts
+        if opt_whitespace then          -- trim whitespace only
+          do_lcomment(i)
+        end
+        prev = i
+      elseif opt_comments then
         local eols = commenteols(info)
         ------------------------------------------------------------
         -- prepare opt_emptylines case first, if a disposable token

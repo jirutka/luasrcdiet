@@ -18,6 +18,7 @@
 -- * Remember to update version and date information below (MSG_TITLE)
 -- * TODO: to implement pcall() to properly handle lexer etc. errors
 -- * TODO: verify token stream or double-check binary chunk?
+-- * TODO: need some automatic testing for a semblance of sanity
 ----------------------------------------------------------------------]]
 
 -- standard libraries, functions
@@ -29,7 +30,9 @@ local gmatch = string.gmatch
 
 -- support modules
 local llex = require "llex"
+local lparser = require "lparser"
 local optlex = require "optlex"
+local optparser = require "optparser"
 
 --[[--------------------------------------------------------------------
 -- messages and textual data
@@ -37,7 +40,7 @@ local optlex = require "optlex"
 
 local MSG_TITLE = [[
 LuaSrcDiet: Puts your Lua 5.1 source code on a diet
-Version 0.10.2 (20080527)  Copyright (c) 2005-2008 Kein-Hong Man
+Version 0.11.0 (20080529)  Copyright (c) 2005-2008 Kein-Hong Man
 The COPYRIGHT file describes the conditions under which this
 software may be distributed.
 ]]
@@ -53,12 +56,20 @@ options:
   -h, --help        prints usage information
   -o <file>         specify file name to write output
   -s <suffix>       suffix for output files (default '_')
-  --quiet           process files quietly
+  --keep <msg>      keep block comment with <msg> inside
+  -                 stop handling arguments
+
+  (optimization levels)
+  --none            all optimizations off (normalizes EOLs only)
   --basic           lexer-based optimizations only
   --maximum         maximize reduction of source
+
+  (informational)
+  --quiet           process files quietly
   --read-only       read file and print token stats only
-  --dump            dump raw tokens from lexer to stdout
-  -                 stop handling arguments
+  --dump-lexer      dump raw tokens from lexer to stdout
+  --dump-parser     dump variable tracking tables from parser
+  --details         gives extra information, e.g. detailed stats
 
 features (to disable, insert 'no' prefix like --noopt-comments):
 %s
@@ -77,26 +88,30 @@ local OPTION = [[
 --opt-eols,'all above, plus remove unnecessary EOLs'
 --opt-strings,'optimize strings and long strings'
 --opt-numbers,'optimize numbers'
+--opt-locals,'optimize local variable names'
 ]]
---TODO--opt-locals,'optimize local variable names'
 
 -- preset configuration
 local DEFAULT_CONFIG = [[
   --opt-comments --opt-whitespace --opt-emptylines
-  --opt-numbers
+  --opt-numbers --opt-locals
 ]]
---TODO--opt-locals
 -- override configurations: MUST explicitly enable/disable everything
 local BASIC_CONFIG = [[
   --opt-comments --opt-whitespace --opt-emptylines
   --noopt-eols --noopt-strings --noopt-numbers
+  --noopt-locals
 ]]
---TODO--noopt-locals
 local MAXIMUM_CONFIG = [[
   --opt-comments --opt-whitespace --opt-emptylines
-  --opt-eols --opt-strings --opt-numbers
+  --opt-eols --opt-strings --opt-numbers --opt-locals
 ]]
---TODO--opt-locals
+local NONE_CONFIG = [[
+  --noopt-comments --noopt-whitespace --noopt-emptylines
+  --noopt-eols --noopt-strings --noopt-numbers
+  --noopt-locals
+]]
+
 local DEFAULT_SUFFIX = "_"      -- default suffix for file renaming
 
 --[[--------------------------------------------------------------------
@@ -252,10 +267,16 @@ end
 ------------------------------------------------------------------------
 
 local function dump_tokens(srcfl)
+  --------------------------------------------------------------------
+  -- load file and process source input into tokens
+  --------------------------------------------------------------------
   local z = load_file(srcfl)
   llex.init(z)
   llex.llex()
   local toklist, seminfolist = llex.tok, llex.seminfo
+  --------------------------------------------------------------------
+  -- display output
+  --------------------------------------------------------------------
   for i = 1, #toklist do
     local tok, seminfo = toklist[i], seminfolist[i]
     if tok == "TK_OP" and string.byte(seminfo) < 32 then
@@ -269,11 +290,67 @@ local function dump_tokens(srcfl)
   end--for
 end
 
+----------------------------------------------------------------------
+-- parser dump; dump globalinfo and localinfo tables
+----------------------------------------------------------------------
+
+local function dump_parser(srcfl)
+  local print = print
+  --------------------------------------------------------------------
+  -- load file and process source input into tokens
+  --------------------------------------------------------------------
+  local z = load_file(srcfl)
+  llex.init(z)
+  llex.llex()
+  local toklist, seminfolist, toklnlist
+    = llex.tok, llex.seminfo, llex.tokln
+  --------------------------------------------------------------------
+  -- do parser optimization here
+  --------------------------------------------------------------------
+  lparser.init(toklist, seminfolist, toklnlist)
+  local globalinfo, localinfo = lparser.parser()
+  --------------------------------------------------------------------
+  -- display output
+  --------------------------------------------------------------------
+  local hl = string.rep("-", 72)
+  print("*** Local/Global Variable Tracker Tables ***")
+  print(hl.."\n GLOBALS\n"..hl)
+  -- global tables have a list of xref numbers only
+  for i = 1, #globalinfo do
+    local obj = globalinfo[i]
+    local msg = "("..i..") '"..obj.name.."' -> "
+    local xref = obj.xref
+    for j = 1, #xref do msg = msg..xref[j].." " end
+    print(msg)
+  end
+  -- local tables have xref numbers and a few other special
+  -- numbers that are specially named: decl (declaration xref),
+  -- act (activation xref), rem (removal xref)
+  print(hl.."\n LOCALS (decl=declared act=activated rem=removed)\n"..hl)
+  for i = 1, #localinfo do
+    local obj = localinfo[i]
+    local msg = "("..i..") '"..obj.name.."' decl:"..obj.decl..
+                " act:"..obj.act.." rem:"..obj.rem
+    if obj.isself then
+      msg = msg.." isself"
+    end
+    msg = msg.." -> "
+    local xref = obj.xref
+    for j = 1, #xref do msg = msg..xref[j].." " end
+    print(msg)
+  end
+  print(hl.."\n")
+end
+
 ------------------------------------------------------------------------
 -- reads source file(s) and reports some statistics
 ------------------------------------------------------------------------
 
 local function read_only(srcfl)
+  local print = print
+  --------------------------------------------------------------------
+  -- load file and process source input into tokens
+  --------------------------------------------------------------------
   local z = load_file(srcfl)
   llex.init(z)
   llex.llex()
@@ -313,12 +390,17 @@ local function read_only(srcfl)
   print(hl.."\n")
 end
 
+------------------------------------------------------------------------
+-- process source file(s), write output and reports some statistics
+------------------------------------------------------------------------
+
 local function process_file(srcfl, destfl)
-  --------------------------------------------------------------------
   local function print(...)             -- handle quiet option
     if option.QUIET then return end
     _G.print(...)
   end
+  --------------------------------------------------------------------
+  -- load file and process source input into tokens
   --------------------------------------------------------------------
   local z = load_file(srcfl)
   llex.init(z)
@@ -338,7 +420,16 @@ local function process_file(srcfl, destfl)
   local stat1_a = stat_calc()
   local stat1_c, stat1_l = stat_c, stat_l
   --------------------------------------------------------------------
-  -- do optimization here, save output file
+  -- do parser optimization here
+  --------------------------------------------------------------------
+  if option["opt-locals"] then
+    optparser.print = print  -- hack
+    lparser.init(toklist, seminfolist, toklnlist)
+    local globalinfo, localinfo = lparser.parser()
+    optparser.optimize(option, toklist, seminfolist, globalinfo, localinfo)
+  end
+  --------------------------------------------------------------------
+  -- do lexer optimization here, save output file
   --------------------------------------------------------------------
   toklist, seminfolist
     = optlex.optimize(option, toklist, seminfolist, toklnlist)
@@ -371,6 +462,7 @@ local function process_file(srcfl, destfl)
   local tabf1, tabf2 = "%-16s%8s%8s%10s%8s%8s%10s",
                        "%-16s%8d%8d%10.2f%8d%8d%10.2f"
   local hl = string.rep("-", 68)
+  print("*** lexer-based optimizations summary ***\n"..hl)
   print(fmt(tabf1, "Lexical",
             "Input", "Input", "Input",
             "Output", "Output", "Output"))
@@ -431,8 +523,10 @@ local function do_files(fspec)
     ------------------------------------------------------------------
     -- perform requested operations
     ------------------------------------------------------------------
-    if option.DUMP then
+    if option.DUMP_LEXER then
       dump_tokens(srcfl)
+    elseif option.DUMP_PARSER then
+      dump_parser(srcfl)
     elseif option.READ_ONLY then
       read_only(srcfl)
     else
@@ -479,6 +573,10 @@ local function main()
         option.HELP = true; break
       elseif o == "--version" then
         option.VERSION = true; break
+      elseif o == "--keep" then
+        if not p then die("--keep option needs a string to match for") end
+        option.KEEP = p
+        i = i + 1
       elseif o == "--quiet" then
         option.QUIET = true
       elseif o == "--read-only" then
@@ -487,8 +585,14 @@ local function main()
         set_options(BASIC_CONFIG)
       elseif o == "--maximum" then
         set_options(MAXIMUM_CONFIG)
-      elseif o == "--dump" then
-        option.DUMP = true
+      elseif o == "--none" then
+        set_options(NONE_CONFIG)
+      elseif o == "--dump-lexer" then
+        option.DUMP_LEXER = true
+      elseif o == "--dump-parser" then
+        option.DUMP_PARSER = true
+      elseif o == "--details" then
+        option.DETAILS = true
       elseif OPTION[o] then  -- lookup optimization options
         set_options(o)
       else

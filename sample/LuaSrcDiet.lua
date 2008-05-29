@@ -1,15 +1,15 @@
 #!/usr/bin/env lua
-local string=string
-local math=math
-local table=table
-local sub=string.sub
-local gmatch=string.gmatch
-local llex=require"llex"local optlex=require"optlex"local MSG_TITLE=[[
+local o=string
+local I=math
+local j=table
+local r=o.sub
+local q=o.gmatch
+local a=require"llex"local f=require"lparser"local l=require"optlex"local k=require"optparser"local m=[[
 LuaSrcDiet: Puts your Lua 5.1 source code on a diet
-Version 0.10.1 (20080525)  Copyright (c) 2005-2008 Kein-Hong Man
+Version 0.11.0 (20080529)  Copyright (c) 2005-2008 Kein-Hong Man
 The COPYRIGHT file describes the conditions under which this
 software may be distributed.
-]]local MSG_USAGE=[[
+]]local v=[[
 usage: LuaSrcDiet [options] [filenames]
 
 example:
@@ -20,192 +20,234 @@ options:
   -h, --help        prints usage information
   -o <file>         specify file name to write output
   -s <suffix>       suffix for output files (default '_')
-  --quiet           process files quietly
+  --keep <msg>      keep block comment with <msg> inside
+  -                 stop handling arguments
+
+  (optimization levels)
+  --none            all optimizations off (normalizes EOLs only)
   --basic           lexer-based optimizations only
   --maximum         maximize reduction of source
+
+  (informational)
+  --quiet           process files quietly
   --read-only       read file and print token stats only
-  --dump            dump raw tokens from lexer to stdout
-  -                 stop handling arguments
+  --dump-lexer      dump raw tokens from lexer to stdout
+  --dump-parser     dump variable tracking tables from parser
+  --details         gives extra information, e.g. detailed stats
 
 features (to disable, insert 'no' prefix like --noopt-comments):
 %s
 default settings:
-%s]]local OPTION=[[
+%s]]local c=[[
 --opt-comments,'remove comments and block comments'
 --opt-whitespace,'remove whitespace excluding EOLs'
 --opt-emptylines,'remove empty lines'
 --opt-eols,'all above, plus remove unnecessary EOLs'
 --opt-strings,'optimize strings and long strings'
 --opt-numbers,'optimize numbers'
-]]local DEFAULT_CONFIG=[[
+--opt-locals,'optimize local variable names'
+]]local g=[[
   --opt-comments --opt-whitespace --opt-emptylines
-  --opt-numbers
-]]local BASIC_CONFIG=[[
+  --opt-numbers --opt-locals
+]]local x=[[
   --opt-comments --opt-whitespace --opt-emptylines
   --noopt-eols --noopt-strings --noopt-numbers
-]]local MAXIMUM_CONFIG=[[
+  --noopt-locals
+]]local A=[[
   --opt-comments --opt-whitespace --opt-emptylines
-  --opt-eols --opt-strings --opt-numbers
-]]local DEFAULT_SUFFIX="_"local function die(msg)print("LuaSrcDiet: "..msg);os.exit()end
-if not string.match(_VERSION,"5.1",1,1)then
-die("requires Lua 5.1 to run")end
-local MSG_OPTIONS=""do
-local WIDTH=24
-local o={}for op,desc in gmatch(OPTION,"%s*([^,]+),'([^']+)'")do
-local msg="  "..op
-msg=msg..string.rep(" ",WIDTH-#msg)..desc.."\n"MSG_OPTIONS=MSG_OPTIONS..msg
-o[op]=true
-o["--no"..sub(op,3)]=true
+  --opt-eols --opt-strings --opt-numbers --opt-locals
+]]local T=[[
+  --noopt-comments --noopt-whitespace --noopt-emptylines
+  --noopt-eols --noopt-strings --noopt-numbers
+  --noopt-locals
+]]local E="_"local function i(e)print("LuaSrcDiet: "..e);os.exit()end
+if not o.match(_VERSION,"5.1",1,1)then
+i("requires Lua 5.1 to run")end
+local p=""do
+local n=24
+local a={}for t,i in q(c,"%s*([^,]+),'([^']+)'")do
+local e="  "..t
+e=e..o.rep(" ",n-#e)..i.."\n"p=p..e
+a[t]=true
+a["--no"..r(t,3)]=true
 end
-OPTION=o
+c=a
 end
-MSG_USAGE=string.format(MSG_USAGE,MSG_OPTIONS,DEFAULT_CONFIG)local suffix=DEFAULT_SUFFIX
-local option={}local stat_c,stat_l
-local function set_options(CONFIG)for op in gmatch(CONFIG,"(%-%-%S+)")do
-if sub(op,3,4)=="no"and
-OPTION["--"..sub(op,5)]then
-option[sub(op,5)]=false
+v=o.format(v,p,g)local b=E
+local e={}local s,n
+local function d(a)for t in q(a,"(%-%-%S+)")do
+if r(t,3,4)=="no"and
+c["--"..r(t,5)]then
+e[r(t,5)]=false
 else
-option[sub(op,3)]=true
+e[r(t,3)]=true
 end
 end
 end
-local TTYPES={"TK_KEYWORD","TK_NAME","TK_NUMBER","TK_STRING","TK_LSTRING","TK_OP","TK_EOS","TK_COMMENT","TK_LCOMMENT","TK_EOL","TK_SPACE",}local TTYPE_GRAMMAR=7
-local EOLTYPES={["\n"]="LF",["\r"]="CR",["\n\r"]="LFCR",["\r\n"]="CRLF",}local function load_file(fname)local INF=io.open(fname,"rb")if not INF then die('cannot open "'..fname..'" for reading')end
-local dat=INF:read("*a")if not dat then die('cannot read from "'..fname..'"')end
-INF:close()return dat
+local h={"TK_KEYWORD","TK_NAME","TK_NUMBER","TK_STRING","TK_LSTRING","TK_OP","TK_EOS","TK_COMMENT","TK_LCOMMENT","TK_EOL","TK_SPACE",}local _=7
+local z={["\n"]="LF",["\r"]="CR",["\n\r"]="LFCR",["\r\n"]="CRLF",}local function u(e)local t=io.open(e,"rb")if not t then i('cannot open "'..e..'" for reading')end
+local a=t:read("*a")if not a then i('cannot read from "'..e..'"')end
+t:close()return a
 end
-local function save_file(fname,dat)local OUTF=io.open(fname,"wb")if not OUTF then die('cannot open "'..fname..'" for writing')end
-local status=OUTF:write(dat)if not status then die('cannot write to "'..fname..'"')end
-OUTF:close()end
-local function stat_init()stat_c,stat_l={},{}for i=1,#TTYPES do
-local ttype=TTYPES[i]stat_c[ttype],stat_l[ttype]=0,0
+local function q(e,a)local t=io.open(e,"wb")if not t then i('cannot open "'..e..'" for writing')end
+local a=t:write(a)if not a then i('cannot write to "'..e..'"')end
+t:close()end
+local function p()s,n={},{}for t=1,#h do
+local e=h[t]s[e],n[e]=0,0
 end
 end
-local function stat_add(tok,seminfo)stat_c[tok]=stat_c[tok]+1
-stat_l[tok]=stat_l[tok]+#seminfo
+local function y(e,t)s[e]=s[e]+1
+n[e]=n[e]+#t
 end
-local function stat_calc()local function avg(c,l)if c==0 then return 0 end
-return l/c
+local function w()local function i(e,t)if e==0 then return 0 end
+return t/e
 end
-local stat_a={}local c,l=0,0
-for i=1,TTYPE_GRAMMAR do
-local ttype=TTYPES[i]c=c+stat_c[ttype];l=l+stat_l[ttype]end
-stat_c.TOTAL_TOK,stat_l.TOTAL_TOK=c,l
-stat_a.TOTAL_TOK=avg(c,l)c,l=0,0
-for i=1,#TTYPES do
-local ttype=TTYPES[i]c=c+stat_c[ttype];l=l+stat_l[ttype]stat_a[ttype]=avg(stat_c[ttype],stat_l[ttype])end
-stat_c.TOTAL_ALL,stat_l.TOTAL_ALL=c,l
-stat_a.TOTAL_ALL=avg(c,l)return stat_a
+local o={}local t,e=0,0
+for o=1,_ do
+local a=h[o]t=t+s[a];e=e+n[a]end
+s.TOTAL_TOK,n.TOTAL_TOK=t,e
+o.TOTAL_TOK=i(t,e)t,e=0,0
+for r=1,#h do
+local a=h[r]t=t+s[a];e=e+n[a]o[a]=i(s[a],n[a])end
+s.TOTAL_ALL,n.TOTAL_ALL=t,e
+o.TOTAL_ALL=i(t,e)return o
 end
-local function dump_tokens(srcfl)local z=load_file(srcfl)llex.init(z)llex.llex()local toklist,seminfolist=llex.tok,llex.seminfo
-for i=1,#toklist do
-local tok,seminfo=toklist[i],seminfolist[i]if tok=="TK_OP"and string.byte(seminfo)<32 then
-seminfo="("..string.byte(seminfo)..")"elseif tok=="TK_EOL"then
-seminfo=EOLTYPES[seminfo]else
-seminfo="'"..seminfo.."'"end
-print(tok.." "..seminfo)end
+local function O(s)local n=u(s)a.init(n)a.llex()local i,n=a.tok,a.seminfo
+for a=1,#i do
+local t,e=i[a],n[a]if t=="TK_OP"and o.byte(e)<32 then
+e="("..o.byte(e)..")"elseif t=="TK_EOL"then
+e=z[e]else
+e="'"..e.."'"end
+print(t.." "..e)end
 end
-local function read_only(srcfl)local z=load_file(srcfl)llex.init(z)llex.llex()local toklist,seminfolist=llex.tok,llex.seminfo
-print(MSG_TITLE)print("Statistics for: "..srcfl.."\n")stat_init()for i=1,#toklist do
-local tok,seminfo=toklist[i],seminfolist[i]stat_add(tok,seminfo)end
-local stat_a=stat_calc()local fmt=string.format
-local function figures(tt)return stat_c[tt],stat_l[tt],stat_a[tt]end
-local tabf1,tabf2="%-16s%8s%8s%10s","%-16s%8d%8d%10.2f"local hl=string.rep("-",42)print(fmt(tabf1,"Lexical","Input","Input","Input"))print(fmt(tabf1,"Elements","Count","Bytes","Average"))print(hl)for i=1,#TTYPES do
-local ttype=TTYPES[i]print(fmt(tabf2,ttype,figures(ttype)))if ttype=="TK_EOS"then print(hl)end
+local function z(h)local i=print
+local h=u(h)a.init(h)a.llex()local r,d,h=a.tok,a.seminfo,a.tokln
+f.init(r,d,h)local n,s=f.parser()local a=o.rep("-",72)i("*** Local/Global Variable Tracker Tables ***")i(a.."\n GLOBALS\n"..a)for o=1,#n do
+local a=n[o]local e="("..o..") '"..a.name.."' -> "local t=a.xref
+for a=1,#t do e=e..t[a].." "end
+i(e)end
+i(a.."\n LOCALS (decl=declared act=activated rem=removed)\n"..a)for a=1,#s do
+local t=s[a]local e="("..a..") '"..t.name.."' decl:"..t.decl.." act:"..t.act.." rem:"..t.rem
+if t.isself then
+e=e.." isself"end
+e=e.." -> "local t=t.xref
+for a=1,#t do e=e..t[a].." "end
+i(e)end
+i(a.."\n")end
+local function _(r)local e=print
+local l=u(r)a.init(l)a.llex()local d,l=a.tok,a.seminfo
+e(m)e("Statistics for: "..r.."\n")p()for e=1,#d do
+local e,t=d[e],l[e]y(e,t)end
+local r=w()local a=o.format
+local function i(e)return s[e],n[e],r[e]end
+local s,n="%-16s%8s%8s%10s","%-16s%8d%8d%10.2f"local t=o.rep("-",42)e(a(s,"Lexical","Input","Input","Input"))e(a(s,"Elements","Count","Bytes","Average"))e(t)for s=1,#h do
+local o=h[s]e(a(n,o,i(o)))if o=="TK_EOS"then e(t)end
 end
-print(hl)print(fmt(tabf2,"Total Elements",figures("TOTAL_ALL")))print(hl)print(fmt(tabf2,"Total Tokens",figures("TOTAL_TOK")))print(hl.."\n")end
-local function process_file(srcfl,destfl)local function print(...)if option.QUIET then return end
+e(t)e(a(n,"Total Elements",i("TOTAL_ALL")))e(t)e(a(n,"Total Tokens",i("TOTAL_TOK")))e(t.."\n")end
+local function E(d,c)local function t(...)if e.QUIET then return end
 _G.print(...)end
-local z=load_file(srcfl)llex.init(z)llex.llex()local toklist,seminfolist,toklnlist=llex.tok,llex.seminfo,llex.tokln
-print(MSG_TITLE)print("Statistics for: "..srcfl.." -> "..destfl.."\n")stat_init()for i=1,#toklist do
-local tok,seminfo=toklist[i],seminfolist[i]stat_add(tok,seminfo)end
-local stat1_a=stat_calc()local stat1_c,stat1_l=stat_c,stat_l
-toklist,seminfolist=optlex.optimize(option,toklist,seminfolist,toklnlist)local dat=table.concat(seminfolist)if string.find(dat,"\r\n",1,1)or
-string.find(dat,"\n\r",1,1)then
-optlex.warn.mixedeol=true
+local g=u(d)a.init(g)a.llex()local a,i,u=a.tok,a.seminfo,a.tokln
+t(m)t("Statistics for: "..d.." -> "..c.."\n")p()for e=1,#a do
+local t,e=a[e],i[e]y(t,e)end
+local v=w()local b,m=s,n
+if e["opt-locals"]then
+k.print=t
+f.init(a,i,u)local o,t=f.parser()k.optimize(e,a,i,o,t)end
+a,i=l.optimize(e,a,i,u)local r=j.concat(i)if o.find(r,"\r\n",1,1)or
+o.find(r,"\n\r",1,1)then
+l.warn.mixedeol=true
 end
-save_file(destfl,dat)stat_init()for i=1,#toklist do
-local tok,seminfo=toklist[i],seminfolist[i]stat_add(tok,seminfo)end
-local stat_a=stat_calc()local fmt=string.format
-local function figures(tt)return stat1_c[tt],stat1_l[tt],stat1_a[tt],stat_c[tt],stat_l[tt],stat_a[tt]end
-local tabf1,tabf2="%-16s%8s%8s%10s%8s%8s%10s","%-16s%8d%8d%10.2f%8d%8d%10.2f"local hl=string.rep("-",68)print(fmt(tabf1,"Lexical","Input","Input","Input","Output","Output","Output"))print(fmt(tabf1,"Elements","Count","Bytes","Average","Count","Bytes","Average"))print(hl)for i=1,#TTYPES do
-local ttype=TTYPES[i]print(fmt(tabf2,ttype,figures(ttype)))if ttype=="TK_EOS"then print(hl)end
+q(c,r)p()for e=1,#a do
+local t,e=a[e],i[e]y(t,e)end
+local d=w()local a=o.format
+local function r(e)return b[e],m[e],v[e],s[e],n[e],d[e]end
+local n,i="%-16s%8s%8s%10s%8s%8s%10s","%-16s%8d%8d%10.2f%8d%8d%10.2f"local e=o.rep("-",68)t("*** lexer-based optimizations summary ***\n"..e)t(a(n,"Lexical","Input","Input","Input","Output","Output","Output"))t(a(n,"Elements","Count","Bytes","Average","Count","Bytes","Average"))t(e)for n=1,#h do
+local o=h[n]t(a(i,o,r(o)))if o=="TK_EOS"then t(e)end
 end
-print(hl)print(fmt(tabf2,"Total Elements",figures("TOTAL_ALL")))print(hl)print(fmt(tabf2,"Total Tokens",figures("TOTAL_TOK")))print(hl)if optlex.warn.lstring then
-print("* WARNING: "..optlex.warn.lstring)elseif optlex.warn.mixedeol then
-print("* WARNING: ".."output still contains some CRLF or LFCR line endings")end
-print()end
-local arg={...}local fspec={}set_options(DEFAULT_CONFIG)local function do_files(fspec)for _,srcfl in ipairs(fspec)do
-local destfl
-local extb,exte=string.find(srcfl,"%.[^%.%\\%/]*$")local basename,extension=srcfl,""if extb and extb>1 then
-basename=sub(srcfl,1,extb-1)extension=sub(srcfl,extb,exte)end
-destfl=basename..suffix..extension
-if#fspec==1 and option.OUTPUT_FILE then
-destfl=option.OUTPUT_FILE
+t(e)t(a(i,"Total Elements",r("TOTAL_ALL")))t(e)t(a(i,"Total Tokens",r("TOTAL_TOK")))t(e)if l.warn.lstring then
+t("* WARNING: "..l.warn.lstring)elseif l.warn.mixedeol then
+t("* WARNING: ".."output still contains some CRLF or LFCR line endings")end
+t()end
+local h={...}local s={}d(g)local function u(h)for l,t in ipairs(h)do
+local a
+local o,d=o.find(t,"%.[^%.%\\%/]*$")local n,s=t,""if o and o>1 then
+n=r(t,1,o-1)s=r(t,o,d)end
+a=n..b..s
+if#h==1 and e.OUTPUT_FILE then
+a=e.OUTPUT_FILE
 end
-if srcfl==destfl then
-die("output filename identical to input filename")end
-if option.DUMP then
-dump_tokens(srcfl)elseif option.READ_ONLY then
-read_only(srcfl)else
-process_file(srcfl,destfl)end
+if t==a then
+i("output filename identical to input filename")end
+if e.DUMP_LEXER then
+O(t)elseif e.DUMP_PARSER then
+z(t)elseif e.READ_ONLY then
+_(t)else
+E(t,a)end
 end
 end
-local function main()local argn,i=#arg,1
-if argn==0 then
-option.HELP=true
+local function l()local r,a=#h,1
+if r==0 then
+e.HELP=true
 end
-while i<=argn do
-local o,p=arg[i],arg[i+1]local dash=string.match(o,"^%-%-?")if dash=="-"then
-if o=="-h"then
-option.HELP=true;break
-elseif o=="-v"then
-option.VERSION=true;break
-elseif o=="-s"then
-if not p then die("-s option needs suffix specification")end
-suffix=p
-i=i+1
-elseif o=="-o"then
-if not p then die("-o option needs a file name")end
-option.OUTPUT_FILE=p
-i=i+1
-elseif o=="-"then
+while a<=r do
+local t,n=h[a],h[a+1]local o=o.match(t,"^%-%-?")if o=="-"then
+if t=="-h"then
+e.HELP=true;break
+elseif t=="-v"then
+e.VERSION=true;break
+elseif t=="-s"then
+if not n then i("-s option needs suffix specification")end
+b=n
+a=a+1
+elseif t=="-o"then
+if not n then i("-o option needs a file name")end
+e.OUTPUT_FILE=n
+a=a+1
+elseif t=="-"then
 break
 else
-die("unrecognized option "..o)end
-elseif dash=="--"then
-if o=="--help"then
-option.HELP=true;break
-elseif o=="--version"then
-option.VERSION=true;break
-elseif o=="--quiet"then
-option.QUIET=true
-elseif o=="--read-only"then
-option.READ_ONLY=true
-elseif o=="--basic"then
-set_options(BASIC_CONFIG)elseif o=="--maximum"then
-set_options(MAXIMUM_CONFIG)elseif o=="--dump"then
-option.DUMP=true
-elseif OPTION[o]then
-set_options(o)else
-die("unrecognized option "..o)end
+i("unrecognized option "..t)end
+elseif o=="--"then
+if t=="--help"then
+e.HELP=true;break
+elseif t=="--version"then
+e.VERSION=true;break
+elseif t=="--keep"then
+if not n then i("--keep option needs a string to match for")end
+e.KEEP=n
+a=a+1
+elseif t=="--quiet"then
+e.QUIET=true
+elseif t=="--read-only"then
+e.READ_ONLY=true
+elseif t=="--basic"then
+d(x)elseif t=="--maximum"then
+d(A)elseif t=="--none"then
+d(T)elseif t=="--dump-lexer"then
+e.DUMP_LEXER=true
+elseif t=="--dump-parser"then
+e.DUMP_PARSER=true
+elseif t=="--details"then
+e.DETAILS=true
+elseif c[t]then
+d(t)else
+i("unrecognized option "..t)end
 else
-fspec[#fspec+1]=o
+s[#s+1]=t
 end
-i=i+1
+a=a+1
 end
-if option.HELP then
-print(MSG_TITLE..MSG_USAGE);return true
-elseif option.VERSION then
-print(MSG_TITLE);return true
+if e.HELP then
+print(m..v);return true
+elseif e.VERSION then
+print(m);return true
 end
-if#fspec>0 then
-if#fspec>1 and option.OUTPUT_FILE then
-die("with -o, only one source file can be specified")end
-do_files(fspec)return true
+if#s>0 then
+if#s>1 and e.OUTPUT_FILE then
+i("with -o, only one source file can be specified")end
+u(s)return true
 else
-die("nothing to do!")end
+i("nothing to do!")end
 end
-if not main()then
-die("Please run with option -h or --help for usage information")end
+if not l()then
+i("Please run with option -h or --help for usage information")end

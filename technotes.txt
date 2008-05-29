@@ -96,10 +96,17 @@ Description of Locals Optimization
 Miscellaneous Ideas, TODO Stuff
 -------------------------------
 
-Spaces to Tabs Conversion:
-
-If running with little optimizations, an option to convert tabs to
-spaces might have some use, but is of little importance beyond feature
-completeness.
+Other Ideas:
+(a) remove unused locals that can be removed in the source
+(b) remove declarations using nil
+(c) remove table constructor elements using nil
+(d) extra optional semicolon removal
+(e) extra comma or semicolon removal in table constructors
+(f) special number forms: using ^ and * to shorten constants: 1^16
+(g) simple declaration of locals that can be merged: local a,b,c,d
+(h) warn of opportunity for using a local to zap a bunch of globals
+(i) warn of trailing whitespace in strings or long strings
+(j) spaces to tabs in comments/long comments/long strings
+(k) convert long strings to normal strings, vice versa
 
 END.

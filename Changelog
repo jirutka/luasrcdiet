@@ -1,6 +1,115 @@
 LuaSrcDiet changelog
 --------------------
 
+2008-05-29  Kein-Hong Man  <khman@users.sf.net>
+
+	* Manifest: updated
+	* README: updated
+	* lparser.lua: added isself flag to handle "self" specially
+	* LuaSrcDiet.lua (dump_parser): added display for 'isself'
+	* optparser.lua (optimize): added support for preserving implicit
+	"self" parameter, updated local renaming loop
+	* Version: 0.11.0
+	* README: updated
+
+2008-05-29  Kein-Hong Man  <khman@users.sf.net>
+
+	* optparser.lua (stats_summary): improved with output stats, clean up
+	* LuaSrcDiet.lua (process_file): clean up stats display
+	* LuaSrcDiet.lua (process_file): mistake in assigning optional print,
+	mistakenly assigned to lparser.print instead of optparser.print
+	* sample/Makefile: added entries for dumping --dump-* samples
+	* sample/Makefile: added entries for different optimization options
+
+2008-05-29  Kein-Hong Man  <khman@users.sf.net>
+
+	* optparser.lua (optimize): finished coding local variable
+	optimizer, to test now
+	* optparser.lua (optimize): syntax error, used 'then' instead of 'do'
+	* lparser.lua: bug in binopr_*, missing "%" operator, Yueliang bug
+	* lparser.lua: added nameref, to track local variable declaration's
+	position properly
+	* lparser.lua (searchvar): bug, forgot to fix a "return 1" to return
+	a proper useful id
+	* optparser.lua (optimize): fix obj/object handling, no need to
+	compare against nil
+	* optparser.lua (optimize): rewrite local-local collision loop using
+	a variable scanleft to track objects left to process
+	* optparser.lua (optimize): objects assigned to mark properly with
+	skip and done
+	* lparser.lua (adjustlocalvars): change 'rem' assignment if local
+	variables are overlapping
+	* optparser.lua (optimize): added handling for 'rem' extension if
+	it is negative
+	* sample/Makefile: updated, plus second-generation test, auto-diffed
+	* optparser.lua: local variable optimization seems to work
+
+2008-05-28  Kein-Hong Man  <khman@users.sf.net>
+
+	* optparser.lua: added designs for stats tables
+	* optparser.lua (debug_dump_info): beautify variable names
+	* optparser.lua: added draft of statistics dump code
+	* optparser.lua (optimize): added option as parm for future
+	* optparser.lua (debug_dump_info): removed along with associated
+	stuff, moved to main program as a dump option
+	* LuaSrcDiet.lua: change name of --dump to --dump-lexer, added
+	--dump-parser
+	* LuaSrcDiet.lua (dump_parser): adapted from debug_dump_info
+	* optparser.lua: rearranged some code
+	* optparser.lua: fixed LETTERS, upper-case is valid also
+	* optparser.lua (new_var_name): implemented variable name allocator
+	* optparser.lua (preprocess): added preprocess to find first and
+	last accesses of locals
+
+2008-05-28  Kein-Hong Man  <khman@users.sf.net>
+
+	* lparser.lua (removevars): adapted from original parser,
+	needed for proper local variable activation/deactivation tracking
+	* optparser.lua: added some debugging display code
+	* lparser.lua (forlist): bug, nvar set to 0 but should be 1,
+	mistake in copy-and-paste
+	* lparser.lua: global/local tables seems okay
+	* lparser.lua (adjustlocalvars): adjusted activation order
+	* LuaSrcDiet.lua: added --keep option to leave license or
+	copyright texts alone
+
+2008-05-28  Kein-Hong Man  <khman@users.sf.net>
+
+	* technotes.txt: added a list of possible optimizations
+	* optparser.lua: updated constant strings to handle name entropy
+	* LuaSrcDiet.lua: added --none option for zero optimizations
+	* LuaSrcDiet.lua: added --details option (flag only) for display
+	of extra or useful optimization output information
+
+2008-05-28  Kein-Hong Man  <khman@users.sf.net>
+
+	* LuaSrcDiet.lua: enabled code for --opt-locals
+	* LuaSrcDiet.lua: added code to call parser, parser optimizer
+	* lparser.lua: added tables for deferred local variable activation
+	* lparser.lua (adjustlocalvars): adapted from original parser,
+	needed for deferred local variable activation, updated various
+	functions that uses it as well
+	* lparser.lua (init): off by 1 error for j index, 0 should be 1
+	* lparser.lua: bug in unopr, missing "#" lookup, Yueliang bug
+	* optparser.lua (optimize): added debug code
+	* lparser.lua: working better
+
+2008-05-28  Kein-Hong Man  <khman@users.sf.net>
+
+	* lparser.lua: fitted with new token retrieval scheme using tables
+	* llex.lua: simplified locals declaration
+	* sample/Makefile: added lparser.lua and optparser.lua for testing
+	* lparser.lua: restored some earlier line numbering code
+	* lparser.lua (init): rewrote token retrieval properly to take into
+	consideration non-grammar tokens and fake constants
+	* lparser.lua: removed unused token peeking code, added table init
+	* lparser.lua: add local variable tracking code
+	* lparser.lua: coded local/global variable tracking code
+	* lparser.lua (singlevar): bug, tried to local globalinfo[id]
+	* lparser.lua (init): rename mistake, toklist should be tokorig
+	* lparser.lua (init): indexing mistake, target, i should be j
+	* lparser.lua: passes parsing of LuaSrcDiet.lua
+
 2008-05-27  Kein-Hong Man  <khman@users.sf.net>
 
 	* README: updated
