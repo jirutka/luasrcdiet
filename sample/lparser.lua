@@ -1,362 +1,363 @@
-local N=_G
-local U=require"string"module"lparser"local X=N.getfenv()local _,k,z,C,l,u,K,t,g,s,x,y,a,Q,j,D,n,p,A
-local v,r,w,E,T
-local L=U.gmatch
-local R={}for e in L("else elseif end until <eof>","%S+")do
-R[e]=true
+local K=_G
+local P=require"string"module"lparser"local Y=K.getfenv()local E,m,N,B,d,f,F,n,O,u,w,b,l,W,A,S,a,v,D
+local p,c,_,I,T,x
+local C=P.gmatch
+local U={}for e in C("else elseif end until <eof>","%S+")do
+U[e]=true
 end
-local Z={}for e in L("if while do for repeat function local return break","%S+")do
-Z[e]=e.."_stat"end
-local S={}local B={}for e,t,a in L([[
+local q={}for e in C("if while do for repeat function local return break","%S+")do
+q[e]=e.."_stat"end
+local M={}local y={}for e,l,n in C([[
 {+ 6 6}{- 6 6}{* 7 7}{/ 7 7}{% 7 7}
 {^ 10 9}{.. 5 4}
 {~= 3 3}{== 3 3}
 {< 3 3}{<= 3 3}{> 3 3}{>= 3 3}
 {and 2 2}{or 1 1}
 ]],"{(%S+)%s(%d+)%s(%d+)}")do
-S[e]=t+0
-B[e]=a+0
+M[e]=l+0
+y[e]=n+0
 end
-local oe={["not"]=true,["-"]=true,["#"]=true,}local ae=8
-local function te(a,e)local t=error or N.error
-t(U.format("(source):%d: %s",e or s,a))end
-local function e()K=z[l]t,g,s,x=_[l],k[l],z[l],C[l]l=l+1
+local ce={["not"]=true,["-"]=true,["#"]=true,}local te=8
+local function le(l,n)local e=error or K.error
+e(P.format("(source):%d: %s",n or u,l))end
+local function e()F=N[d]n,O,u,w=E[d],m[d],N[d],B[d]d=d+1
 end
-local function ee()return _[l]end
-local function h(a)local e=t
+local function oe()return E[d]end
+local function r(l)local e=n
 if e~="<number>"and e~="<string>"then
-if e=="<name>"then e=g end
+if e=="<name>"then e=O end
 e="'"..e.."'"end
-te(a.." near "..e)end
-local function V(e)h("'"..e.."' expected")end
-local function o(a)if t==a then e();return true end
+le(l.." near "..e)end
+local function Z(e)r("'"..e.."' expected")end
+local function t(l)if n==l then e();return true end
 end
-local function L(e)if t~=e then V(e)end
+local function R(e)if n~=e then Z(e)end
 end
-local function i(t)L(t);e()end
-local function G(e,t)if not e then h(t)end
+local function o(n)R(n);e()end
+local function ee(n,e)if not n then r(e)end
 end
-local function d(e,a,t)if not o(e)then
-if t==s then
-V(e)else
-h("'"..e.."' expected (to close '"..a.."' at line "..t..")")end
+local function i(e,l,n)if not t(e)then
+if n==u then
+Z(e)else
+r("'"..e.."' expected (to close '"..l.."' at line "..n..")")end
 end
 end
-local function f()L("<name>")local t=g
-y=x
-e()return t
+local function V()R("<name>")local n=O
+b=w
+e()return n
 end
-local function H(e,t)e.k="VK"end
-local function O(e)H(e,f())end
-local function m(s,i)local o=a.bl
-local e
+local function G(e,n)e.k="VK"end
+local function C(e)G(e,V())end
+local function h(t,c)local o=l.bl
+local n
 if o then
-e=o.locallist
+n=o.locallist
 else
-e=a.locallist
+n=l.locallist
 end
-local t=#n+1
-n[t]={name=s,xref={y},decl=y,}if i then
-n[t].isself=true
+local e=#a+1
+a[e]={name=t,xref={b},decl=b,}if c then
+a[e].isself=true
 end
-local a=#p+1
-p[a]=t
-A[a]=e
+local l=#v+1
+v[l]=e
+D[l]=n
 end
-local function q(e)local s=#p
-while e>0 do
-e=e-1
-local e=s-e
-local a=p[e]local t=n[a]local o=t.name
-t.act=x
-p[e]=nil
-local i=A[e]A[e]=nil
-local e=i[o]if e then
-t=n[e]t.rem=-a
+local function g(n)local c=#v
+while n>0 do
+n=n-1
+local e=c-n
+local l=v[e]local n=a[l]local o=n.name
+n.act=w
+v[e]=nil
+local t=D[e]D[e]=nil
+local e=t[o]if e then
+n=a[e]n.rem=-l
 end
-i[o]=a
+t[o]=l
 end
 end
-local function P()local t=a.bl
+local function H()local n=l.bl
 local e
-if t then
-e=t.locallist
+if n then
+e=n.locallist
 else
-e=a.locallist
+e=l.locallist
 end
-for t,e in N.pairs(e)do
-local e=n[e]e.rem=x
+for l,n in K.pairs(e)do
+local e=a[n]e.rem=w
 end
 end
-local function c(e,t)if U.sub(e,1,1)=="("then
+local function s(e,n)if P.sub(e,1,1)=="("then
 return
 end
-m(e,t)end
-local function te(a,t)local e=a.bl
-if e then
-locallist=e.locallist
-while locallist do
-if locallist[t]then return locallist[t]end
-e=e.prev
-locallist=e and e.locallist
+h(e,n)end
+local function ne(o,l)local n=o.bl
+local e
+if n then
+e=n.locallist
+while e do
+if e[l]then return e[l]end
+n=n.prev
+e=n and n.locallist
 end
 end
-locallist=a.locallist
-return locallist[t]or-1
+e=o.locallist
+return e[l]or-1
 end
-local function V(t,a,e)if t==nil then
+local function z(n,o,e)if n==nil then
 e.k="VGLOBAL"return"VGLOBAL"else
-local o=te(t,a)if o>=0 then
-e.k="VLOCAL"e.id=o
+local l=ne(n,o)if l>=0 then
+e.k="VLOCAL"e.id=l
 return"VLOCAL"else
-if V(t.prev,a,e)=="VGLOBAL"then
+if z(n.prev,o,e)=="VGLOBAL"then
 return"VGLOBAL"end
 e.k="VUPVAL"return"VUPVAL"end
 end
 end
-local function J(o)local t=f()V(a,t,o)if o.k=="VGLOBAL"then
-local e=D[t]if not e then
-e=#j+1
-j[e]={name=t,xref={y},}D[t]=e
+local function j(o)local n=V()z(l,n,o)if o.k=="VGLOBAL"then
+local e=S[n]if not e then
+e=#A+1
+A[e]={name=n,xref={b},}S[n]=e
 else
-local e=j[e].xref
-e[#e+1]=y
+local e=A[e].xref
+e[#e+1]=b
 end
 else
-local t=o.id
-local e=n[t].xref
-e[#e+1]=y
+local n=o.id
+local e=a[n].xref
+e[#e+1]=b
 end
 end
-local function b(t)local e={}e.isbreakable=t
-e.prev=a.bl
-e.locallist={}a.bl=e
+local function k(n)local e={}e.isbreakable=n
+e.prev=l.bl
+e.locallist={}l.bl=e
 end
-local function y()local e=a.bl
-P()a.bl=e.prev
+local function L()local e=l.bl
+H()l.bl=e.prev
 end
-local function F()local e
-if not a then
-e=Q
+local function Z()local e
+if not l then
+e=W
 else
 e={}end
-e.prev=a
+e.prev=l
 e.bl=nil
-e.locallist={}a=e
+e.locallist={}l=e
 end
-local function M()P()a=a.prev
+local function z()H()l=l.prev
 end
-local function x(a)local t={}e()O(t)a.k="VINDEXED"end
-local function N(t)e()r(t)i("]")end
-local function U(o)local e,a={},{}if t=="<name>"then
-O(e)else
-N(e)end
-i("=")r(a)end
-local function V(e)if e.v.k=="VVOID"then return end
+local function b(n)local l={}e()C(l)n.k="VINDEXED"end
+local function Q(n)e()c(n)o("]")end
+local function J(t)local e,l={},{}if n=="<name>"then
+C(e)else
+Q(e)end
+o("=")c(l)end
+local function H(e)if e.v.k=="VVOID"then return end
 e.v.k="VVOID"end
-local function W(e)r(e.v)end
-local function Y(a)local n=s
-local e={}e.v={}e.t=a
-a.k="VRELOCABLE"e.v.k="VVOID"i("{")repeat
-if t=="}"then break end
-local t=t
-if t=="<name>"then
-if ee()~="="then
-W(e)else
-U(e)end
-elseif t=="["then
-U(e)else
-W(e)end
-until not o(",")and not o(";")d("}","{",n)end
-local function W()local i=0
-if t~=")"then
+local function P(e)c(e.v)end
+local function X(l)local c=u
+local e={}e.v={}e.t=l
+l.k="VRELOCABLE"e.v.k="VVOID"o("{")repeat
+if n=="}"then break end
+local n=n
+if n=="<name>"then
+if oe()~="="then
+P(e)else
+J(e)end
+elseif n=="["then
+J(e)else
+P(e)end
+until not t(",")and not t(";")i("}","{",c)end
+local function J()local o=0
+if n~=")"then
 repeat
-local t=t
-if t=="<name>"then
-m(f())i=i+1
-elseif t=="..."then
-e()a.is_vararg=true
+local n=n
+if n=="<name>"then
+h(V())o=o+1
+elseif n=="..."then
+e()l.is_vararg=true
 else
-h("<name> or '...' expected")end
-until a.is_vararg or not o(",")end
-q(i)end
-local function U(n)local a={}local i=s
-local o=t
+r("<name> or '...' expected")end
+until l.is_vararg or not t(",")end
+g(o)end
+local function K(c)local l={}local t=u
+local o=n
 if o=="("then
-if i~=K then
-h("ambiguous syntax (function call x new statement)")end
-e()if t==")"then
-a.k="VVOID"else
-v(a)end
-d(")","(",i)elseif o=="{"then
-Y(a)elseif o=="<string>"then
-H(a,g)e()else
-h("function arguments expected")return
+if t~=F then
+r("ambiguous syntax (function call x new statement)")end
+e()if n==")"then
+l.k="VVOID"else
+p(l)end
+i(")","(",t)elseif o=="{"then
+X(l)elseif o=="<string>"then
+G(l,O)e()else
+r("function arguments expected")return
 end
-n.k="VCALL"end
-local function P(a)local t=t
-if t=="("then
-local t=s
-e()r(a)d(")","(",t)elseif t=="<name>"then
-J(a)else
-h("unexpected symbol")end
+c.k="VCALL"end
+local function F(l)local n=n
+if n=="("then
+local n=u
+e()c(l)i(")","(",n)elseif n=="<name>"then
+j(l)else
+r("unexpected symbol")end
 end
-local function I(a)P(a)while true do
-local t=t
-if t=="."then
-x(a)elseif t=="["then
-local e={}N(e)elseif t==":"then
-local t={}e()O(t)U(a)elseif t=="("or t=="<string>"or t=="{"then
-U(a)else
+local function w(l)F(l)while true do
+local n=n
+if n=="."then
+b(l)elseif n=="["then
+local e={}Q(e)elseif n==":"then
+local n={}e()C(n)K(l)elseif n=="("or n=="<string>"or n=="{"then
+K(l)else
 return
 end
 end
 end
-local function U(o)local t=t
-if t=="<number>"then
-o.k="VKNUM"elseif t=="<string>"then
-H(o,g)elseif t=="nil"then
-o.k="VNIL"elseif t=="true"then
-o.k="VTRUE"elseif t=="false"then
-o.k="VFALSE"elseif t=="..."then
-G(a.is_vararg==true,"cannot use '...' outside a vararg function");o.k="VVARARG"elseif t=="{"then
-Y(o)return
-elseif t=="function"then
-e()T(o,false,s)return
+local function F(o)local n=n
+if n=="<number>"then
+o.k="VKNUM"elseif n=="<string>"then
+G(o,O)elseif n=="nil"then
+o.k="VNIL"elseif n=="true"then
+o.k="VTRUE"elseif n=="false"then
+o.k="VFALSE"elseif n=="..."then
+ee(l.is_vararg==true,"cannot use '...' outside a vararg function");o.k="VVARARG"elseif n=="{"then
+X(o)return
+elseif n=="function"then
+e()T(o,false,u)return
 else
-I(o)return
+w(o)return
 end
 e()end
-local function g(o,i)local a=t
-local n=oe[a]if n then
-e()g(o,ae)else
-U(o)end
-a=t
-local t=S[a]while t and t>i do
-local o={}e()local e=g(o,B[a])a=e
-t=S[a]end
-return a
+local function O(o,c)local l=n
+local t=ce[l]if t then
+e()O(o,te)else
+F(o)end
+l=n
+local n=M[l]while n and n>c do
+local o={}e()local e=O(o,y[l])l=e
+n=M[l]end
+return l
 end
-function r(e)g(e,0)end
-local function O(a)local t={}local e=a.v.k
-G(e=="VLOCAL"or e=="VUPVAL"or e=="VGLOBAL"or e=="VINDEXED","syntax error")if o(",")then
-local e={}e.v={}I(e.v)O(e)else
-i("=")v(t)return
+function c(e)O(e,0)end
+local function O(l)local n={}local e=l.v.k
+ee(e=="VLOCAL"or e=="VUPVAL"or e=="VGLOBAL"or e=="VINDEXED","syntax error")if t(",")then
+local e={}e.v={}w(e.v)O(e)else
+o("=")p(n)return
 end
-t.k="VNONRELOC"end
-local function N(e,t)i("do")b(false)q(e)w()y()end
-local function U(e)local t=u
-c("(for index)")c("(for limit)")c("(for step)")m(e)i("=")E()i(",")E()if o(",")then
-E()else
+n.k="VNONRELOC"end
+local function K(e,n)o("do")k(false)g(e)_()L()end
+local function M(e)local n=f
+s("(for index)")s("(for limit)")s("(for step)")h(e)o("=")I()o(",")I()if t(",")then
+I()else
 end
-N(1,true)end
-local function H(a)local t={}c("(for generator)")c("(for state)")c("(for control)")m(a)local e=1
-while o(",")do
-m(f())e=e+1
+K(1,true)end
+local function P(l)local n={}s("(for generator)")s("(for state)")s("(for control)")h(l)local e=1
+while t(",")do
+h(V())e=e+1
 end
-i("in")local a=u
-v(t)N(e,false)end
-local function S(e)local a=false
-J(e)while t=="."do
-x(e)end
-if t==":"then
-a=true
-x(e)end
-return a
+o("in")local l=f
+p(n)K(e,false)end
+local function C(e)local l=false
+j(e)while n=="."do
+b(e)end
+if n==":"then
+l=true
+b(e)end
+return l
 end
-function E()local e={}r(e)end
-local function g()local e={}r(e)end
-local function x()e()g()i("then")w()end
-local function E()local t,e={}m(f())t.k="VLOCAL"q(1)T(e,false,s)end
-local function N()local e=0
-local t={}repeat
-m(f())e=e+1
-until not o(",")if o("=")then
-v(t)else
-t.k="VVOID"end
-q(e)end
-function v(e)r(e)while o(",")do
-r(e)end
+function I()local e={}c(e)end
+local function b()local e={}c(e)end
+local function I()e()b()o("then")_()end
+local function G()local e,n={}h(V())e.k="VLOCAL"g(1)T(n,false,u)end
+local function K()local e=0
+local n={}repeat
+h(V())e=e+1
+until not t(",")if t("=")then
+p(n)else
+n.k="VVOID"end
+g(e)end
+function p(e)c(e)while t(",")do
+c(e)end
 end
-function T(a,t,e)F()i("(")if t then
-c("self",true)q(1)end
-W()i(")")chunk()d("end","function",e)M()end
-function w()b(false)chunk()y()end
-function for_stat()local o=u
-b(true)e()local a=f()local e=t
+function T(l,e,n)Z()o("(")if e then
+s("self",true)g(1)end
+J()o(")")x()i("end","function",n)z()end
+function _()k(false)x()L()end
+function for_stat()local o=f
+k(true)e()local l=V()local e=n
 if e=="="then
-U(a)elseif e==","or e=="in"then
-H(a)else
-h("'=' or 'in' expected")end
-d("end","for",o)y()end
-function while_stat()local t=u
-e()g()b(true)i("do")w()d("end","while",t)y()end
-function repeat_stat()local t=u
-b(true)b(false)e()chunk()d("until","repeat",t)g()y()y()end
-function if_stat()local a=u
-local o={}x()while t=="elseif"do
-x()end
-if t=="else"then
-e()w()end
-d("end","if",a)end
-function return_stat()local a={}e()local e=t
-if R[e]or e==";"then
+M(l)elseif e==","or e=="in"then
+P(l)else
+r("'=' or 'in' expected")end
+i("end","for",o)L()end
+function while_stat()local n=f
+e()b()k(true)o("do")_()i("end","while",n)L()end
+function repeat_stat()local n=f
+k(true)k(false)e()x()i("until","repeat",n)b()L()L()end
+function if_stat()local l=f
+local o={}I()while n=="elseif"do
+I()end
+if n=="else"then
+e()_()end
+i("end","if",l)end
+function return_stat()local l={}e()local e=n
+if U[e]or e==";"then
 else
-v(a)end
+p(l)end
 end
-function break_stat()local t=a.bl
-e()while t and not t.isbreakable do
-t=t.prev
+function break_stat()local n=l.bl
+e()while n and not n.isbreakable do
+n=n.prev
 end
-if not t then
-h("no loop to break")end
+if not n then
+r("no loop to break")end
 end
-function expr_stat()local e={}e.v={}I(e.v)if e.v.k=="VCALL"then
+function expr_stat()local e={}e.v={}w(e.v)if e.v.k=="VCALL"then
 else
 e.prev=nil
 O(e)end
 end
-function function_stat()local o=u
-local a,t={},{}e()local e=S(a)T(t,e,o)end
-function do_stat()local t=u
-e()w()d("end","do",t)end
-function local_stat()e()if o("function")then
-E()else
-N()end
+function function_stat()local l=f
+local o,n={},{}e()local e=C(o)T(n,e,l)end
+function do_stat()local n=f
+e()_()i("end","do",n)end
+function local_stat()e()if t("function")then
+G()else
+K()end
 end
-local function h()u=s
-local e=t
-local t=Z[e]if t then
-X[t]()if e=="return"or e=="break"then return true end
+local function c()f=u
+local e=n
+local n=q[e]if n then
+Y[n]()if e=="return"or e=="break"then return true end
 else
 expr_stat()end
 return false
 end
-function chunk()local e=false
-while not e and not R[t]do
-e=h()o(";")end
+function x()local e=false
+while not e and not U[n]do
+e=c()t(";")end
 end
-function parser()F()a.is_vararg=true
-e()chunk()L("<eof>")M()return j,n
+function parser()Z()l.is_vararg=true
+e()x()R("<eof>")z()return A,a
 end
-function init(o,i,s)l=1
-Q={}local t=1
-_,k,z,C={},{},{},{}for a=1,#o do
-local e=o[a]local o=true
+function init(t,o,c)d=1
+W={}local n=1
+E,m,N,B={},{},{},{}for l=1,#t do
+local e=t[l]local t=true
 if e=="TK_KEYWORD"or e=="TK_OP"then
-e=i[a]elseif e=="TK_NAME"then
-e="<name>"k[t]=i[a]elseif e=="TK_NUMBER"then
-e="<number>"k[t]=0
+e=o[l]elseif e=="TK_NAME"then
+e="<name>"m[n]=o[l]elseif e=="TK_NUMBER"then
+e="<number>"m[n]=0
 elseif e=="TK_STRING"or e=="TK_LSTRING"then
-e="<string>"k[t]=""elseif e=="TK_EOS"then
+e="<string>"m[n]=""elseif e=="TK_EOS"then
 e="<eof>"else
-o=false
+t=false
 end
-if o then
-_[t]=e
-z[t]=s[a]C[t]=a
-t=t+1
+if t then
+E[n]=e
+N[n]=c[l]B[n]=l
+n=n+1
 end
 end
-j,D,n={},{},{}p,A={},{}end
-return X
+A,S,a={},{},{}v,D={},{}end
+return Y

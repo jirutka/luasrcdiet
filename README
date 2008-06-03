@@ -62,6 +62,12 @@ functions (LUA_COMPAT_VARARG).
 
 WHAT'S NEW
 
+Major changes for version 0.11.1 (see the ChangeLog as well):
+* --detail option for more string, number and local variable info
+* fixed a local rename bug that generates names that are keywords
+* added explanatory notes on local variable optimization
+* added --opt-entropy option for locals to reduce symbol entropy
+
 Major changes for version 0.11.0 (see the ChangeLog as well):
 * Local variable name optimization.
 * Many options and sample output added.
@@ -173,4 +179,4 @@ Enjoy!!
 
 Kein-Hong Man (esq.)
 Kuala Lumpur
-Malaysia 20080529
+Malaysia 20080603

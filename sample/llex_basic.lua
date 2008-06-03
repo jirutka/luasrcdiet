@@ -60,6 +60,7 @@ function errorline(s,line)
 local e=error or base.error
 e(string.format("%s:%d: %s",chunkid(),line or ln,s))
 end
+local errorline=errorline
 local function skip_sep(i)
 local sub=sub
 local s=sub(z,i,i)

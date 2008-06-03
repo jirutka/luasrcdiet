@@ -58,7 +58,7 @@ local toklist,                  -- grammar-only token tables (token table,
       ilocalrefs                -- corresponding references to activate
 
 -- forward references for local functions
-local explist1, expr, block, exp1, body
+local explist1, expr, block, exp1, body, chunk
 
 ----------------------------------------------------------------------
 -- initialization: data structures
@@ -334,6 +334,7 @@ end
 
 local function searchvar(fs, n)
   local bl = fs.bl
+  local locallist
   if bl then
     locallist = bl.locallist
     while locallist do
@@ -1219,6 +1220,7 @@ end
 -- * used in parser(), body(), block(), repeat_stat()
 ----------------------------------------------------------------------
 
+-- this is a forward-referenced local
 function chunk()
   -- chunk -> { stat [';'] }
   local islast = false

@@ -1,4 +1,3 @@
-#!/usr/bin/env lua
 --[[--------------------------------------------------------------------
 
   LuaSrcDiet
@@ -25,8 +24,6 @@
 local string = string
 local math = math
 local table = table
-local require = require
-local print = print
 local sub = string.sub
 local gmatch = string.gmatch
 
@@ -42,7 +39,7 @@ local optparser = require "optparser"
 
 local MSG_TITLE = [[
 LuaSrcDiet: Puts your Lua 5.1 source code on a diet
-Version 0.11.1 (20080603)  Copyright (c) 2005-2008 Kein-Hong Man
+Version 0.11.0 (20080529)  Copyright (c) 2005-2008 Kein-Hong Man
 The COPYRIGHT file describes the conditions under which this
 software may be distributed.
 ]]
@@ -71,7 +68,7 @@ options:
   --read-only       read file and print token stats only
   --dump-lexer      dump raw tokens from lexer to stdout
   --dump-parser     dump variable tracking tables from parser
-  --details         extra info (strings, numbers, locals)
+  --details         gives extra information, e.g. detailed stats
 
 features (to disable, insert 'no' prefix like --noopt-comments):
 %s
@@ -91,7 +88,6 @@ local OPTION = [[
 --opt-strings,'optimize strings and long strings'
 --opt-numbers,'optimize numbers'
 --opt-locals,'optimize local variable names'
---opt-entropy,'tries to reduce symbol entropy of locals'
 ]]
 
 -- preset configuration
@@ -107,8 +103,7 @@ local BASIC_CONFIG = [[
 ]]
 local MAXIMUM_CONFIG = [[
   --opt-comments --opt-whitespace --opt-emptylines
-  --opt-eols --opt-strings --opt-numbers
-  --opt-locals --opt-entropy
+  --opt-eols --opt-strings --opt-numbers --opt-locals
 ]]
 local NONE_CONFIG = [[
   --noopt-comments --noopt-whitespace --noopt-emptylines
@@ -435,7 +430,6 @@ local function process_file(srcfl, destfl)
   --------------------------------------------------------------------
   -- do lexer optimization here, save output file
   --------------------------------------------------------------------
-  optlex.print = print  -- hack
   toklist, seminfolist
     = optlex.optimize(option, toklist, seminfolist, toklnlist)
   local dat = table.concat(seminfolist)

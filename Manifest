@@ -35,3 +35,6 @@ sample/llex_emptylines.lua
 test/test_llex.lua
 test/test_optlex.lua
 test/test_optparser.lua
+test/test_benchmark1.lua
+test/LuaSrcDiet_fixed.lua
+test/LuaSrcDiet_fixed_.lua

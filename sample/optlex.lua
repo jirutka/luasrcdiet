@@ -1,329 +1,344 @@
-local r=_G
-local c=require"string"module"optlex"local o=c.match
-local e=c.sub
-local l=c.find
-local d=c.rep
-error=r.error
-warn={}local n,i,u
-local v={TK_KEYWORD=true,TK_NAME=true,TK_NUMBER=true,TK_STRING=true,TK_LSTRING=true,TK_OP=true,TK_EOS=true,}local w={TK_COMMENT=true,TK_LCOMMENT=true,TK_EOL=true,TK_SPACE=true,}local function p(e)local t=n[e-1]if e<=1 or t=="TK_EOL"then
+local f=_G
+local u=require"string"module"optlex"local o=u.match
+local e=u.sub
+local h=u.find
+local c=u.rep
+local T
+error=f.error
+warn={}local i,t,s
+local O={TK_KEYWORD=true,TK_NAME=true,TK_NUMBER=true,TK_STRING=true,TK_LSTRING=true,TK_OP=true,TK_EOS=true,}local L={TK_COMMENT=true,TK_LCOMMENT=true,TK_EOL=true,TK_SPACE=true,}local a
+local function P(e)local n=i[e-1]if e<=1 or n=="TK_EOL"then
 return true
-elseif t==""then
-return p(e-1)end
+elseif n==""then
+return P(e-1)end
 return false
 end
-local function g(t)local e=n[t+1]if t>=#n or e=="TK_EOL"or e=="TK_EOS"then
+local function R(n)local e=i[n+1]if n>=#i or e=="TK_EOL"or e=="TK_EOS"then
 return true
 elseif e==""then
-return g(t+1)end
+return R(n+1)end
 return false
 end
-local function T(i)local o=#o(i,"^%-%-%[=*%[")local i=e(i,o+1,-(o-1))local e,t=1,0
+local function G(t)local o=#o(t,"^%-%-%[=*%[")local o=e(t,o+1,-(o-1))local e,n=1,0
 while true do
-local a,n,i,o=l(i,"([\r\n])([\r\n]?)",e)if not a then break end
-e=a+1
-t=t+1
-if#o>0 and i~=o then
+local l,i,o,t=h(o,"([\r\n])([\r\n]?)",e)if not l then break end
+e=l+1
+n=n+1
+if#t>0 and o~=t then
 e=e+1
 end
 end
-return t
+return n
 end
-local function b(h,s)local a=o
-local t,e=n[h],n[s]if t=="TK_STRING"or t=="TK_LSTRING"or
+local function S(a,d)local l=o
+local n,e=i[a],i[d]if n=="TK_STRING"or n=="TK_LSTRING"or
 e=="TK_STRING"or e=="TK_LSTRING"then
-return""elseif t=="TK_OP"or e=="TK_OP"then
-if(t=="TK_OP"and(e=="TK_KEYWORD"or e=="TK_NAME"))or(e=="TK_OP"and(t=="TK_KEYWORD"or t=="TK_NAME"))then
+return""elseif n=="TK_OP"or e=="TK_OP"then
+if(n=="TK_OP"and(e=="TK_KEYWORD"or e=="TK_NAME"))or(e=="TK_OP"and(n=="TK_KEYWORD"or n=="TK_NAME"))then
 return""end
-if t=="TK_OP"and e=="TK_OP"then
-local t,e=i[h],i[s]if(a(t,"^%.%.?$")and a(e,"^%."))or(a(t,"^[~=<>]$")and e=="=")or(t=="["and(e=="["or e=="="))then
+if n=="TK_OP"and e=="TK_OP"then
+local n,e=t[a],t[d]if(l(n,"^%.%.?$")and l(e,"^%."))or(l(n,"^[~=<>]$")and e=="=")or(n=="["and(e=="["or e=="="))then
 return" "end
 return""end
-local t=i[h]if e=="TK_OP"then t=i[s]end
-if a(t,"^%.%.?%.?$")then
+local n=t[a]if e=="TK_OP"then n=t[d]end
+if l(n,"^%.%.?%.?$")then
 return" "end
 return""else
 return" "end
 end
-local function k()local s,h,o={},{},{}local e=1
-for t=1,#n do
-local a=n[t]if a~=""then
-s[e],h[e],o[e]=a,i[t],u[t]e=e+1
+local function M()local l,o,d={},{},{}local e=1
+for n=1,#i do
+local i=i[n]if i~=""then
+l[e],o[e],d[e]=i,t[n],s[n]e=e+1
 end
 end
-n,i,u=s,h,o
+i,t,s=l,o,d
 end
-local function z(l)local u=i[l]local a=u
-local n
-if o(a,"^0[xX]")then
-local e=r.tostring(r.tonumber(a))if#e<=#a then
-a=e
+local function w(r)local h=t[r]local i=h
+local d
+if o(i,"^0[xX]")then
+local e=f.tostring(f.tonumber(i))if#e<=#i then
+i=e
 else
 return
 end
 end
-if o(a,"^%d+%.?0*$")then
-a=o(a,"^(%d+)%.?0*$")if a+0>0 then
-a=o(a,"^0*([1-9]%d*)$")local t=#o(a,"0*$")local o=r.tostring(t)if t>#o+1 then
-a=e(a,1,#a-t).."e"..o
+if o(i,"^%d+%.?0*$")then
+i=o(i,"^(%d+)%.?0*$")if i+0>0 then
+i=o(i,"^0*([1-9]%d*)$")local n=#o(i,"0*$")local l=f.tostring(n)if n>#l+1 then
+i=e(i,1,#i-n).."e"..l
 end
-n=a
+d=i
 else
-n="0"end
-elseif not o(a,"[eE]")then
-local a,t=o(a,"^(%d*)%.(%d+)$")if a==""then a=0 end
-if t+0==0 and a==0 then
-n="0"else
-local i=#o(t,"0*$")if i>0 then
-t=e(t,1,#t-i)end
-if a+0>0 then
-n=a.."."..t
+d="0"end
+elseif not o(i,"[eE]")then
+local l,n=o(i,"^(%d*)%.(%d+)$")if l==""then l=0 end
+if n+0==0 and l==0 then
+d="0"else
+local i=#o(n,"0*$")if i>0 then
+n=e(n,1,#n-i)end
+if l+0>0 then
+d=l.."."..n
 else
-n="."..t
-local i=#o(t,"^0*")local a=#t-i
-local o=r.tostring(#t)if a+2+#o<1+#t then
-n=e(t,-a).."e-"..o
+d="."..n
+local o=#o(n,"^0*")local t=#n-o
+local l=f.tostring(#n)if t+2+#l<1+#n then
+d=e(n,-t).."e-"..l
 end
 end
 end
 else
-local t,a=o(a,"^([^eE]+)[eE]([%+%-]?%d+)$")a=r.tonumber(a)local h,s=o(t,"^(%d*)%.(%d*)$")if h then
-a=a-#s
-t=h..s
+local n,l=o(i,"^([^eE]+)[eE]([%+%-]?%d+)$")l=f.tonumber(l)local i,a=o(n,"^(%d*)%.(%d*)$")if i then
+l=l-#a
+n=i..a
 end
-if t+0==0 then
-n="0"else
-local i=#o(t,"^0*")t=e(t,i+1)i=#o(t,"0*$")if i>0 then
-t=e(t,1,#t-i)a=a+i
+if n+0==0 then
+d="0"else
+local t=#o(n,"^0*")n=e(n,t+1)t=#o(n,"0*$")if t>0 then
+n=e(n,1,#n-t)l=l+t
 end
-local o=r.tostring(a)if a==0 then
-n=t
-elseif a>0 and(a<=1+#o)then
-n=t..d("0",a)elseif a<0 and(a>=-#t)then
-i=#t+a
-n=e(t,1,i).."."..e(t,i+1)elseif a<0 and(#o>=-a-#t)then
-i=-a-#t
-n="."..d("0",i)..t
+local o=f.tostring(l)if l==0 then
+d=n
+elseif l>0 and(l<=1+#o)then
+d=n..c("0",l)elseif l<0 and(l>=-#n)then
+t=#n+l
+d=e(n,1,t).."."..e(n,t+1)elseif l<0 and(#o>=-l-#n)then
+t=-l-#n
+d="."..c("0",t)..n
 else
-n=t.."e"..a
+d=n.."e"..l
 end
 end
 end
-if n then i[l]=n end
+if d and d~=t[r]then
+if a then
+T("<number> (line "..s[r]..") "..t[r].." -> "..d)a=a+1
 end
-local function I(f)local w=i[f]local s=e(w,1,1)local u=(s=="'")and'"'or"'"local t=e(w,2,-2)local a=1
-local d,n=0,0
-while a<=#t do
-local f=e(t,a,a)if f=="\\"then
-local i=a+1
-local f=e(t,i,i)local r=l("abfnrtv\\\n\r\"'0123456789",f,1,true)if not r then
-t=e(t,1,a-1)..e(t,i)a=a+1
+t[r]=d
+end
+end
+local function A(r)local _=t[r]local i=e(_,1,1)local K=(i=="'")and'"'or"'"local n=e(_,2,-2)local l=1
+local f,d=0,0
+while l<=#n do
+local T=e(n,l,l)if T=="\\"then
+local t=l+1
+local s=e(n,t,t)local r=h("abfnrtv\\\n\r\"'0123456789",s,1,true)if not r then
+n=e(n,1,l-1)..e(n,t)l=l+1
 elseif r<=8 then
-a=a+2
+l=l+2
 elseif r<=10 then
-local o=e(t,i,i+1)if o=="\r\n"or o=="\n\r"then
-t=e(t,1,a).."\n"..e(t,i+2)elseif r==10 then
-t=e(t,1,a).."\n"..e(t,i+1)end
-a=a+2
+local o=e(n,t,t+1)if o=="\r\n"or o=="\n\r"then
+n=e(n,1,l).."\n"..e(n,t+2)elseif r==10 then
+n=e(n,1,l).."\n"..e(n,t+1)end
+l=l+2
 elseif r<=12 then
-if f==s then
-d=d+1
-a=a+2
+if s==i then
+f=f+1
+l=l+2
 else
-n=n+1
-t=e(t,1,a-1)..e(t,i)a=a+1
+d=d+1
+n=e(n,1,l-1)..e(n,t)l=l+1
 end
 else
-local o=o(t,"^(%d%d?%d?)",i)i=a+1+#o
-local m=o+0
-local h=c.char(m)local r=l("\a\b\f\n\r\t\v",h,1,true)if r then
-o="\\"..e("abfnrtv",r,r)elseif m<32 then
-o="\\"..m
-elseif h==s then
-o="\\"..h
-d=d+1
-elseif h=="\\"then
+local o=o(n,"^(%d%d?%d?)",t)t=l+1+#o
+local c=o+0
+local a=u.char(c)local r=h("\a\b\f\n\r\t\v",a,1,true)if r then
+o="\\"..e("abfnrtv",r,r)elseif c<32 then
+o="\\"..c
+elseif a==i then
+o="\\"..a
+f=f+1
+elseif a=="\\"then
 o="\\\\"else
-o=h
-if h==u then
-n=n+1
+o=a
+if a==K then
+d=d+1
 end
 end
-t=e(t,1,a-1)..o..e(t,i)a=a+#o
+n=e(n,1,l-1)..o..e(n,t)l=l+#o
 end
 else
-a=a+1
-if f==u then
-n=n+1
+l=l+1
+if T==K then
+d=d+1
 end
 end
 end
-if d>n then
-a=1
-while a<=#t do
-local o,n,i=l(t,"(['\"])",a)if not o then break end
-if i==s then
-t=e(t,1,o-2)..e(t,o)a=o
+if f>d then
+l=1
+while l<=#n do
+local t,d,o=h(n,"(['\"])",l)if not t then break end
+if o==i then
+n=e(n,1,t-2)..e(n,t)l=t
 else
-t=e(t,1,o-1).."\\"..e(t,o)a=o+2
+n=e(n,1,t-1).."\\"..e(n,t)l=t+2
 end
 end
-s=u
+i=K
 end
-i[f]=s..t..s
-end
-local function O(r)local c=i[r]local h=o(c,"^%[=*%[")local a=#h
-local m=e(c,-a,-1)local s=e(c,a+1,-(a+1))local n=""local t=1
-while true do
-local a,l,d,h=l(s,"([\r\n])([\r\n]?)",t)local i
-if not a then
-i=e(s,t)elseif a>=t then
-i=e(s,t,a-1)end
-if i~=""then
-if o(i,"%s+$")then
-warn.lstring="trailing whitespace in long string near line "..u[r]end
-n=n..i
-end
-if not a then
-break
-end
-t=a+1
+n=i..n..i
+if n~=t[r]then
 if a then
-if#h>0 and d~=h then
-t=t+1
+T("<string> (line "..s[r]..") "..t[r].." -> "..n)a=a+1
 end
-if not(t==1 and t==a)then
-n=n.."\n"end
+t[r]=n
 end
 end
-if a>=3 then
-local e,t=a-1
-while e>=2 do
-local a="%]"..d("=",e-2).."%]"if not o(n,a)then t=e end
-e=e-1
-end
-if t then
-a=d("=",t-2)h,m="["..a.."[","]"..a.."]"end
-end
-i[r]=h..n..m
-end
-local function f(u)local r=i[u]local h=o(r,"^%-%-%[=*%[")local t=#h
-local c=e(r,-t,-1)local s=e(r,t+1,-(t-1))local n=""local a=1
+local function m(a)local d=t[a]local r=o(d,"^%[=*%[")local l=#r
+local f=e(d,-l,-1)local d=e(d,l+1,-(l+1))local i=""local n=1
 while true do
-local i,d,r,h=l(s,"([\r\n])([\r\n]?)",a)local t
-if not i then
-t=e(s,a)elseif i>=a then
-t=e(s,a,i-1)end
+local l,c,f,r=h(d,"([\r\n])([\r\n]?)",n)local t
+if not l then
+t=e(d,n)elseif l>=n then
+t=e(d,n,l-1)end
 if t~=""then
-local a=o(t,"%s*$")if#a>0 then t=e(t,1,-(a+1))end
-n=n..t
+if o(t,"%s+$")then
+warn.lstring="trailing whitespace in long string near line "..s[a]end
+i=i..t
 end
-if not i then
+if not l then
 break
 end
-a=i+1
-if i then
-if#h>0 and r~=h then
-a=a+1
+n=l+1
+if l then
+if#r>0 and f~=r then
+n=n+1
 end
-n=n.."\n"end
+if not(n==1 and n==l)then
+i=i.."\n"end
 end
-t=t-2
-if t>=3 then
-local e,a=t-1
+end
+if l>=3 then
+local e,n=l-1
 while e>=2 do
-local t="%]"..d("=",e-2).."%]"if not o(n,t)then a=e end
+local l="%]"..c("=",e-2).."%]"if not o(i,l)then n=e end
 e=e-1
 end
-if a then
-t=d("=",a-2)h,c="--["..t.."[","]"..t.."]"end
+if n then
+l=c("=",n-2)r,f="["..l.."[","]"..l.."]"end
 end
-i[u]=h..n..c
+t[a]=r..i..f
 end
-local function y(n)local t=i[n]local a=o(t,"%s*$")if#a>0 then
-t=e(t,1,-(a+1))end
-i[n]=t
+local function _(f)local r=t[f]local a=o(r,"^%-%-%[=*%[")local n=#a
+local s=e(r,-n,-1)local d=e(r,n+1,-(n-1))local i=""local l=1
+while true do
+local t,f,r,a=h(d,"([\r\n])([\r\n]?)",l)local n
+if not t then
+n=e(d,l)elseif t>=l then
+n=e(d,l,t-1)end
+if n~=""then
+local l=o(n,"%s*$")if#l>0 then n=e(n,1,-(l+1))end
+i=i..n
 end
-local function N(i,t)if not i then return false end
-local o=o(t,"^%-%-%[=*%[")local a=#o
-local o=e(t,-a,-1)local e=e(t,a+1,-(a-1))if l(e,i,1,true)then
+if not t then
+break
+end
+l=t+1
+if t then
+if#a>0 and r~=a then
+l=l+1
+end
+i=i.."\n"end
+end
+n=n-2
+if n>=3 then
+local e,l=n-1
+while e>=2 do
+local n="%]"..c("=",e-2).."%]"if not o(i,n)then l=e end
+e=e-1
+end
+if l then
+n=c("=",l-2)a,s="--["..n.."[","]"..n.."]"end
+end
+t[f]=a..i..s
+end
+local function N(i)local n=t[i]local l=o(n,"%s*$")if#l>0 then
+n=e(n,1,-(l+1))end
+t[i]=n
+end
+local function k(t,n)if not t then return false end
+local o=o(n,"^%-%-%[=*%[")local l=#o
+local o=e(n,-l,-1)local e=e(n,l+1,-(l-1))if h(e,t,1,true)then
 return true
 end
 end
-function optimize(h,E,A,_)local l=h["opt-comments"]local r=h["opt-whitespace"]local c=h["opt-emptylines"]local m=h["opt-eols"]local j=h["opt-strings"]local q=h["opt-numbers"]local x=h.KEEP
-if m then
-l=true
-r=true
-c=true
+function optimize(r,D,g,I)local K=r["opt-comments"]local h=r["opt-whitespace"]local u=r["opt-emptylines"]local E=r["opt-eols"]local b=r["opt-strings"]local p=r["opt-numbers"]local C=r.KEEP
+a=r.DETAILS and 0
+T=T or f.print
+if E then
+K=true
+h=true
+u=true
 end
-n,i,u=E,A,_
-local t=1
-local a
-local s
-local function o(a,o,e)e=e or t
-n[e]=a or""i[e]=o or""end
+i,t,s=D,g,I
+local n=1
+local l,r
+local d
+local function o(l,o,e)e=e or n
+i[e]=l or""t[e]=o or""end
 while true do
-a,info=n[t],i[t]local h=p(t)if h then s=nil end
-if a=="TK_EOS"then
+l,r=i[n],t[n]local a=P(n)if a then d=nil end
+if l=="TK_EOS"then
 break
-elseif a=="TK_KEYWORD"or
-a=="TK_NAME"or
-a=="TK_OP"then
-s=t
-elseif a=="TK_NUMBER"then
-if q then
-z(t)end
-s=t
-elseif a=="TK_STRING"or
-a=="TK_LSTRING"then
-if j then
-if a=="TK_STRING"then
-I(t)else
-O(t)end
+elseif l=="TK_KEYWORD"or
+l=="TK_NAME"or
+l=="TK_OP"then
+d=n
+elseif l=="TK_NUMBER"then
+if p then
+w(n)end
+d=n
+elseif l=="TK_STRING"or
+l=="TK_LSTRING"then
+if b then
+if l=="TK_STRING"then
+A(n)else
+m(n)end
 end
-s=t
-elseif a=="TK_COMMENT"then
-if l then
-if t==1 and e(info,1,1)=="#"then
-y(t)else
+d=n
+elseif l=="TK_COMMENT"then
+if K then
+if n==1 and e(r,1,1)=="#"then
+N(n)else
 o()end
-elseif r then
-y(t)end
-elseif a=="TK_LCOMMENT"then
-if N(x,info)then
-if r then
-f(t)end
-s=t
-elseif l then
-local e=T(info)if w[n[t+1]]then
-o()a=""else
+elseif h then
+N(n)end
+elseif l=="TK_LCOMMENT"then
+if k(C,r)then
+if h then
+_(n)end
+d=n
+elseif K then
+local e=G(r)if L[i[n+1]]then
+o()l=""else
 o("TK_SPACE"," ")end
-if not c and e>0 then
-o("TK_EOL",d("\n",e))end
-if r and a~=""then
-t=t-1
+if not u and e>0 then
+o("TK_EOL",c("\n",e))end
+if h and l~=""then
+n=n-1
 end
 else
-if r then
-f(t)end
-s=t
+if h then
+_(n)end
+d=n
 end
-elseif a=="TK_EOL"then
-if h and c then
-o()elseif info=="\r\n"or info=="\n\r"then
+elseif l=="TK_EOL"then
+if a and u then
+o()elseif r=="\r\n"or r=="\n\r"then
 o("TK_EOL","\n")end
-elseif a=="TK_SPACE"then
-if r then
-if h or g(t)then
+elseif l=="TK_SPACE"then
+if h then
+if a or R(n)then
 o()else
-local a=n[s]if a=="TK_LCOMMENT"then
+local l=i[d]if l=="TK_LCOMMENT"then
 o()else
-local e=n[t+1]if w[e]then
+local e=i[n+1]if L[e]then
 if(e=="TK_COMMENT"or e=="TK_LCOMMENT")and
-a=="TK_OP"and i[s]=="-"then
+l=="TK_OP"and t[d]=="-"then
 else
 o()end
 else
-local e=b(s,t+1)if e==""then
+local e=S(d,n+1)if e==""then
 o()else
 o("TK_SPACE"," ")end
 end
@@ -332,24 +347,25 @@ end
 end
 else
 error("unidentified token encountered")end
-t=t+1
+n=n+1
 end
-k()if m then
-t=1
-if n[1]=="TK_COMMENT"then
-t=3
+M()if E then
+n=1
+if i[1]=="TK_COMMENT"then
+n=3
 end
 while true do
-a,info=n[t],i[t]if a=="TK_EOS"then
+l,r=i[n],t[n]if l=="TK_EOS"then
 break
-elseif a=="TK_EOL"then
-local a,i=n[t-1],n[t+1]if v[a]and v[i]then
-local e=b(t-1,t+1)if e==""then
+elseif l=="TK_EOL"then
+local e,l=i[n-1],i[n+1]if O[e]and O[l]then
+local e=S(n-1,n+1)if e==""then
 o()end
 end
 end
-t=t+1
+n=n+1
 end
-k()end
-return n,i,u
+M()end
+if a and a>0 then T()end
+return i,t,s
 end

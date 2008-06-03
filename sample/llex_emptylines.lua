@@ -110,6 +110,7 @@ function errorline(s, line)
   local e = error or base.error
   e(string.format("%s:%d: %s", chunkid(), line or ln, s))
 end
+local errorline = errorline
 ------------------------------------------------------------------------
 -- count separators ("=") in a long string delimiter
 ------------------------------------------------------------------------

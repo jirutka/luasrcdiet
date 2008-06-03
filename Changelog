@@ -1,6 +1,42 @@
 LuaSrcDiet changelog
 --------------------
 
+*** Remember to update version and date information in LuaSrcDiet.lua ***
+
+2008-06-03  Kein-Hong Man  <khman@users.sf.net>
+
+	* LuaSrcDiet.lua: added --opt-entropy option handling
+	* sample/Makefile: improved with an explanation list
+	* optparser.lua: added implementation for --opt-entropy
+	* Manifest: updated
+	* README: updated
+	* Version: 0.11.1
+
+2008-06-03  Kein-Hong Man  <khman@users.sf.net>
+
+	* technotes.txt: added notes on local variable rename algorithm
+	* optparser.lua: bug fix, avoid keywords when generating names
+	* test/test_benchmark1.lua: fixed missing die() to error()
+	* test/test_benchmark1.lua: added verification of scripts after
+	first loading them using loadstring()
+	* LuaSrcDiet.lua, optlex.lua: --detail implementation for
+	strings and numbers, extra info display
+	* optlex.lua (do_number): fixed --detail handling where the
+	converted number is no different
+	* optparser.lua: updated final local renaming handling
+	* optparser.lua: added --details statistics implementation for
+	local variable renaming
+	* sample/Makefile: added --details to standard 'all' build
+	* LuaSrcDiet.lua, llex.lua, lparser.lua, optlex.lua: fixed some
+	inadvertent or forgotten or unnecessary global variable accesses
+
+2008-05-31  Kein-Hong Man  <khman@users.sf.net>
+
+	* test/test_benchmark1.lua: coded simple test for loader
+	performance
+	* test/LuaSrcDiet_fixed.lua, test/LuaSrcDiet_fixed_.lua: files
+	without shbang first line to satisfy loadstring()
+
 2008-05-29  Kein-Hong Man  <khman@users.sf.net>
 
 	* Manifest: updated

@@ -26,6 +26,7 @@ local match = string.match
 local sub = string.sub
 local find = string.find
 local rep = string.rep
+local print
 
 ------------------------------------------------------------------------
 -- variables and data structures
@@ -53,6 +54,8 @@ local is_faketoken = {          -- whitespace (non-grammar) tokens
   TK_EOL = true,
   TK_SPACE = true,
 }
+
+local opt_details               -- for extra information
 
 ------------------------------------------------------------------------
 -- true if current token is at the start of a line
@@ -300,7 +303,13 @@ local function do_number(i)
     end--if sig
   end
   --------------------------------------------------------------------
-  if y then sinfos[i] = y end
+  if y and y ~= sinfos[i] then
+    if opt_details then
+      print("<number> (line "..stoklns[i]..") "..sinfos[i].." -> "..y)
+      opt_details = opt_details + 1
+    end
+    sinfos[i] = y
+  end
 end
 
 ------------------------------------------------------------------------
@@ -418,7 +427,14 @@ local function do_string(I)
     delim = ndelim  -- actually change delimiters
   end
   --------------------------------------------------------------------
-  sinfos[I] = delim..z..delim
+  z = delim..z..delim
+  if z ~= sinfos[I] then
+    if opt_details then
+      print("<string> (line "..stoklns[I]..") "..sinfos[I].." -> "..z)
+      opt_details = opt_details + 1
+    end
+    sinfos[I] = z
+  end
 end
 
 ------------------------------------------------------------------------
@@ -602,6 +618,8 @@ function optimize(option, toklist, semlist, toklnlist)
   local opt_strings = option["opt-strings"]
   local opt_numbers = option["opt-numbers"]
   local opt_keep = option.KEEP
+  opt_details = option.DETAILS and 0  -- upvalues for details display
+  print = print or base.print
   if opt_eols then  -- forced settings, otherwise won't work properly
     opt_comments = true
     opt_whitespace = true
@@ -613,7 +631,7 @@ function optimize(option, toklist, semlist, toklnlist)
   stoks, sinfos, stoklns                -- set source lists
     = toklist, semlist, toklnlist
   local i = 1                           -- token position
-  local tok                             -- current token
+  local tok, info                       -- current token
   local prev    -- position of last grammar token
                 -- on same line (for TK_SPACE stuff)
   --------------------------------------------------------------------
@@ -809,5 +827,6 @@ function optimize(option, toklist, semlist, toklnlist)
     repack_tokens()
   end
   --------------------------------------------------------------------
+  if opt_details and opt_details > 0 then print() end -- spacing
   return stoks, sinfos, stoklns
 end

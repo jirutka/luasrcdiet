@@ -18,17 +18,8 @@
 -- * The processing load is quite significant, but since this is an
 --   off-line text processor, I believe we can wait a few seconds.
 -- * TODO: might process "local a,a,a" wrongly... need tests!
--- * TODO: add --opt-entropy for using source's letter frequencies
 -- * TODO: remove position handling if overlapped locals (rem < 0)
 --   needs more study, to check behaviour
--- * TODO: detailed stats:
-Decl.   Token   Input   Input   Output  Output  Unique
-Count   Count   Bytes   Average Bytes   Average Name
---------------------------------------------------------
-3       10      146     #       20      #       ee
---------------------------------------------------------
-100     400     3000    #       1000    #       TOTALS
---------------------------------------------------------
 ----------------------------------------------------------------------]]
 
 local base = _G
@@ -50,6 +41,16 @@ module "optparser"
 local LETTERS = "etaoinshrdlucmfwypvbgkqjxz_ETAOINSHRDLUCMFWYPVBGKQJXZ"
 local ALPHANUM = "etaoinshrdlucmfwypvbgkqjxz_0123456789ETAOINSHRDLUCMFWYPVBGKQJXZ"
 
+-- names or identifiers that must be skipped
+-- * the first two lines are for keywords
+local SKIP_NAME = {}
+for v in string.gmatch([[
+and break do else elseif end false for function if in
+local nil not or repeat return then true until while
+self]], "%S+") do
+  SKIP_NAME[v] = true
+end
+
 ------------------------------------------------------------------------
 -- variables and data structures
 ------------------------------------------------------------------------
@@ -57,7 +58,8 @@ local ALPHANUM = "etaoinshrdlucmfwypvbgkqjxz_0123456789ETAOINSHRDLUCMFWYPVBGKQJX
 local toklist, seminfolist,             -- token lists
       globalinfo, localinfo,            -- variable information tables
       globaluniq, localuniq,            -- unique name tables
-      var_new                           -- index of new variable names
+      var_new,                          -- index of new variable names
+      varlist                           -- list of output variables
 
 ----------------------------------------------------------------------
 -- preprocess information table to get lists of unique names
@@ -94,8 +96,81 @@ local function preprocess(infotable)
 end
 
 ----------------------------------------------------------------------
+-- calculate actual symbol frequencies, in order to reduce entropy
+-- * this may help further reduce the size of compressed sources
+-- * note that since parsing optimizations is put before lexing
+--   optimizations, the frequency table is not exact!
+-- * yes, this will miss --keep block comments too...
+----------------------------------------------------------------------
+
+local function recalc_for_entropy(option)
+  local byte = string.byte
+  local char = string.char
+  -- table of token classes to accept in calculating symbol frequency
+  local ACCEPT = {
+    TK_KEYWORD = true, TK_NAME = true, TK_NUMBER = true,
+    TK_STRING = true, TK_LSTRING = true,
+  }
+  if not option["opt-comments"] then
+    ACCEPT.TK_COMMENT = true
+    ACCEPT.TK_LCOMMENT = true
+  end
+  --------------------------------------------------------------------
+  -- create a new table and remove any original locals by filtering
+  --------------------------------------------------------------------
+  local filtered = {}
+  for i = 1, #toklist do
+    filtered[i] = seminfolist[i]
+  end
+  for i = 1, #localinfo do              -- enumerate local info table
+    local obj = localinfo[i]
+    local xref = obj.xref
+    for j = 1, obj.xcount do
+      local p = xref[j]
+      filtered[p] = ""                  -- remove locals
+    end
+  end
+  --------------------------------------------------------------------
+  local freq = {}                       -- reset symbol frequency table
+  for i = 0, 255 do freq[i] = 0 end
+  for i = 1, #toklist do                -- gather symbol frequency
+    local tok, info = toklist[i], filtered[i]
+    if ACCEPT[tok] then
+      for j = 1, #info do
+        local c = byte(info, j)
+        freq[c] = freq[c] + 1
+      end
+    end--if
+  end--for
+  --------------------------------------------------------------------
+  -- function to re-sort symbols according to actual frequencies
+  --------------------------------------------------------------------
+  local function resort(symbols)
+    local symlist = {}
+    for i = 1, #symbols do              -- prepare table to sort
+      local c = byte(symbols, i)
+      symlist[i] = { c = c, freq = freq[c], }
+    end
+    table.sort(symlist,                 -- sort selected symbols
+      function(v1, v2)
+        return v1.freq > v2.freq
+      end
+    )
+    local charlist = {}                 -- reconstitute the string
+    for i = 1, #symlist do
+      charlist[i] = char(symlist[i].c)
+    end
+    return table.concat(charlist)
+  end
+  --------------------------------------------------------------------
+  LETTERS = resort(LETTERS)             -- change letter arrangement
+  ALPHANUM = resort(ALPHANUM)
+end
+
+----------------------------------------------------------------------
 -- returns a string containing a new local variable name to use, and
 -- a flag indicating whether it collides with a global variable
+-- * trapping keywords and other names like 'self' is done elsewhere
 ----------------------------------------------------------------------
 
 local function new_var_name()
@@ -133,8 +208,10 @@ end
 -- * probably better in main source, put here for now
 ----------------------------------------------------------------------
 
-local function stats_summary(globaluniq, localuniq, afteruniq)
+local function stats_summary(globaluniq, localuniq, afteruniq, option)
   local print = print or base.print
+  local fmt = string.format
+  local opt_details = option.DETAILS
   local uniq_g , uniq_li, uniq_lo, uniq_ti, uniq_to,  -- stats needed
         decl_g, decl_li, decl_lo, decl_ti, decl_to,
         token_g, token_li, token_lo, token_ti, token_to,
@@ -174,9 +251,63 @@ local function stats_summary(globaluniq, localuniq, afteruniq)
   token_to = token_g + token_lo
   size_to = size_g + size_lo
   --------------------------------------------------------------------
+  -- detailed stats: global list
+  --------------------------------------------------------------------
+  if opt_details then
+    local sorted = {} -- sort table of unique global names by size
+    for name, uniq in base.pairs(globaluniq) do
+      uniq.name = name
+      sorted[#sorted + 1] = uniq
+    end
+    table.sort(sorted,
+      function(v1, v2)
+        return v1.size > v2.size
+      end
+    )
+    local tabf1, tabf2 = "%8s%8s%10s  %s", "%8d%8d%10.2f  %s"
+    local hl = string.rep("-", 44)
+    print("*** global variable list (sorted by size) ***\n"..hl)
+    print(fmt(tabf1, "Token",  "Input", "Input", "Global"))
+    print(fmt(tabf1, "Count", "Bytes", "Average", "Name"))
+    print(hl)
+    for i = 1, #sorted do
+      local uniq = sorted[i]
+      print(fmt(tabf2, uniq.token, uniq.size, avg(uniq.token, uniq.size), uniq.name))
+    end
+    print(hl)
+    print(fmt(tabf2, token_g, size_g, avg(token_g, size_g), "TOTAL"))
+    print(hl.."\n")
+  --------------------------------------------------------------------
+  -- detailed stats: local list
+  --------------------------------------------------------------------
+    local tabf1, tabf2 = "%8s%8s%8s%10s%8s%10s  %s", "%8d%8d%8d%10.2f%8d%10.2f  %s"
+    local hl = string.rep("-", 70)
+    print("*** local variable list (sorted by allocation order) ***\n"..hl)
+    print(fmt(tabf1, "Decl.", "Token",  "Input", "Input", "Output", "Output", "Global"))
+    print(fmt(tabf1, "Count", "Count", "Bytes", "Average", "Bytes", "Average", "Name"))
+    print(hl)
+    for i = 1, #varlist do  -- iterate according to order assigned
+      local name = varlist[i]
+      local uniq = afteruniq[name]
+      local old_t, old_s = 0, 0
+      for j = 1, #localinfo do  -- find corresponding old names and calculate
+        local obj = localinfo[j]
+        if obj.name == name then
+          old_t = old_t + obj.xcount
+          old_s = old_s + obj.xcount * #obj.oldname
+        end
+      end
+      print(fmt(tabf2, uniq.decl, uniq.token, old_s, avg(old_t, old_s),
+                uniq.size, avg(uniq.token, uniq.size), name))
+    end
+    print(hl)
+    print(fmt(tabf2, decl_lo, token_lo, size_li, avg(token_li, size_li),
+              size_lo, avg(token_lo, size_lo), "TOTAL"))
+    print(hl.."\n")
+  end--if opt_details
+  --------------------------------------------------------------------
   -- display output
   --------------------------------------------------------------------
-  local fmt = string.format
   local tabf1, tabf2 = "%-16s%8s%8s%8s%8s%10s", "%-16s%8d%8d%8d%8d%10.2f"
   local hl = string.rep("-", 58)
   print("*** local variable optimization summary ***\n"..hl)
@@ -203,11 +334,15 @@ function optimize(option, _toklist, _seminfolist, _globalinfo, _localinfo)
   toklist, seminfolist, globalinfo, localinfo
     = _toklist, _seminfolist, _globalinfo, _localinfo
   var_new = 0                           -- reset variable name allocator
+  varlist = {}
   ------------------------------------------------------------------
-  -- preprocess global/local tables
+  -- preprocess global/local tables, handle entropy reduction
   ------------------------------------------------------------------
   globaluniq = preprocess(globalinfo)
   localuniq = preprocess(localinfo)
+  if option["opt-entropy"] then         -- for entropy improvement
+    recalc_for_entropy(option)
+  end
   ------------------------------------------------------------------
   -- build initial declared object table, then sort according to
   -- token count, this might help assign more tokens to more common
@@ -229,12 +364,14 @@ function optimize(option, _toklist, _seminfolist, _globalinfo, _localinfo)
   -- * the allocator below will never use "self", so it is safe to
   --   keep those implicit declarations as-is
   ------------------------------------------------------------------
-  local temp, j = {}, 1
+  local temp, j, gotself = {}, 1, false
   for i = 1, #object do
     local obj = object[i]
     if not obj.isself then
       temp[j] = obj
       j = j + 1
+    else
+      gotself = true
     end
   end
   object = temp
@@ -248,11 +385,11 @@ function optimize(option, _toklist, _seminfolist, _globalinfo, _localinfo)
   ------------------------------------------------------------------
   local nobject = #object
   while nobject > 0 do
-    local varname, gcollide             -- collect a variable name
-      = new_var_name()
-    if varname == "self" then           -- "self" is special, skip it
-      varname, gcollide = new_var_name()
-    end
+    local varname, gcollide
+    repeat
+      varname, gcollide = new_var_name()  -- collect a variable name
+    until not SKIP_NAME[varname]          -- skip all special names
+    varlist[#varlist + 1] = varname       -- keep a list
     local oleft = nobject
     ------------------------------------------------------------------
     -- if variable name collides with an existing global, the name
@@ -376,20 +513,24 @@ function optimize(option, _toklist, _seminfolist, _globalinfo, _localinfo)
   for i = 1, #localinfo do  -- enumerate all locals
     local obj = localinfo[i]
     local xref = obj.xref
-    for j = 1, obj.xcount do
-      local p = xref[j]                 -- xrefs indexes the token list
-      if obj.newname then
-        seminfolist[p] = obj.newname    -- if got new name, patch it in
+    if obj.newname then                 -- if got new name, patch it in
+      for j = 1, obj.xcount do
+        local p = xref[j]               -- xrefs indexes the token list
+        seminfolist[p] = obj.newname
       end
-    end
-    if obj.newname then
-      obj.name = obj.newname    -- can't undo! this is for stats work
+      obj.name, obj.oldname             -- adjust names
+        = obj.newname, obj.name
+    else
+      obj.oldname = obj.name            -- for cases like 'self'
     end
   end
   ------------------------------------------------------------------
   -- deal with statistics output
   ------------------------------------------------------------------
+  if gotself then  -- add 'self' to end of list
+    varlist[#varlist + 1] = "self"
+  end
   local afteruniq = preprocess(localinfo)
-  stats_summary(globaluniq, localuniq, afteruniq)
+  stats_summary(globaluniq, localuniq, afteruniq, option)
   ------------------------------------------------------------------
 end
