@@ -3,6 +3,38 @@ LuaSrcDiet changelog
 
 *** Remember to update version and date information in LuaSrcDiet.lua ***
 
+2008-06-08  Kein-Hong Man  <khman@users.sf.net>
+
+	* optparser.lua: improved local variable collision discrimination
+	* technotes.txt: updated notes on local variable collision tests
+	* optparser.lua: changed a collision test to be more conservative
+	* Manifest: updated
+	* README: updated
+	* Version: 0.11.2
+
+2008-06-07  Kein-Hong Man  <khman@users.sf.net>
+
+	* plugin/sloc.lua, plugin/html.lua: added skeletons for two
+	planned plugins
+	* LuaSrcDiet.lua: added early exit options for plugins
+	* plugin/example.lua: added early exit for plugin, filenames
+	* plugin/sloc.lua: implemented SLOC plugin
+	* plugin/html.lua: implemented HTML plugin
+	* numbers_original.lua, numbers_on_diet.lua: fixed missing commas
+	* LuaSrcDiet.lua: fixed early exit handling for multiple files
+	* sample/Makefile: added generator entry for HTML plugin
+	* sample/html_sample.html: added HTML plugin sample (html.lua)
+	* plugin/example.lua: updated comments
+	* technotes.txt: added note on maximum local identifiers needed
+	* optparser.lua: minor formatting tweaks
+
+2008-06-06  Kein-Hong Man  <khman@users.sf.net>
+
+	* plugin/: created directory for plugins
+	* plugin/example.lua: created example plugin with specified calls
+	* LuaSrcDiet.lua: added --plugin option with plugin handling code
+	* LuaSrcDiet.lua: tweaked usage text
+
 2008-06-03  Kein-Hong Man  <khman@users.sf.net>
 
 	* LuaSrcDiet.lua: added --opt-entropy option handling

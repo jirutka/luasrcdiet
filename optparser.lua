@@ -20,6 +20,11 @@
 -- * TODO: might process "local a,a,a" wrongly... need tests!
 -- * TODO: remove position handling if overlapped locals (rem < 0)
 --   needs more study, to check behaviour
+-- * TODO: there are probably better ways to do allocation, e.g. by
+--   choosing better methods to sort and pick locals...
+-- * TODO: we don't need 53*63 two-letter identifiers; we can make
+--   do with significantly less depending on how many that are really
+--   needed and improve entropy; e.g. 13 needed -> choose 4*4 instead
 ----------------------------------------------------------------------]]
 
 local base = _G
@@ -70,17 +75,20 @@ local function preprocess(infotable)
   for i = 1, #infotable do              -- enumerate info table
     local obj = infotable[i]
     local name = obj.name
+    --------------------------------------------------------------------
     if not uniqtable[name] then         -- not found, start an entry
       uniqtable[name] = {
         decl = 0, token = 0, size = 0,
       }
     end
+    --------------------------------------------------------------------
     local uniq = uniqtable[name]        -- count declarations, tokens, size
     uniq.decl = uniq.decl + 1
     local xref = obj.xref
     local xcount = #xref
     uniq.token = uniq.token + xcount
     uniq.size = uniq.size + xcount * #name
+    --------------------------------------------------------------------
     if obj.decl then            -- if local table, create first,last pairs
       obj.id = i
       obj.xcount = xcount
@@ -88,9 +96,11 @@ local function preprocess(infotable)
         obj.first = xref[2]
         obj.last = xref[xcount]
       end
+    --------------------------------------------------------------------
     else                        -- if global table, add a back ref
       uniq.id = i
     end
+    --------------------------------------------------------------------
   end--for
   return uniqtable
 end
@@ -453,9 +463,10 @@ function optimize(option, _toklist, _seminfolist, _globalinfo, _localinfo)
       ------------------------------------------------------------------
       -- then, scan all the rest and drop those colliding
       -- if A was never accessed then it'll never collide with anything
-      -- otherwise skip if:
+      -- otherwise trivial skip if:
       -- * B was activated after A's last access (last < act)
       -- * B was removed before A's first access (first > rem)
+      -- if not, see detailed skip below...
       ------------------------------------------------------------------
       if first and oleft > 0 then  -- must have at least 1 access
         local scanleft = oleft
@@ -473,14 +484,31 @@ function optimize(option, _toklist, _seminfolist, _globalinfo, _localinfo)
           end
           --------------------------------------------------------
           if not(last < act or first > rem) then  -- possible collision
-            for j = 1, obja.xcount do  -- ... then check every access
-              local p = xref[j]
-              if p >= act and p <= rem then  -- A accessed when B live!
+            --------------------------------------------------------
+            -- B is activated later than A or at the same statement,
+            -- this means for no collision, A cannot be accessed when B
+            -- is alive, since B overrides A (or is a peer)
+            --------------------------------------------------------
+            if act >= obja.act then
+              for j = 1, obja.xcount do  -- ... then check every access
+                local p = xref[j]
+                if p >= act and p <= rem then  -- A accessed when B live!
+                  oleft = oleft - 1
+                  objb.skip = true
+                  break
+                end
+              end--for
+            --------------------------------------------------------
+            -- A is activated later than B, this means for no collision,
+            -- A's access is okay since it overrides B, but B's last
+            -- access need to be earlier than A's activation time
+            --------------------------------------------------------
+            else
+              if objb.last and objb.last >= obja.act then
                 oleft = oleft - 1
                 objb.skip = true
-                break
               end
-            end--for
+            end
           end
           --------------------------------------------------------
           if oleft == 0 then break end

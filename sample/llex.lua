@@ -1,71 +1,71 @@
-local k=_G
-local c=require"string"module"llex"local T=c.find
-local _=c.match
-local r=c.sub
-local b={}for e in c.gmatch([[
+local u=_G
+local d=require"string"module"llex"local c=d.find
+local s=d.match
+local r=d.sub
+local k={}for e in d.gmatch([[
 and break do else elseif end false for function if in
 local nil not or repeat return then true until while]],"%S+")do
-b[e]=true
+k[e]=true
 end
-local e,s,l,t,f
+local e,a,l,t,i
 local function o(n,l)local e=#tok+1
 tok[e]=n
 seminfo[e]=l
-tokln[e]=f
+tokln[e]=i
 end
-local function h(n,i)local r=r
+local function f(n,d)local r=r
 local t=r(e,n,n)n=n+1
 local e=r(e,n,n)if(e=="\n"or e=="\r")and(e~=t)then
 n=n+1
 t=t..e
 end
-if i then o("TK_EOL",t)end
-f=f+1
+if d then o("TK_EOL",t)end
+i=i+1
 l=n
 return n
 end
 function init(t,n)e=t
-s=n
+a=n
 l=1
-f=1
-tok={}seminfo={}tokln={}local n,r,e,t=T(e,"^(#[^\r\n]*)(\r?\n?)")if n then
+i=1
+tok={}seminfo={}tokln={}local n,r,e,t=c(e,"^(#[^\r\n]*)(\r?\n?)")if n then
 l=l+#e
-o("TK_COMMENT",e)if#t>0 then h(l,true)end
+o("TK_COMMENT",e)if#t>0 then f(l,true)end
 end
 end
-function chunkid()if s and _(s,"^[=@]")then
-return r(s,2)end
+function chunkid()if a and s(a,"^[=@]")then
+return r(a,2)end
 return"[string]"end
-function errorline(e,l)local n=error or k.error
-n(c.format("%s:%d: %s",chunkid(),l or f,e))end
+function errorline(e,l)local n=error or u.error
+n(d.format("%s:%d: %s",chunkid(),l or i,e))end
 local a=errorline
-local function s(n)local t=r
+local function h(n)local t=r
 local r=t(e,n,n)n=n+1
-local o=#_(e,"=*",n)n=n+o
+local o=#s(e,"=*",n)n=n+o
 l=n
 return(t(e,n,n)==r)and o or(-o)-1
 end
-local function K(d,i)local n=l+1
+local function T(d,i)local n=l+1
 local r=r
 local o=r(e,n,n)if o=="\r"or o=="\n"then
-n=h(n)end
-local c=n
+n=f(n)end
+local o=n
 while true do
-local o,c,f=T(e,"([\r\n%]])",n)if not o then
+local o,u,c=c(e,"([\r\n%]])",n)if not o then
 a(d and"unfinished long string"or"unfinished long comment")end
 n=o
-if f=="]"then
-if s(n)==i then
+if c=="]"then
+if h(n)==i then
 t=r(e,t,l)l=l+1
 return t
 end
 n=l
 else
-t=t.."\n"n=h(n)end
+t=t.."\n"n=f(n)end
 end
 end
-local function m(f)local n=l
-local i=T
+local function _(h)local n=l
+local i=c
 local d=r
 while true do
 local r,c,o=i(e,"([\n\r\\\"'])",n)if r then
@@ -77,7 +77,7 @@ n=n+1
 o=d(e,n,n)if o==""then break end
 r=i("abfnrtv\n\r",o,1,true)if r then
 if r>7 then
-n=h(n)else
+n=f(n)else
 n=n+1
 end
 elseif i(o,"%D")then
@@ -89,7 +89,7 @@ a("escape sequence too large")end
 end
 else
 n=n+1
-if o==f then
+if o==h then
 l=n
 return d(e,t,n-1)end
 end
@@ -98,36 +98,36 @@ break
 end
 end
 a("unfinished string")end
-function llex()local i=T
-local c=_
+function llex()local i=c
+local c=s
 while true do
 local n=l
 while true do
-local g,E,u=i(e,"^([_%a][_%w]*)",n)if g then
-l=n+#u
-if b[u]then
-o("TK_KEYWORD",u)else
-o("TK_NAME",u)end
+local s,K,d=i(e,"^([_%a][_%w]*)",n)if s then
+l=n+#d
+if k[d]then
+o("TK_KEYWORD",d)else
+o("TK_NAME",d)end
 break
 end
-local T,b,_=i(e,"^(%.?)%d",n)if T then
-if _=="."then n=n+1 end
-local f,d,t=i(e,"^%d*[%.%d]*([eE]?)",n)n=d+1
+local d,k,s=i(e,"^(%.?)%d",n)if d then
+if s=="."then n=n+1 end
+local h,f,t=i(e,"^%d*[%.%d]*([eE]?)",n)n=f+1
 if#t==1 then
 if c(e,"^[%+%-]",n)then
 n=n+1
 end
 end
 local t,n=i(e,"^[_%w]*",n)l=n+1
-local e=r(e,T,n)if not k.tonumber(e)then
+local e=r(e,d,n)if not u.tonumber(e)then
 a("malformed number")end
 o("TK_NUMBER",e)break
 end
-local k,T,_,u=i(e,"^((%s)[ \t\v\f]*)",n)if k then
-if u=="\n"or u=="\r"then
-h(n,true)else
-l=T+1
-o("TK_SPACE",_)end
+local s,u,k,d=i(e,"^((%s)[ \t\v\f]*)",n)if s then
+if d=="\n"or d=="\r"then
+f(n,true)else
+l=u+1
+o("TK_SPACE",k)end
 break
 end
 local d=c(e,"^%p",n)if d then
@@ -139,15 +139,15 @@ local a=c(e,"^%-%-(%[?)",n)if a then
 n=n+2
 local d=-1
 if a=="["then
-d=s(n)end
+d=h(n)end
 if d>=0 then
-o("TK_LCOMMENT",K(false,d))else
+o("TK_LCOMMENT",T(false,d))else
 l=i(e,"[\n\r]",n)or(#e+1)o("TK_COMMENT",r(e,t,l-1))end
 break
 end
 else
-local e=s(n)if e>=0 then
-o("TK_LSTRING",K(true,e))elseif e==-1 then
+local e=h(n)if e>=0 then
+o("TK_LSTRING",T(true,e))elseif e==-1 then
 o("TK_OP","[")else
 a("invalid long string delimiter")end
 break
@@ -155,7 +155,7 @@ end
 elseif f<=5 then
 if f<5 then
 l=n+1
-o("TK_STRING",m(d))break
+o("TK_STRING",_(d))break
 end
 d=c(e,"^%.%.?%.?",n)else
 d=c(e,"^%p=?",n)end
@@ -171,4 +171,4 @@ o("TK_EOS","")return
 end
 end
 end
-return k.getfenv()
+return u.getfenv()

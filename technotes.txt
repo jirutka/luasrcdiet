@@ -240,28 +240,40 @@ the parser says, and we cannot modify the positions of 'Decl', 'Act' and
                 Decl    Act                     Rem
                 +       +-----------------------+
                 ---------------------------------
- (1)+   +---+                (2)+   +---+            (3)+   +---+
-    ---------                   ---------               ---------
+ (1)+   +---+   (2)+   +---+      (3)+   +---+	    (4)+   +---+
+    ---------      ---------         ---------         ---------
 
 For the case of A and B having the same names and colliding, consider
-the cases for which B is at (1), (2) or (3) in the above.
+the cases for which B is at (1), (2), (3) or (4) in the above.
 
-(1) and (3) means that A and B are completely isolated from each other.
-In fact, since A and B won't clash during the times when they have been
-declared but are inactive, we only need to consider the periods when A
-and B are 'live'. To go deeper, since A has been assigned a new name and
-B hasn't, we can partly or fully overlap B and A as long as A is never
-accessed when B is active.
+(1) and (4) means that A and B are completely isolated from each other,
+hence in the two cases, A and B can safely use the same variable names.
+To be specific, since we have assigned A, B is considered completely
+isolated from A if B's Activation-to-Removal period is isolated from
+the time of A's first access to last access, meaning B's active time
+will never affect any of A's accesses.
 
-Position (2) follows the "A is never accessed when B is active" rule in
-a more general way. To illustrate, the local B can use the same name as
-local A and live in a child function or block scope if each time A is
-accessed, Lua sees A and not B. So we have to check all accesses of A
-and see whether they collide with the active period of B. Now if A was
-never accessed, then B can be active anywhere.
+For (2) and (3), we have two cases where we need to consider which one
+has been activated first. For (2), B is active before A, so A cannot
+impose on B. But A's accesses are valid while B is active, since A can
+override B. For no collision in the case of (2), we simply need to
+ensure that the last access of B occurs before A is activated.
+
+For (3), B is activated before A, hence B can override A's accesses. For
+no collision, all of A's accesses cannot happen while B is active. Thus
+position (3) follows the "A is never accessed when B is active" rule in
+a general way. Local variables of a child function are in the position
+of (3). To illustrate, the local B can use the same name as local A and
+live in a child function or block scope if each time A is accessed, Lua
+sees A and not B. So we have to check all accesses of A and see whether
+they collide with the active period of B. Now if A was never accessed,
+then B can be active anywhere.
 
 The above appears to resolve all sorts of cases where the active times
 of A and B overlap. If there is a more simple scheme, do let me know.
+Note that in the above, the allocator does not need to know how locals
+are separated according to function prototypes. Perhaps the allocator
+can be simplified if knowledge of function structure is utilized.
 
 (E) Name allocation algorithm
 -----------------------------
@@ -278,6 +290,14 @@ identifiers (minus a few keywords), there isn't a pressing need to
 optimally maximize name reuse. Sample files show that we can eventually
 get 20 tokens per identifier name, thus a source file can have over 1000
 local variable tokens that are all single character in length.
+
+In theory, we should need no more than 260 local identifiers by default.
+Why? Since LUAI_MAXVARS is 200 and LUAI_MAXUPVALUES is 60, at any block
+scope, there can be at most (LUAI_MAXVARS + LUAI_MAXUPVALUES) locals
+referenced, or 260. Also, those from outer scopes not referenced in
+inner scopes can reuse identifiers. The net effect of this is that a
+local variable name allocation method should not allocate more than 260
+identifier names for locals.
 
 The current algorithm is a simple first-come first-served scheme:
 

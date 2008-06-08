@@ -19,6 +19,7 @@
 -- * TODO: to implement pcall() to properly handle lexer etc. errors
 -- * TODO: verify token stream or double-check binary chunk?
 -- * TODO: need some automatic testing for a semblance of sanity
+-- * TODO: the plugin module is highly experimental and unstable
 ----------------------------------------------------------------------]]
 
 -- standard libraries, functions
@@ -35,6 +36,7 @@ local llex = require "llex"
 local lparser = require "lparser"
 local optlex = require "optlex"
 local optparser = require "optparser"
+local plugin
 
 --[[--------------------------------------------------------------------
 -- messages and textual data
@@ -42,7 +44,7 @@ local optparser = require "optparser"
 
 local MSG_TITLE = [[
 LuaSrcDiet: Puts your Lua 5.1 source code on a diet
-Version 0.11.1 (20080603)  Copyright (c) 2005-2008 Kein-Hong Man
+Version 0.11.2 (20080608)  Copyright (c) 2005-2008 Kein-Hong Man
 The COPYRIGHT file describes the conditions under which this
 software may be distributed.
 ]]
@@ -54,24 +56,25 @@ example:
   >LuaSrcDiet myscript.lua -o myscript_.lua
 
 options:
-  -v, --version     prints version information
-  -h, --help        prints usage information
-  -o <file>         specify file name to write output
-  -s <suffix>       suffix for output files (default '_')
-  --keep <msg>      keep block comment with <msg> inside
-  -                 stop handling arguments
+  -v, --version       prints version information
+  -h, --help          prints usage information
+  -o <file>           specify file name to write output
+  -s <suffix>         suffix for output files (default '_')
+  --keep <msg>        keep block comment with <msg> inside
+  --plugin <module>   run <module> in plugin/ directory
+  -                   stop handling arguments
 
   (optimization levels)
-  --none            all optimizations off (normalizes EOLs only)
-  --basic           lexer-based optimizations only
-  --maximum         maximize reduction of source
+  --none              all optimizations off (normalizes EOLs only)
+  --basic             lexer-based optimizations only
+  --maximum           maximize reduction of source
 
   (informational)
-  --quiet           process files quietly
-  --read-only       read file and print token stats only
-  --dump-lexer      dump raw tokens from lexer to stdout
-  --dump-parser     dump variable tracking tables from parser
-  --details         extra info (strings, numbers, locals)
+  --quiet             process files quietly
+  --read-only         read file and print token stats only
+  --dump-lexer        dump raw tokens from lexer to stdout
+  --dump-parser       dump variable tracking tables from parser
+  --details           extra info (strings, numbers, locals)
 
 features (to disable, insert 'no' prefix like --noopt-comments):
 %s
@@ -81,6 +84,7 @@ default settings:
 ------------------------------------------------------------------------
 -- optimization options, for ease of switching on and off
 -- * positive to enable optimization, negative (no) to disable
+-- * these options should follow --opt-* and --noopt-* style for now
 ------------------------------------------------------------------------
 
 local OPTION = [[
@@ -117,6 +121,7 @@ local NONE_CONFIG = [[
 ]]
 
 local DEFAULT_SUFFIX = "_"      -- default suffix for file renaming
+local PLUGIN_SUFFIX = "plugin/" -- relative location of plugins
 
 --[[--------------------------------------------------------------------
 -- startup and initialize option list handling
@@ -403,16 +408,28 @@ local function process_file(srcfl, destfl)
     if option.QUIET then return end
     _G.print(...)
   end
+  if plugin and plugin.init then        -- plugin init
+    option.EXIT = false
+    plugin.init(option, srcfl, destfl)
+    if option.EXIT then return end
+  end
+  print(MSG_TITLE)                      -- title message
   --------------------------------------------------------------------
   -- load file and process source input into tokens
   --------------------------------------------------------------------
   local z = load_file(srcfl)
+  if plugin and plugin.post_load then   -- plugin post-load
+    z = plugin.post_load(z) or z
+    if option.EXIT then return end
+  end
   llex.init(z)
   llex.llex()
   local toklist, seminfolist, toklnlist
     = llex.tok, llex.seminfo, llex.tokln
-  print(MSG_TITLE)
-  print("Statistics for: "..srcfl.." -> "..destfl.."\n")
+  if plugin and plugin.post_lex then    -- plugin post-lex
+    plugin.post_lex(toklist, seminfolist, toklnlist)
+    if option.EXIT then return end
+  end
   --------------------------------------------------------------------
   -- collect 'before' statistics
   --------------------------------------------------------------------
@@ -430,14 +447,26 @@ local function process_file(srcfl, destfl)
     optparser.print = print  -- hack
     lparser.init(toklist, seminfolist, toklnlist)
     local globalinfo, localinfo = lparser.parser()
+    if plugin and plugin.post_parse then        -- plugin post-parse
+      plugin.post_parse(globalinfo, localinfo)
+      if option.EXIT then return end
+    end
     optparser.optimize(option, toklist, seminfolist, globalinfo, localinfo)
+    if plugin and plugin.post_optparse then     -- plugin post-optparse
+      plugin.post_optparse()
+      if option.EXIT then return end
+    end
   end
   --------------------------------------------------------------------
   -- do lexer optimization here, save output file
   --------------------------------------------------------------------
   optlex.print = print  -- hack
-  toklist, seminfolist
+  toklist, seminfolist, toklnlist
     = optlex.optimize(option, toklist, seminfolist, toklnlist)
+  if plugin and plugin.post_optlex then         -- plugin post-optlex
+    plugin.post_optlex(toklist, seminfolist, toklnlist)
+    if option.EXIT then return end
+  end
   local dat = table.concat(seminfolist)
   -- depending on options selected, embedded EOLs in long strings and
   -- long comments may not have been translated to \n, tack a warning
@@ -459,6 +488,7 @@ local function process_file(srcfl, destfl)
   --------------------------------------------------------------------
   -- display output
   --------------------------------------------------------------------
+  print("Statistics for: "..srcfl.." -> "..destfl.."\n")
   local fmt = string.format
   local function figures(tt)
     return stat1_c[tt], stat1_l[tt], stat1_a[tt],
@@ -485,7 +515,9 @@ local function process_file(srcfl, destfl)
   print(hl)
   print(fmt(tabf2, "Total Tokens", figures("TOTAL_TOK")))
   print(hl)
+  --------------------------------------------------------------------
   -- report warning flags from optimizing process
+  --------------------------------------------------------------------
   if optlex.warn.lstring then
     print("* WARNING: "..optlex.warn.lstring)
   elseif optlex.warn.mixedeol then
@@ -581,6 +613,12 @@ local function main()
       elseif o == "--keep" then
         if not p then die("--keep option needs a string to match for") end
         option.KEEP = p
+        i = i + 1
+      elseif o == "--plugin" then
+        if not p then die("--plugin option needs a module name") end
+        if option.PLUGIN then die("only one plugin can be specified") end
+        option.PLUGIN = p
+        plugin = require(PLUGIN_SUFFIX..p)
         i = i + 1
       elseif o == "--quiet" then
         option.QUIET = true

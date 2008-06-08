@@ -1,169 +1,169 @@
 local p=_G
-local a=require"string"local x=require"table"module"optparser"local m="etaoinshrdlucmfwypvbgkqjxz_ETAOINSHRDLUCMFWYPVBGKQJXZ"local k="etaoinshrdlucmfwypvbgkqjxz_0123456789ETAOINSHRDLUCMFWYPVBGKQJXZ"local O={}for e in a.gmatch([[
+local a=require"string"local b=require"table"module"optparser"local t="etaoinshrdlucmfwypvbgkqjxz_ETAOINSHRDLUCMFWYPVBGKQJXZ"local c="etaoinshrdlucmfwypvbgkqjxz_0123456789ETAOINSHRDLUCMFWYPVBGKQJXZ"local _={}for e in a.gmatch([[
 and break do else elseif end false for function if in
 local nil not or repeat return then true until while
 self]],"%S+")do
-O[e]=true
+_[e]=true
 end
-local b,N,y,o,w,L,z,i
-local function A(d)local a={}for t=1,#d do
-local e=d[t]local n=e.name
+local z,N,L,o,w,K,T,i
+local function O(e)local a={}for t=1,#e do
+local l=e[t]local n=l.name
 if not a[n]then
 a[n]={decl=0,token=0,size=0,}end
-local l=a[n]l.decl=l.decl+1
-local a=e.xref
+local e=a[n]e.decl=e.decl+1
+local a=l.xref
 local o=#a
-l.token=l.token+o
-l.size=l.size+o*#n
-if e.decl then
-e.id=t
-e.xcount=o
-if o>1 then
-e.first=a[2]e.last=a[o]end
-else
+e.token=e.token+o
+e.size=e.size+o*#n
+if l.decl then
 l.id=t
+l.xcount=o
+if o>1 then
+l.first=a[2]l.last=a[o]end
+else
+e.id=t
 end
 end
 return a
 end
-local function E(r)local d=a.byte
-local c=a.char
-local n={TK_KEYWORD=true,TK_NAME=true,TK_NUMBER=true,TK_STRING=true,TK_LSTRING=true,}if not r["opt-comments"]then
-n.TK_COMMENT=true
-n.TK_LCOMMENT=true
+local function E(e)local d=a.byte
+local a=a.char
+local l={TK_KEYWORD=true,TK_NAME=true,TK_NUMBER=true,TK_STRING=true,TK_LSTRING=true,}if not e["opt-comments"]then
+l.TK_COMMENT=true
+l.TK_LCOMMENT=true
 end
-local a={}for e=1,#b do
-a[e]=N[e]end
+local n={}for e=1,#z do
+n[e]=N[e]end
+for e=1,#o do
+local e=o[e]local l=e.xref
+for e=1,e.xcount do
+local e=l[e]n[e]=""end
+end
+local e={}for l=0,255 do e[l]=0 end
+for o=1,#z do
+local n,o=z[o],n[o]if l[n]then
 for l=1,#o do
-local e=o[l]local l=e.xref
-for o=1,e.xcount do
-local e=l[o]a[e]=""end
-end
-local l={}for e=0,255 do l[e]=0 end
-for o=1,#b do
-local a,o=b[o],a[o]if n[a]then
-for n=1,#o do
-local e=d(o,n)l[e]=l[e]+1
+local l=d(o,l)e[l]=e[l]+1
 end
 end
 end
-local function t(a)local e={}for n=1,#a do
-local o=d(a,n)e[n]={c=o,freq=l[o],}end
-x.sort(e,function(l,e)return l.freq>e.freq
-end)local l={}for o=1,#e do
-l[o]=c(e[o].c)end
-return x.concat(l)end
-m=t(m)k=t(k)end
-local function G()local l
-local d,r=#m,#k
-local e=z
+local function o(o)local l={}for n=1,#o do
+local o=d(o,n)l[n]={c=o,freq=e[o],}end
+b.sort(l,function(l,e)return l.freq>e.freq
+end)local o={}for e=1,#l do
+o[e]=a(l[e].c)end
+return b.concat(o)end
+t=o(t)c=o(c)end
+local function C()local l
+local d,r=#t,#c
+local e=T
 if e<d then
 e=e+1
-l=a.sub(m,e,e)else
-local c,t=d,1
+l=a.sub(t,e,e)else
+local o,n=d,1
 repeat
-e=e-c
-c=c*r
-t=t+1
-until c>e
-local n=e%d
-e=(e-n)/d
+e=e-o
+o=o*r
 n=n+1
-l=a.sub(m,n,n)while t>1 do
+until o>e
+local o=e%d
+e=(e-o)/d
+o=o+1
+l=a.sub(t,o,o)while n>1 do
 local o=e%r
 e=(e-o)/r
 o=o+1
-l=l..a.sub(k,o,o)t=t-1
+l=l..a.sub(c,o,o)n=n-1
 end
 end
-z=z+1
+T=T+1
 return l,w[l]~=nil
 end
-local function C(g,I,_,v)local e=print or p.print
+local function I(N,v,L,n)local e=print or p.print
 local l=a.format
-local v=v.DETAILS
-local h,T,k,L,O,z,m,u,K,N,d,s,f,w,b,t,r,c,A,y=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+local I=n.DETAILS
+local u,k,T,O,K,y,m,h,_,g,d,f,s,A,x,t,r,c,w,z=0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
 local function n(e,l)if e==0 then return 0 end
 return l/e
 end
-for l,e in p.pairs(g)do
-h=h+1
+for l,e in p.pairs(N)do
+u=u+1
 d=d+e.token
 t=t+e.size
 end
-for l,e in p.pairs(I)do
-T=T+1
+for l,e in p.pairs(v)do
+k=k+1
 m=m+e.decl
-s=s+e.token
+f=f+e.token
 r=r+e.size
 end
-for l,e in p.pairs(_)do
-k=k+1
-u=u+e.decl
-f=f+e.token
+for l,e in p.pairs(L)do
+T=T+1
+h=h+e.decl
+s=s+e.token
 c=c+e.size
 end
-L=h+T
-K=z+m
-w=d+s
-A=t+r
-O=h+k
-N=z+u
-b=d+f
-y=t+c
-if v then
-local h={}for l,e in p.pairs(g)do
+O=u+k
+_=y+m
+A=d+f
+w=t+r
+K=u+T
+g=y+h
+x=d+s
+z=t+c
+if I then
+local u={}for l,e in p.pairs(N)do
 e.name=l
-h[#h+1]=e
+u[#u+1]=e
 end
-x.sort(h,function(e,l)return e.size>l.size
-end)local m,T="%8s%8s%10s  %s","%8d%8d%10.2f  %s"local p=a.rep("-",44)e("*** global variable list (sorted by size) ***\n"..p)e(l(m,"Token","Input","Input","Global"))e(l(m,"Count","Bytes","Average","Name"))e(p)for a=1,#h do
-local o=h[a]e(l(T,o.token,o.size,n(o.token,o.size),o.name))end
-e(p)e(l(T,d,t,n(d,t),"TOTAL"))e(p.."\n")local p,h="%8s%8s%8s%10s%8s%10s  %s","%8d%8d%8d%10.2f%8d%10.2f  %s"local t=a.rep("-",70)e("*** local variable list (sorted by allocation order) ***\n"..t)e(l(p,"Decl.","Token","Input","Input","Output","Output","Global"))e(l(p,"Count","Count","Bytes","Average","Bytes","Average","Name"))e(t)for r=1,#i do
-local c=i[r]local a=_[c]local d,t=0,0
+b.sort(u,function(l,e)return l.size>e.size
+end)local m,T="%8s%8s%10s  %s","%8d%8d%10.2f  %s"local p=a.rep("-",44)e("*** global variable list (sorted by size) ***\n"..p)e(l(m,"Token","Input","Input","Global"))e(l(m,"Count","Bytes","Average","Name"))e(p)for o=1,#u do
+local o=u[o]e(l(T,o.token,o.size,n(o.token,o.size),o.name))end
+e(p)e(l(T,d,t,n(d,t),"TOTAL"))e(p.."\n")local t,u="%8s%8s%8s%10s%8s%10s  %s","%8d%8d%8d%10.2f%8d%10.2f  %s"local d=a.rep("-",70)e("*** local variable list (sorted by allocation order) ***\n"..d)e(l(t,"Decl.","Token","Input","Input","Output","Output","Global"))e(l(t,"Count","Count","Bytes","Average","Bytes","Average","Name"))e(d)for a=1,#i do
+local d=i[a]local a=L[d]local c,t=0,0
 for l=1,#o do
-local e=o[l]if e.name==c then
-d=d+e.xcount
+local e=o[l]if e.name==d then
+c=c+e.xcount
 t=t+e.xcount*#e.oldname
 end
 end
-e(l(h,a.decl,a.token,t,n(d,t),a.size,n(a.token,a.size),c))end
-e(t)e(l(h,u,f,r,n(s,r),c,n(f,c),"TOTAL"))e(t.."\n")end
-local i,o="%-16s%8s%8s%8s%8s%10s","%-16s%8d%8d%8d%8d%10.2f"local a=a.rep("-",58)e("*** local variable optimization summary ***\n"..a)e(l(i,"Variable","Unique","Decl.","Token","Size","Average"))e(l(i,"Types","Names","Count","Count","Bytes","Bytes"))e(a)e(l(o,"Global",h,z,d,t,n(d,t)))e(a)e(l(o,"Local (in)",T,m,s,r,n(s,r)))e(l(o,"TOTAL (in)",L,K,w,A,n(w,A)))e(a)e(l(o,"Local (out)",k,u,f,c,n(f,c)))e(l(o,"TOTAL (out)",O,N,b,y,n(b,y)))e(a.."\n")end
-function optimize(c,h,u,p,m)b,N,y,o=h,u,p,m
-z=0
-i={}w=A(y)L=A(o)if c["opt-entropy"]then
+e(l(u,a.decl,a.token,t,n(c,t),a.size,n(a.token,a.size),d))end
+e(d)e(l(u,h,s,r,n(f,r),c,n(s,c),"TOTAL"))e(d.."\n")end
+local i,o="%-16s%8s%8s%8s%8s%10s","%-16s%8d%8d%8d%8d%10.2f"local a=a.rep("-",58)e("*** local variable optimization summary ***\n"..a)e(l(i,"Variable","Unique","Decl.","Token","Size","Average"))e(l(i,"Types","Names","Count","Count","Bytes","Bytes"))e(a)e(l(o,"Global",u,y,d,t,n(d,t)))e(a)e(l(o,"Local (in)",k,m,f,r,n(f,r)))e(l(o,"TOTAL (in)",O,_,A,w,n(A,w)))e(a)e(l(o,"Local (out)",T,h,s,c,n(s,c)))e(l(o,"TOTAL (out)",K,g,x,z,n(x,z)))e(a.."\n")end
+function optimize(c,e,l,a,n)z,N,L,o=e,l,a,n
+T=0
+i={}w=O(L)K=O(o)if c["opt-entropy"]then
 E(c)end
 local e={}for l=1,#o do
 e[l]=o[l]end
-x.sort(e,function(l,e)return l.xcount>e.xcount
-end)local f,r,s={},1,false
-for l=1,#e do
-local e=e[l]if not e.isself then
-f[r]=e
-r=r+1
+b.sort(e,function(e,l)return e.xcount>l.xcount
+end)local n,l,r={},1,false
+for o=1,#e do
+local e=e[o]if not e.isself then
+n[l]=e
+l=l+1
 else
-s=true
+r=true
 end
 end
-e=f
+e=n
 local d=#e
 while d>0 do
-local t,c
+local t,l
 repeat
-t,c=G()until not O[t]i[#i+1]=t
+t,l=C()until not _[t]i[#i+1]=t
 local n=d
-if c then
-local a=y[w[t].id].xref
-local t=#a
-for c=1,d do
-local l=e[c]local d,e=l.act,l.rem
+if l then
+local a=L[w[t].id].xref
+local c=#a
+for l=1,d do
+local l=e[l]local t,e=l.act,l.rem
 while e<0 do
 e=o[-e].rem
 end
 local o
-for n=1,t do
-local l=a[n]if l>=d and l<=e then o=true end
+for l=1,c do
+local l=a[l]if l>=t and l<=e then o=true end
 end
 if o then
 l.skip=true
@@ -181,26 +181,33 @@ local a=e[l]l=l+1
 a.newname=t
 a.skip=true
 a.done=true
-local c,r=a.first,a.last
-local i=a.xref
-if c and n>0 then
-local d=n
-while d>0 do
+local d,c=a.first,a.last
+local r=a.xref
+if d and n>0 then
+local t=n
+while t>0 do
 while e[l].skip do
 l=l+1
 end
-d=d-1
-local t=e[l]l=l+1
-local d,e=t.act,t.rem
-while e<0 do
-e=o[-e].rem
+t=t-1
+local e=e[l]l=l+1
+local t,l=e.act,e.rem
+while l<0 do
+l=o[-l].rem
 end
-if not(r<d or c>e)then
+if not(c<t or d>l)then
+if t>=a.act then
 for o=1,a.xcount do
-local l=i[o]if l>=d and l<=e then
+local o=r[o]if o>=t and o<=l then
 n=n-1
-t.skip=true
+e.skip=true
 break
+end
+end
+else
+if e.last and e.last>=a.act then
+n=n-1
+e.skip=true
 end
 end
 end
@@ -219,8 +226,8 @@ end
 e=o
 d=#e
 end
-for l=1,#o do
-local e=o[l]local l=e.xref
+for e=1,#o do
+local e=o[e]local l=e.xref
 if e.newname then
 for o=1,e.xcount do
 local l=l[o]N[l]=e.newname
@@ -230,6 +237,6 @@ else
 e.oldname=e.name
 end
 end
-if s then
+if r then
 i[#i+1]="self"end
-local e=A(o)C(w,L,e,c)end
+local e=O(o)I(w,K,e,c)end

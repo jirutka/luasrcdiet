@@ -1,0 +1,247 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>plugin/html.lua</title>
+<meta name="Generator" content="LuaSrcDiet">
+<style type="text/css">
+BODY {
+    background: white;
+    color: navy;
+}
+pre.code { color: black; }
+span.comment { color: #00a000; }
+span.string  { color: #009090; }
+span.keyword { color: black; font-weight: bold; }
+span.number { }
+span.operator { }
+span.name { }
+span.global { color: #ff0000; font-weight: bold; }
+span.local { color: #0000ff; font-weight: bold; }
+</style>
+</head>
+<body>
+<pre class="code">
+<span class="comment">--[[--------------------------------------------------------------------
+
+  html.lua: Turns Lua 5.1 source code into HTML files
+  This file is part of LuaSrcDiet.
+
+  Copyright (c) 2008 Kein-Hong Man &lt;khman@users.sf.net&gt;
+  The COPYRIGHT file describes the conditions
+  under which this software may be distributed.
+
+  See the ChangeLog for more information.
+
+----------------------------------------------------------------------]]</span>
+
+<span class="comment">--[[--------------------------------------------------------------------
+-- NOTES:
+-- WARNING: highly experimental! interface liable to change
+-- * This HTML highlighter marks globals brightly so that their usage
+--   can be manually optimized.
+-- * Either uses a .html extension for output files or it follows the
+--   -o &lt;filespec&gt; option.
+-- * The HTML style tries to follow that of the Lua wiki.
+----------------------------------------------------------------------]]</span>
+
+<span class="keyword">local</span> <span class="local">string</span> <span class="operator">=</span> <span class="global">require</span> <span class="string">&quot;string&quot;</span>
+<span class="keyword">local</span> <span class="local">table</span> <span class="operator">=</span> <span class="global">require</span> <span class="string">&quot;table&quot;</span>
+<span class="keyword">local</span> <span class="local">io</span> <span class="operator">=</span> <span class="global">require</span> <span class="string">&quot;io&quot;</span>
+<span class="keyword">local</span> <span class="local">base</span> <span class="operator">=</span> <span class="global">_G</span>
+<span class="global">module</span> <span class="string">&quot;html&quot;</span>
+
+<span class="comment">------------------------------------------------------------------------</span>
+<span class="comment">-- constants and configuration</span>
+<span class="comment">------------------------------------------------------------------------</span>
+
+<span class="keyword">local</span> <span class="local">HTML_EXT</span> <span class="operator">=</span> <span class="string">&quot;.html&quot;</span>
+<span class="keyword">local</span> <span class="local">ENTITIES</span> <span class="operator">=</span> <span class="operator">{</span>
+  <span class="operator">[</span><span class="string">&quot;&amp;&quot;</span><span class="operator">]</span> <span class="operator">=</span> <span class="string">&quot;&amp;amp;&quot;</span><span class="operator">,</span> <span class="operator">[</span><span class="string">&quot;&lt;&quot;</span><span class="operator">]</span> <span class="operator">=</span> <span class="string">&quot;&amp;lt;&quot;</span><span class="operator">,</span> <span class="operator">[</span><span class="string">&quot;&gt;&quot;</span><span class="operator">]</span> <span class="operator">=</span> <span class="string">&quot;&amp;gt;&quot;</span><span class="operator">,</span>
+  <span class="operator">[</span><span class="string">&quot;&apos;&quot;</span><span class="operator">]</span> <span class="operator">=</span> <span class="string">&quot;&amp;apos;&quot;</span><span class="operator">,</span> <span class="operator">[</span><span class="string">&quot;\&quot;&quot;</span><span class="operator">]</span> <span class="operator">=</span> <span class="string">&quot;&amp;quot;&quot;</span><span class="operator">,</span>
+<span class="operator">}</span>
+
+<span class="comment">-- simple headers and footers</span>
+<span class="keyword">local</span> <span class="local">HEADER</span> <span class="operator">=</span> <span class="string">[[
+&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.01 Transitional//EN&quot;&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;%s&lt;/title&gt;
+&lt;meta name=&quot;Generator&quot; content=&quot;LuaSrcDiet&quot;&gt;
+&lt;style type=&quot;text/css&quot;&gt;
+%s&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;pre class=&quot;code&quot;&gt;
+]]</span>
+<span class="keyword">local</span> <span class="local">FOOTER</span> <span class="operator">=</span> <span class="string">[[
+&lt;/pre&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+]]</span>
+<span class="comment">-- for more, please see wikimain.css from the Lua wiki site</span>
+<span class="keyword">local</span> <span class="local">STYLESHEET</span> <span class="operator">=</span> <span class="string">[[
+BODY {
+    background: white;
+    color: navy;
+}
+pre.code { color: black; }
+span.comment { color: #00a000; }
+span.string  { color: #009090; }
+span.keyword { color: black; font-weight: bold; }
+span.number { }
+span.operator { }
+span.name { }
+span.global { color: #ff0000; font-weight: bold; }
+span.local { color: #0000ff; font-weight: bold; }
+]]</span>
+
+<span class="comment">------------------------------------------------------------------------</span>
+<span class="comment">-- option handling, plays nice with --quiet option</span>
+<span class="comment">------------------------------------------------------------------------</span>
+
+<span class="keyword">local</span> <span class="local">option</span>                    <span class="comment">-- local reference to list of options</span>
+<span class="keyword">local</span> <span class="local">srcfl</span><span class="operator">,</span> <span class="local">destfl</span>             <span class="comment">-- filenames</span>
+<span class="keyword">local</span> <span class="local">toklist</span><span class="operator">,</span> <span class="local">seminfolist</span><span class="operator">,</span> <span class="local">toklnlist</span>  <span class="comment">-- token data</span>
+
+<span class="keyword">local</span> <span class="keyword">function</span> <span class="local">print</span><span class="operator">(</span><span class="operator">...</span><span class="operator">)</span>               <span class="comment">-- handle quiet option</span>
+  <span class="keyword">if</span> <span class="local">option</span><span class="operator">.</span><span class="name">QUIET</span> <span class="keyword">then</span> <span class="keyword">return</span> <span class="keyword">end</span>
+  <span class="local">base</span><span class="operator">.</span><span class="name">print</span><span class="operator">(</span><span class="operator">...</span><span class="operator">)</span>
+<span class="keyword">end</span>
+
+<span class="comment">------------------------------------------------------------------------</span>
+<span class="comment">-- initialization</span>
+<span class="comment">------------------------------------------------------------------------</span>
+
+<span class="keyword">function</span> <span class="global">init</span><span class="operator">(</span><span class="local">_option</span><span class="operator">,</span> <span class="local">_srcfl</span><span class="operator">,</span> <span class="local">_destfl</span><span class="operator">)</span>
+  <span class="local">option</span> <span class="operator">=</span> <span class="local">_option</span>
+  <span class="local">srcfl</span> <span class="operator">=</span> <span class="local">_srcfl</span>
+  <span class="keyword">local</span> <span class="local">extb</span><span class="operator">,</span> <span class="local">exte</span> <span class="operator">=</span> <span class="local">string</span><span class="operator">.</span><span class="name">find</span><span class="operator">(</span><span class="local">srcfl</span><span class="operator">,</span> <span class="string">&quot;%.[^%.%\\%/]*$&quot;</span><span class="operator">)</span>
+  <span class="keyword">local</span> <span class="local">basename</span><span class="operator">,</span> <span class="local">extension</span> <span class="operator">=</span> <span class="local">srcfl</span><span class="operator">,</span> <span class="string">&quot;&quot;</span>
+  <span class="keyword">if</span> <span class="local">extb</span> <span class="keyword">and</span> <span class="local">extb</span> <span class="operator">&gt;</span> <span class="number">1</span> <span class="keyword">then</span>
+    <span class="local">basename</span> <span class="operator">=</span> <span class="local">string</span><span class="operator">.</span><span class="name">sub</span><span class="operator">(</span><span class="local">srcfl</span><span class="operator">,</span> <span class="number">1</span><span class="operator">,</span> <span class="local">extb</span> <span class="operator">-</span> <span class="number">1</span><span class="operator">)</span>
+    <span class="local">extension</span> <span class="operator">=</span> <span class="local">string</span><span class="operator">.</span><span class="name">sub</span><span class="operator">(</span><span class="local">srcfl</span><span class="operator">,</span> <span class="local">extb</span><span class="operator">,</span> <span class="local">exte</span><span class="operator">)</span>
+  <span class="keyword">end</span>
+  <span class="local">destfl</span> <span class="operator">=</span> <span class="local">basename</span><span class="operator">..</span><span class="local">HTML_EXT</span>
+  <span class="keyword">if</span> <span class="local">option</span><span class="operator">.</span><span class="name">OUTPUT_FILE</span> <span class="keyword">then</span>
+    <span class="local">destfl</span> <span class="operator">=</span> <span class="local">option</span><span class="operator">.</span><span class="name">OUTPUT_FILE</span>
+  <span class="keyword">end</span>
+  <span class="keyword">if</span> <span class="local">srcfl</span> <span class="operator">==</span> <span class="local">destfl</span> <span class="keyword">then</span>
+    <span class="local">base</span><span class="operator">.</span><span class="name">error</span><span class="operator">(</span><span class="string">&quot;output filename identical to input filename&quot;</span><span class="operator">)</span>
+  <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+<span class="comment">------------------------------------------------------------------------</span>
+<span class="comment">-- message display, post-load processing</span>
+<span class="comment">------------------------------------------------------------------------</span>
+
+<span class="keyword">function</span> <span class="global">post_load</span><span class="operator">(</span><span class="local">z</span><span class="operator">)</span>
+  <span class="local">print</span><span class="operator">(</span><span class="string">[[
+HTML plugin module for LuaSrcDiet
+]]</span><span class="operator">)</span>
+  <span class="local">print</span><span class="operator">(</span><span class="string">&quot;Exporting: &quot;</span><span class="operator">..</span><span class="local">srcfl</span><span class="operator">..</span><span class="string">&quot; -&gt; &quot;</span><span class="operator">..</span><span class="local">destfl</span><span class="operator">..</span><span class="string">&quot;\n&quot;</span><span class="operator">)</span>
+<span class="keyword">end</span>
+
+<span class="comment">------------------------------------------------------------------------</span>
+<span class="comment">-- post-lexing processing, can work on lexer table output</span>
+<span class="comment">------------------------------------------------------------------------</span>
+
+<span class="keyword">function</span> <span class="global">post_lex</span><span class="operator">(</span><span class="local">_toklist</span><span class="operator">,</span> <span class="local">_seminfolist</span><span class="operator">,</span> <span class="local">_toklnlist</span><span class="operator">)</span>
+  <span class="local">toklist</span><span class="operator">,</span> <span class="local">seminfolist</span><span class="operator">,</span> <span class="local">toklnlist</span>
+    <span class="operator">=</span> <span class="local">_toklist</span><span class="operator">,</span> <span class="local">_seminfolist</span><span class="operator">,</span> <span class="local">_toklnlist</span>
+<span class="keyword">end</span>
+
+<span class="comment">------------------------------------------------------------------------</span>
+<span class="comment">-- escape the usual suspects for HTML/XML</span>
+<span class="comment">------------------------------------------------------------------------</span>
+
+<span class="keyword">local</span> <span class="keyword">function</span> <span class="local">do_entities</span><span class="operator">(</span><span class="local">z</span><span class="operator">)</span>
+  <span class="keyword">local</span> <span class="local">i</span> <span class="operator">=</span> <span class="number">1</span>
+  <span class="keyword">while</span> <span class="local">i</span> <span class="operator">&lt;=</span> <span class="operator">#</span><span class="local">z</span> <span class="keyword">do</span>
+    <span class="keyword">local</span> <span class="local">c</span> <span class="operator">=</span> <span class="local">string</span><span class="operator">.</span><span class="name">sub</span><span class="operator">(</span><span class="local">z</span><span class="operator">,</span> <span class="local">i</span><span class="operator">,</span> <span class="local">i</span><span class="operator">)</span>
+    <span class="keyword">local</span> <span class="local">d</span> <span class="operator">=</span> <span class="local">ENTITIES</span><span class="operator">[</span><span class="local">c</span><span class="operator">]</span>
+    <span class="keyword">if</span> <span class="local">d</span> <span class="keyword">then</span>
+      <span class="local">c</span> <span class="operator">=</span> <span class="local">d</span>
+      <span class="local">z</span> <span class="operator">=</span> <span class="local">string</span><span class="operator">.</span><span class="name">sub</span><span class="operator">(</span><span class="local">z</span><span class="operator">,</span> <span class="number">1</span><span class="operator">,</span> <span class="local">i</span> <span class="operator">-</span> <span class="number">1</span><span class="operator">)</span><span class="operator">..</span><span class="local">c</span><span class="operator">..</span><span class="local">string</span><span class="operator">.</span><span class="name">sub</span><span class="operator">(</span><span class="local">z</span><span class="operator">,</span> <span class="local">i</span> <span class="operator">+</span> <span class="number">1</span><span class="operator">)</span>
+    <span class="keyword">end</span>
+    <span class="local">i</span> <span class="operator">=</span> <span class="local">i</span> <span class="operator">+</span> <span class="operator">#</span><span class="local">c</span>
+  <span class="keyword">end</span><span class="comment">--while</span>
+  <span class="keyword">return</span> <span class="local">z</span>
+<span class="keyword">end</span>
+
+<span class="comment">------------------------------------------------------------------------</span>
+<span class="comment">-- save source code to file</span>
+<span class="comment">------------------------------------------------------------------------</span>
+
+<span class="keyword">local</span> <span class="keyword">function</span> <span class="local">save_file</span><span class="operator">(</span><span class="local">fname</span><span class="operator">,</span> <span class="local">dat</span><span class="operator">)</span>
+  <span class="keyword">local</span> <span class="local">OUTF</span> <span class="operator">=</span> <span class="local">io</span><span class="operator">.</span><span class="name">open</span><span class="operator">(</span><span class="local">fname</span><span class="operator">,</span> <span class="string">&quot;wb&quot;</span><span class="operator">)</span>
+  <span class="keyword">if</span> <span class="keyword">not</span> <span class="local">OUTF</span> <span class="keyword">then</span> <span class="local">base</span><span class="operator">.</span><span class="name">error</span><span class="operator">(</span><span class="string">&quot;cannot open \&quot;&quot;</span><span class="operator">..</span><span class="local">fname</span><span class="operator">..</span><span class="string">&quot;\&quot; for writing&quot;</span><span class="operator">)</span> <span class="keyword">end</span>
+  <span class="keyword">local</span> <span class="local">status</span> <span class="operator">=</span> <span class="local">OUTF</span><span class="operator">:</span><span class="name">write</span><span class="operator">(</span><span class="local">dat</span><span class="operator">)</span>
+  <span class="keyword">if</span> <span class="keyword">not</span> <span class="local">status</span> <span class="keyword">then</span> <span class="local">base</span><span class="operator">.</span><span class="name">error</span><span class="operator">(</span><span class="string">&quot;cannot write to \&quot;&quot;</span><span class="operator">..</span><span class="local">fname</span><span class="operator">..</span><span class="string">&quot;\&quot;&quot;</span><span class="operator">)</span> <span class="keyword">end</span>
+  <span class="local">OUTF</span><span class="operator">:</span><span class="name">close</span><span class="operator">(</span><span class="operator">)</span>
+<span class="keyword">end</span>
+
+<span class="comment">------------------------------------------------------------------------</span>
+<span class="comment">-- post-parsing processing, gives globalinfo, localinfo</span>
+<span class="comment">------------------------------------------------------------------------</span>
+
+<span class="keyword">function</span> <span class="global">post_parse</span><span class="operator">(</span><span class="local">globalinfo</span><span class="operator">,</span> <span class="local">localinfo</span><span class="operator">)</span>
+  <span class="keyword">local</span> <span class="local">html</span> <span class="operator">=</span> <span class="operator">{</span><span class="operator">}</span>
+  <span class="keyword">local</span> <span class="keyword">function</span> <span class="local">add</span><span class="operator">(</span><span class="local">s</span><span class="operator">)</span>         <span class="comment">-- html helpers</span>
+    <span class="local">html</span><span class="operator">[</span><span class="operator">#</span><span class="local">html</span> <span class="operator">+</span> <span class="number">1</span><span class="operator">]</span> <span class="operator">=</span> <span class="local">s</span>
+  <span class="keyword">end</span>
+  <span class="keyword">local</span> <span class="keyword">function</span> <span class="local">span</span><span class="operator">(</span><span class="local">class</span><span class="operator">,</span> <span class="local">s</span><span class="operator">)</span>
+    <span class="local">add</span><span class="operator">(</span><span class="string">&apos;&lt;span class=&quot;&apos;</span><span class="operator">..</span><span class="local">class</span><span class="operator">..</span><span class="string">&apos;&quot;&gt;&apos;</span><span class="operator">..</span><span class="local">s</span><span class="operator">..</span><span class="string">&apos;&lt;/span&gt;&apos;</span><span class="operator">)</span>
+  <span class="keyword">end</span>
+  <span class="comment">----------------------------------------------------------------------</span>
+  <span class="keyword">for</span> <span class="local">i</span> <span class="operator">=</span> <span class="number">1</span><span class="operator">,</span> <span class="operator">#</span><span class="local">globalinfo</span> <span class="keyword">do</span>     <span class="comment">-- mark global identifiers as TK_GLOBAL</span>
+    <span class="keyword">local</span> <span class="local">obj</span> <span class="operator">=</span> <span class="local">globalinfo</span><span class="operator">[</span><span class="local">i</span><span class="operator">]</span>
+    <span class="keyword">local</span> <span class="local">xref</span> <span class="operator">=</span> <span class="local">obj</span><span class="operator">.</span><span class="name">xref</span>
+    <span class="keyword">for</span> <span class="local">j</span> <span class="operator">=</span> <span class="number">1</span><span class="operator">,</span> <span class="operator">#</span><span class="local">xref</span> <span class="keyword">do</span>
+      <span class="keyword">local</span> <span class="local">p</span> <span class="operator">=</span> <span class="local">xref</span><span class="operator">[</span><span class="local">j</span><span class="operator">]</span>
+      <span class="local">toklist</span><span class="operator">[</span><span class="local">p</span><span class="operator">]</span> <span class="operator">=</span> <span class="string">&quot;TK_GLOBAL&quot;</span>
+    <span class="keyword">end</span>
+  <span class="keyword">end</span><span class="comment">--for</span>
+  <span class="comment">----------------------------------------------------------------------</span>
+  <span class="keyword">for</span> <span class="local">i</span> <span class="operator">=</span> <span class="number">1</span><span class="operator">,</span> <span class="operator">#</span><span class="local">localinfo</span> <span class="keyword">do</span>      <span class="comment">-- mark local identifiers as TK_LOCAL</span>
+    <span class="keyword">local</span> <span class="local">obj</span> <span class="operator">=</span> <span class="local">localinfo</span><span class="operator">[</span><span class="local">i</span><span class="operator">]</span>
+    <span class="keyword">local</span> <span class="local">xref</span> <span class="operator">=</span> <span class="local">obj</span><span class="operator">.</span><span class="name">xref</span>
+    <span class="keyword">for</span> <span class="local">j</span> <span class="operator">=</span> <span class="number">1</span><span class="operator">,</span> <span class="operator">#</span><span class="local">xref</span> <span class="keyword">do</span>
+      <span class="keyword">local</span> <span class="local">p</span> <span class="operator">=</span> <span class="local">xref</span><span class="operator">[</span><span class="local">j</span><span class="operator">]</span>
+      <span class="local">toklist</span><span class="operator">[</span><span class="local">p</span><span class="operator">]</span> <span class="operator">=</span> <span class="string">&quot;TK_LOCAL&quot;</span>
+    <span class="keyword">end</span>
+  <span class="keyword">end</span><span class="comment">--for</span>
+  <span class="comment">----------------------------------------------------------------------</span>
+  <span class="local">add</span><span class="operator">(</span><span class="local">string</span><span class="operator">.</span><span class="name">format</span><span class="operator">(</span><span class="local">HEADER</span><span class="operator">,</span>     <span class="comment">-- header and leading stuff</span>
+    <span class="local">do_entities</span><span class="operator">(</span><span class="local">srcfl</span><span class="operator">)</span><span class="operator">,</span>
+    <span class="local">STYLESHEET</span><span class="operator">)</span><span class="operator">)</span>
+  <span class="keyword">for</span> <span class="local">i</span> <span class="operator">=</span> <span class="number">1</span><span class="operator">,</span> <span class="operator">#</span><span class="local">toklist</span> <span class="keyword">do</span>        <span class="comment">-- enumerate token list</span>
+    <span class="keyword">local</span> <span class="local">tok</span><span class="operator">,</span> <span class="local">info</span> <span class="operator">=</span> <span class="local">toklist</span><span class="operator">[</span><span class="local">i</span><span class="operator">]</span><span class="operator">,</span> <span class="local">seminfolist</span><span class="operator">[</span><span class="local">i</span><span class="operator">]</span>
+    <span class="keyword">if</span> <span class="local">tok</span> <span class="operator">==</span> <span class="string">&quot;TK_KEYWORD&quot;</span> <span class="keyword">then</span>
+      <span class="local">span</span><span class="operator">(</span><span class="string">&quot;keyword&quot;</span><span class="operator">,</span> <span class="local">info</span><span class="operator">)</span>
+    <span class="keyword">elseif</span> <span class="local">tok</span> <span class="operator">==</span> <span class="string">&quot;TK_STRING&quot;</span> <span class="keyword">or</span> <span class="local">tok</span> <span class="operator">==</span> <span class="string">&quot;TK_LSTRING&quot;</span> <span class="keyword">then</span>
+      <span class="local">span</span><span class="operator">(</span><span class="string">&quot;string&quot;</span><span class="operator">,</span> <span class="local">do_entities</span><span class="operator">(</span><span class="local">info</span><span class="operator">)</span><span class="operator">)</span>
+    <span class="keyword">elseif</span> <span class="local">tok</span> <span class="operator">==</span> <span class="string">&quot;TK_COMMENT&quot;</span> <span class="keyword">or</span> <span class="local">tok</span> <span class="operator">==</span> <span class="string">&quot;TK_LCOMMENT&quot;</span> <span class="keyword">then</span>
+      <span class="local">span</span><span class="operator">(</span><span class="string">&quot;comment&quot;</span><span class="operator">,</span> <span class="local">do_entities</span><span class="operator">(</span><span class="local">info</span><span class="operator">)</span><span class="operator">)</span>
+    <span class="keyword">elseif</span> <span class="local">tok</span> <span class="operator">==</span> <span class="string">&quot;TK_GLOBAL&quot;</span> <span class="keyword">then</span>
+      <span class="local">span</span><span class="operator">(</span><span class="string">&quot;global&quot;</span><span class="operator">,</span> <span class="local">info</span><span class="operator">)</span>
+    <span class="keyword">elseif</span> <span class="local">tok</span> <span class="operator">==</span> <span class="string">&quot;TK_LOCAL&quot;</span> <span class="keyword">then</span>
+      <span class="local">span</span><span class="operator">(</span><span class="string">&quot;local&quot;</span><span class="operator">,</span> <span class="local">info</span><span class="operator">)</span>
+    <span class="keyword">elseif</span> <span class="local">tok</span> <span class="operator">==</span> <span class="string">&quot;TK_NAME&quot;</span> <span class="keyword">then</span>
+      <span class="local">span</span><span class="operator">(</span><span class="string">&quot;name&quot;</span><span class="operator">,</span> <span class="local">info</span><span class="operator">)</span>
+    <span class="keyword">elseif</span> <span class="local">tok</span> <span class="operator">==</span> <span class="string">&quot;TK_NUMBER&quot;</span> <span class="keyword">then</span>
+      <span class="local">span</span><span class="operator">(</span><span class="string">&quot;number&quot;</span><span class="operator">,</span> <span class="local">info</span><span class="operator">)</span>
+    <span class="keyword">elseif</span> <span class="local">tok</span> <span class="operator">==</span> <span class="string">&quot;TK_OP&quot;</span> <span class="keyword">then</span>
+      <span class="local">span</span><span class="operator">(</span><span class="string">&quot;operator&quot;</span><span class="operator">,</span> <span class="local">do_entities</span><span class="operator">(</span><span class="local">info</span><span class="operator">)</span><span class="operator">)</span>
+    <span class="keyword">elseif</span> <span class="local">tok</span> <span class="operator">~=</span> <span class="string">&quot;TK_EOS&quot;</span> <span class="keyword">then</span>  <span class="comment">-- TK_EOL, TK_SPACE</span>
+      <span class="local">add</span><span class="operator">(</span><span class="local">info</span><span class="operator">)</span>
+    <span class="keyword">end</span>
+  <span class="keyword">end</span><span class="comment">--for</span>
+  <span class="local">add</span><span class="operator">(</span><span class="local">FOOTER</span><span class="operator">)</span>
+  <span class="local">save_file</span><span class="operator">(</span><span class="local">destfl</span><span class="operator">,</span> <span class="local">table</span><span class="operator">.</span><span class="name">concat</span><span class="operator">(</span><span class="local">html</span><span class="operator">)</span><span class="operator">)</span>
+  <span class="local">option</span><span class="operator">.</span><span class="name">EXIT</span> <span class="operator">=</span> <span class="keyword">true</span>
+<span class="keyword">end</span>
+
+<span class="keyword">return</span> <span class="local">base</span><span class="operator">.</span><span class="name">getfenv</span><span class="operator">(</span><span class="operator">)</span>
+</pre>
+</body>
+</html>

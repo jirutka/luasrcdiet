@@ -701,6 +701,14 @@ TK_OP ')'
 TK_EOL LF
 TK_KEYWORD 'end'
 TK_EOL LF
+TK_KEYWORD 'local'
+TK_SPACE ' '
+TK_NAME 'errorline'
+TK_SPACE ' '
+TK_OP '='
+TK_SPACE ' '
+TK_NAME 'errorline'
+TK_EOL LF
 TK_EOL LF
 TK_COMMENT '------------------------------------------------------------------------'
 TK_EOL LF

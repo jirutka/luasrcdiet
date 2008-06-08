@@ -5,8 +5,11 @@
 # by Kein-Hong Man <khman@users.sf.net>, PUBLIC DOMAIN
 #
 
+# Lua 5.1 executables, please adjust name to suit
 LUA 	= lua5.1
 LUAC	= luac5.1
+
+# LuaSrcDiet, to be in parent directory
 LSD	= $(LUA) LuaSrcDiet.lua
 LSD_MAX	= $(LSD) --maximum
 
@@ -21,7 +24,10 @@ all:
 	@echo dump - generate token and parser dump samples
 	@echo different - generate different llex.lua processed files
 	@echo binchunks - needed for test_benchmark1.lua testing
+	@echo html - sample for HTML plugin
+	@echo -------------------------------------------------------------
 	@echo clean - cleanup for 'child' and 'binchunks'
+	@echo -------------------------------------------------------------
 
 # basic test, run LuaSrcDiet files, to generate a compressed, hopefully working, version
 max:
@@ -96,6 +102,9 @@ binchunks:
 	$(LUAC) -s -o lparser.out lparser.lua
 	$(LUAC) -s -o optparser.out optparser.lua
 
+html:
+	cd .. && $(LSD) --plugin html plugin/html.lua -o sample/html_sample.html
+
 # clean up "child" processing, for testing running of a compressed LuaSrcDiet
 clean:
 	rm -f LuaSrcDiet_1.lua llex_1.lua optlex_1.lua lparser_1.lua optparser_1.lua
@@ -103,4 +112,4 @@ clean:
 	rm -f child.txt
 	rm -f LuaSrcDiet.out llex.out optlex.out lparser.out optparser.out
 
-.PHONY: all clean max test strings numbers child dump different binchunks
+.PHONY: all clean max test strings numbers child dump different binchunks html

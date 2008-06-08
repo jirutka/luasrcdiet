@@ -9,6 +9,9 @@ llex.lua
 lparser.lua
 optlex.lua
 optparser.lua
+plugin/example.lua
+plugin/sloc.lua
+plugin/html.lua
 sample/Makefile
 sample/statistics.txt
 sample/LuaSrcDiet.lua
@@ -28,6 +31,7 @@ sample/llex_default.lua
 sample/llex_locals.lua
 sample/llex_whitespace.lua
 sample/llex_emptylines.lua
+sample/html_sample.html
 5.0/README
 5.0/LuaSrcDiet.lua
 5.0/LuaSrcDiet_.lua

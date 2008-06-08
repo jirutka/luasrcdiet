@@ -7,7 +7,7 @@
   under which this software may be distributed.
 
   http://luaforge.net/projects/luasrcdiet/
-  (TODO) http://www.geocities.com/keinhong/luasrcdiet.html
+  http://luasrcdiet.luaforge.net/
 
 --
 
@@ -17,6 +17,8 @@ please see the 5.0/README file.
 --
 
 PREVIEW NOTES
+
+See also: http://luasrcdiet.luaforge.net/
 
 The 0.11.0 release of LuaSrcDiet has a local variable name optimizer.
 Local variable names are renamed into the shortest possible names. In
@@ -61,6 +63,12 @@ functions (LUA_COMPAT_VARARG).
 --
 
 WHAT'S NEW
+
+Major changes for version 0.11.2 (see the ChangeLog as well):
+* improved local variable name allocation, more efficient now
+* added experimental --plugin option with an example plugin script
+* added a SLOC plugin to count SLOC for Lua 5.1 source files
+* added a HTML plugin to see globals and locals marked
 
 Major changes for version 0.11.1 (see the ChangeLog as well):
 * --detail option for more string, number and local variable info
@@ -133,6 +141,9 @@ USING LUASRCDIET
 ...
 
 Please see the command line help or see sample/Makefile for examples.
+
+This is experimental software and nothing has been done yet on a proper
+installation scheme for use with normal work. A thousand apologies...
 
 --
 
