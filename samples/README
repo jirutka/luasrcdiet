@@ -1,0 +1,26 @@
+
+Samples for certain features of LuaSrcDiet.
+
+numbers_original.lua
+numbers_on_diet.lua
+		Before and after samples for number optimization.
+
+strings_original.lua
+strings_on_diet.lua
+		Before and after samples for string optimization.
+
+llex-plugin-output.html
+		Sample output of the HTML plugin.
+
+dump-llex-lexer.dat
+dump-llex-parser.dat
+		Debugging/development data output. Useful only if
+		you are hacking LuaSrcDiet.
+
+experimental1.lua
+experimental1_output.lua
+		Before and after samples for some experimental
+		optimizations:
+		(a) ';' operator removal (deleted or turned into whitespace).
+		(b) f("string") f('string') f([[string]]) calls are turned
+		    into their syntactic sugar equivalents, e.g. f"string"

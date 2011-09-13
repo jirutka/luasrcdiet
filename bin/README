@@ -1,0 +1,38 @@
+
+This directory is named 'bin' for convenience.
+
+Single files or processed files of LuaSrcDiet from the src/ directory
+are placed here. The single-file LuaSrcDiet can be run in a Bash shell
+like an executable file with the correct permissions (755). Windows
+users can run it in Cygwin.
+
+LuaSrcDiet.lua
+		Initial aggregated all-in-one program script that
+		is the output of util/onefile.lua. If one of the
+		compressed scripts break, you can fall back to this.
+
+app_default.lua
+		Processed using default settings.
+		app_default.lua.txt is the detailed processing report
+
+app_basic.lua
+		Processed using --basic settings.
+		app_basic.lua.txt is the detailed processing report
+
+app_maximum.lua
+		Processed using --maximum settings.
+		app_maximum.lua.txt is the detailed processing report.
+
+app_experimental.lua
+		Processed using --maximum and --opt-experimental.
+		Equivalence checking may be disabled (warning only).
+		app_experimental.lua.txt is the detailed processing report.
+
+opt_comments.lua
+opt_whitespace.lua
+opt_emptylines.lua
+opt_locals.lua
+		Processed using --none and one selected optimization.
+		Demonstrates switching on or off individual settings.
+
+

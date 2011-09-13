@@ -1,0 +1,376 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>src/llex.lua</title>
+<meta name="Generator" content="LuaSrcDiet">
+<style type="text/css">
+BODY {
+    background: white;
+    color: navy;
+}
+pre.code { color: black; }
+span.comment { color: #00a000; }
+span.string  { color: #009090; }
+span.keyword { color: black; font-weight: bold; }
+span.number { color: #993399; }
+span.operator { }
+span.name { }
+span.global { color: #ff0000; font-weight: bold; }
+span.local { color: #0000ff; font-weight: bold; }
+</style>
+</head>
+<body>
+<pre class="code">
+<span class="comment">--[[--------------------------------------------------------------------
+
+  llex.lua: Lua 5.1 lexical analyzer in Lua
+  This file is part of LuaSrcDiet, based on Yueliang material.
+
+  Copyright (c) 2008,2011 Kein-Hong Man &lt;keinhong@gmail.com&gt;
+  The COPYRIGHT file describes the conditions
+  under which this software may be distributed.
+
+----------------------------------------------------------------------]]</span>
+
+<span class="comment">--[[--------------------------------------------------------------------
+-- NOTES:
+-- * This is a version of the native 5.1.x lexer from Yueliang 0.4.0,
+--   with significant modifications to handle LuaSrcDiet&apos;s needs:
+--   (1) llex.error is an optional error function handler
+--   (2) seminfo for strings include their delimiters and no
+--       translation operations are performed on them
+-- * ADDED shbang handling has been added to support executable scripts
+-- * NO localized decimal point replacement magic
+-- * NO limit to number of lines
+-- * NO support for compatible long strings (LUA_COMPAT_LSTR)
+----------------------------------------------------------------------]]</span>
+
+<span class="keyword">local</span> <span class="local">base</span> <span class="operator">=</span> <span class="global">_G</span>
+
+<span class="global">module</span> <span class="string">&quot;llex&quot;</span>
+
+<span class="keyword">local</span> <span class="local">string</span> <span class="operator">=</span> <span class="local">base</span><span class="operator">.</span><span class="name">require</span> <span class="string">&quot;string&quot;</span>
+<span class="keyword">local</span> <span class="local">find</span> <span class="operator">=</span> <span class="local">string</span><span class="operator">.</span><span class="name">find</span>
+<span class="keyword">local</span> <span class="local">match</span> <span class="operator">=</span> <span class="local">string</span><span class="operator">.</span><span class="name">match</span>
+<span class="keyword">local</span> <span class="local">sub</span> <span class="operator">=</span> <span class="local">string</span><span class="operator">.</span><span class="name">sub</span>
+
+<span class="comment">----------------------------------------------------------------------</span>
+<span class="comment">-- initialize keyword list, variables</span>
+<span class="comment">----------------------------------------------------------------------</span>
+
+<span class="keyword">local</span> <span class="local">kw</span> <span class="operator">=</span> <span class="operator">{</span><span class="operator">}</span>
+<span class="keyword">for</span> <span class="local">v</span> <span class="keyword">in</span> <span class="local">string</span><span class="operator">.</span><span class="name">gmatch</span><span class="operator">(</span><span class="string">[[
+and break do else elseif end false for function if in
+local nil not or repeat return then true until while]]</span><span class="operator">,</span> <span class="string">&quot;%S+&quot;</span><span class="operator">)</span> <span class="keyword">do</span>
+  <span class="local">kw</span><span class="operator">[</span><span class="local">v</span><span class="operator">]</span> <span class="operator">=</span> <span class="keyword">true</span>
+<span class="keyword">end</span>
+
+<span class="comment">-- see init() for module variables (externally visible):</span>
+<span class="comment">--       tok, seminfo, tokln</span>
+
+<span class="keyword">local</span> <span class="local">z</span><span class="operator">,</span>                <span class="comment">-- source stream</span>
+      <span class="local">sourceid</span><span class="operator">,</span>         <span class="comment">-- name of source</span>
+      <span class="local">I</span><span class="operator">,</span>                <span class="comment">-- position of lexer</span>
+      <span class="local">buff</span><span class="operator">,</span>             <span class="comment">-- buffer for strings</span>
+      <span class="local">ln</span>                <span class="comment">-- line number</span>
+
+<span class="comment">----------------------------------------------------------------------</span>
+<span class="comment">-- add information to token listing</span>
+<span class="comment">----------------------------------------------------------------------</span>
+
+<span class="keyword">local</span> <span class="keyword">function</span> <span class="local">addtoken</span><span class="operator">(</span><span class="local">token</span><span class="operator">,</span> <span class="local">info</span><span class="operator">)</span>
+  <span class="keyword">local</span> <span class="local">i</span> <span class="operator">=</span> <span class="operator">#</span><span class="global">tok</span> <span class="operator">+</span> <span class="number">1</span>
+  <span class="global">tok</span><span class="operator">[</span><span class="local">i</span><span class="operator">]</span> <span class="operator">=</span> <span class="local">token</span>
+  <span class="global">seminfo</span><span class="operator">[</span><span class="local">i</span><span class="operator">]</span> <span class="operator">=</span> <span class="local">info</span>
+  <span class="global">tokln</span><span class="operator">[</span><span class="local">i</span><span class="operator">]</span> <span class="operator">=</span> <span class="local">ln</span>
+<span class="keyword">end</span>
+
+<span class="comment">----------------------------------------------------------------------</span>
+<span class="comment">-- handles line number incrementation and end-of-line characters</span>
+<span class="comment">----------------------------------------------------------------------</span>
+
+<span class="keyword">local</span> <span class="keyword">function</span> <span class="local">inclinenumber</span><span class="operator">(</span><span class="local">i</span><span class="operator">,</span> <span class="local">is_tok</span><span class="operator">)</span>
+  <span class="keyword">local</span> <span class="local">sub</span> <span class="operator">=</span> <span class="local">sub</span>
+  <span class="keyword">local</span> <span class="local">old</span> <span class="operator">=</span> <span class="local">sub</span><span class="operator">(</span><span class="local">z</span><span class="operator">,</span> <span class="local">i</span><span class="operator">,</span> <span class="local">i</span><span class="operator">)</span>
+  <span class="local">i</span> <span class="operator">=</span> <span class="local">i</span> <span class="operator">+</span> <span class="number">1</span>  <span class="comment">-- skip &apos;\n&apos; or &apos;\r&apos;</span>
+  <span class="keyword">local</span> <span class="local">c</span> <span class="operator">=</span> <span class="local">sub</span><span class="operator">(</span><span class="local">z</span><span class="operator">,</span> <span class="local">i</span><span class="operator">,</span> <span class="local">i</span><span class="operator">)</span>
+  <span class="keyword">if</span> <span class="operator">(</span><span class="local">c</span> <span class="operator">==</span> <span class="string">&quot;\n&quot;</span> <span class="keyword">or</span> <span class="local">c</span> <span class="operator">==</span> <span class="string">&quot;\r&quot;</span><span class="operator">)</span> <span class="keyword">and</span> <span class="operator">(</span><span class="local">c</span> <span class="operator">~=</span> <span class="local">old</span><span class="operator">)</span> <span class="keyword">then</span>
+    <span class="local">i</span> <span class="operator">=</span> <span class="local">i</span> <span class="operator">+</span> <span class="number">1</span>  <span class="comment">-- skip &apos;\n\r&apos; or &apos;\r\n&apos;</span>
+    <span class="local">old</span> <span class="operator">=</span> <span class="local">old</span><span class="operator">..</span><span class="local">c</span>
+  <span class="keyword">end</span>
+  <span class="keyword">if</span> <span class="local">is_tok</span> <span class="keyword">then</span> <span class="local">addtoken</span><span class="operator">(</span><span class="string">&quot;TK_EOL&quot;</span><span class="operator">,</span> <span class="local">old</span><span class="operator">)</span> <span class="keyword">end</span>
+  <span class="local">ln</span> <span class="operator">=</span> <span class="local">ln</span> <span class="operator">+</span> <span class="number">1</span>
+  <span class="local">I</span> <span class="operator">=</span> <span class="local">i</span>
+  <span class="keyword">return</span> <span class="local">i</span>
+<span class="keyword">end</span>
+
+<span class="comment">----------------------------------------------------------------------</span>
+<span class="comment">-- initialize lexer for given source _z and source name _sourceid</span>
+<span class="comment">----------------------------------------------------------------------</span>
+
+<span class="keyword">function</span> <span class="global">init</span><span class="operator">(</span><span class="local">_z</span><span class="operator">,</span> <span class="local">_sourceid</span><span class="operator">)</span>
+  <span class="local">z</span> <span class="operator">=</span> <span class="local">_z</span>                        <span class="comment">-- source</span>
+  <span class="local">sourceid</span> <span class="operator">=</span> <span class="local">_sourceid</span>          <span class="comment">-- name of source</span>
+  <span class="local">I</span> <span class="operator">=</span> <span class="number">1</span>                         <span class="comment">-- lexer&apos;s position in source</span>
+  <span class="local">ln</span> <span class="operator">=</span> <span class="number">1</span>                        <span class="comment">-- line number</span>
+  <span class="global">tok</span> <span class="operator">=</span> <span class="operator">{</span><span class="operator">}</span>                      <span class="comment">-- lexed token list*</span>
+  <span class="global">seminfo</span> <span class="operator">=</span> <span class="operator">{</span><span class="operator">}</span>                  <span class="comment">-- lexed semantic information list*</span>
+  <span class="global">tokln</span> <span class="operator">=</span> <span class="operator">{</span><span class="operator">}</span>                    <span class="comment">-- line numbers for messages*</span>
+                                <span class="comment">-- (*) externally visible thru&apos; module</span>
+  <span class="comment">--------------------------------------------------------------------</span>
+  <span class="comment">-- initial processing (shbang handling)</span>
+  <span class="comment">--------------------------------------------------------------------</span>
+  <span class="keyword">local</span> <span class="local">p</span><span class="operator">,</span> <span class="local">_</span><span class="operator">,</span> <span class="local">q</span><span class="operator">,</span> <span class="local">r</span> <span class="operator">=</span> <span class="local">find</span><span class="operator">(</span><span class="local">z</span><span class="operator">,</span> <span class="string">&quot;^(#[^\r\n]*)(\r?\n?)&quot;</span><span class="operator">)</span>
+  <span class="keyword">if</span> <span class="local">p</span> <span class="keyword">then</span>                             <span class="comment">-- skip first line</span>
+    <span class="local">I</span> <span class="operator">=</span> <span class="local">I</span> <span class="operator">+</span> <span class="operator">#</span><span class="local">q</span>
+    <span class="local">addtoken</span><span class="operator">(</span><span class="string">&quot;TK_COMMENT&quot;</span><span class="operator">,</span> <span class="local">q</span><span class="operator">)</span>
+    <span class="keyword">if</span> <span class="operator">#</span><span class="local">r</span> <span class="operator">&gt;</span> <span class="number">0</span> <span class="keyword">then</span> <span class="local">inclinenumber</span><span class="operator">(</span><span class="local">I</span><span class="operator">,</span> <span class="keyword">true</span><span class="operator">)</span> <span class="keyword">end</span>
+  <span class="keyword">end</span>
+<span class="keyword">end</span>
+
+<span class="comment">----------------------------------------------------------------------</span>
+<span class="comment">-- returns a chunk name or id, no truncation for long names</span>
+<span class="comment">----------------------------------------------------------------------</span>
+
+<span class="keyword">function</span> <span class="global">chunkid</span><span class="operator">(</span><span class="operator">)</span>
+  <span class="keyword">if</span> <span class="local">sourceid</span> <span class="keyword">and</span> <span class="local">match</span><span class="operator">(</span><span class="local">sourceid</span><span class="operator">,</span> <span class="string">&quot;^[=@]&quot;</span><span class="operator">)</span> <span class="keyword">then</span>
+    <span class="keyword">return</span> <span class="local">sub</span><span class="operator">(</span><span class="local">sourceid</span><span class="operator">,</span> <span class="number">2</span><span class="operator">)</span>  <span class="comment">-- remove first char</span>
+  <span class="keyword">end</span>
+  <span class="keyword">return</span> <span class="string">&quot;[string]&quot;</span>
+<span class="keyword">end</span>
+
+<span class="comment">----------------------------------------------------------------------</span>
+<span class="comment">-- formats error message and throws error</span>
+<span class="comment">-- * a simplified version, does not report what token was responsible</span>
+<span class="comment">----------------------------------------------------------------------</span>
+
+<span class="keyword">function</span> <span class="global">errorline</span><span class="operator">(</span><span class="local">s</span><span class="operator">,</span> <span class="local">line</span><span class="operator">)</span>
+  <span class="keyword">local</span> <span class="local">e</span> <span class="operator">=</span> <span class="global">error</span> <span class="keyword">or</span> <span class="local">base</span><span class="operator">.</span><span class="name">error</span>
+  <span class="local">e</span><span class="operator">(</span><span class="local">string</span><span class="operator">.</span><span class="name">format</span><span class="operator">(</span><span class="string">&quot;%s:%d: %s&quot;</span><span class="operator">,</span> <span class="global">chunkid</span><span class="operator">(</span><span class="operator">)</span><span class="operator">,</span> <span class="local">line</span> <span class="keyword">or</span> <span class="local">ln</span><span class="operator">,</span> <span class="local">s</span><span class="operator">)</span><span class="operator">)</span>
+<span class="keyword">end</span>
+<span class="keyword">local</span> <span class="local">errorline</span> <span class="operator">=</span> <span class="global">errorline</span>
+
+<span class="comment">------------------------------------------------------------------------</span>
+<span class="comment">-- count separators (&quot;=&quot;) in a long string delimiter</span>
+<span class="comment">------------------------------------------------------------------------</span>
+
+<span class="keyword">local</span> <span class="keyword">function</span> <span class="local">skip_sep</span><span class="operator">(</span><span class="local">i</span><span class="operator">)</span>
+  <span class="keyword">local</span> <span class="local">sub</span> <span class="operator">=</span> <span class="local">sub</span>
+  <span class="keyword">local</span> <span class="local">s</span> <span class="operator">=</span> <span class="local">sub</span><span class="operator">(</span><span class="local">z</span><span class="operator">,</span> <span class="local">i</span><span class="operator">,</span> <span class="local">i</span><span class="operator">)</span>
+  <span class="local">i</span> <span class="operator">=</span> <span class="local">i</span> <span class="operator">+</span> <span class="number">1</span>
+  <span class="keyword">local</span> <span class="local">count</span> <span class="operator">=</span> <span class="operator">#</span><span class="local">match</span><span class="operator">(</span><span class="local">z</span><span class="operator">,</span> <span class="string">&quot;=*&quot;</span><span class="operator">,</span> <span class="local">i</span><span class="operator">)</span>
+  <span class="local">i</span> <span class="operator">=</span> <span class="local">i</span> <span class="operator">+</span> <span class="local">count</span>
+  <span class="local">I</span> <span class="operator">=</span> <span class="local">i</span>
+  <span class="keyword">return</span> <span class="operator">(</span><span class="local">sub</span><span class="operator">(</span><span class="local">z</span><span class="operator">,</span> <span class="local">i</span><span class="operator">,</span> <span class="local">i</span><span class="operator">)</span> <span class="operator">==</span> <span class="local">s</span><span class="operator">)</span> <span class="keyword">and</span> <span class="local">count</span> <span class="keyword">or</span> <span class="operator">(</span><span class="operator">-</span><span class="local">count</span><span class="operator">)</span> <span class="operator">-</span> <span class="number">1</span>
+<span class="keyword">end</span>
+
+<span class="comment">----------------------------------------------------------------------</span>
+<span class="comment">-- reads a long string or long comment</span>
+<span class="comment">----------------------------------------------------------------------</span>
+
+<span class="keyword">local</span> <span class="keyword">function</span> <span class="local">read_long_string</span><span class="operator">(</span><span class="local">is_str</span><span class="operator">,</span> <span class="local">sep</span><span class="operator">)</span>
+  <span class="keyword">local</span> <span class="local">i</span> <span class="operator">=</span> <span class="local">I</span> <span class="operator">+</span> <span class="number">1</span>  <span class="comment">-- skip 2nd &apos;[&apos;</span>
+  <span class="keyword">local</span> <span class="local">sub</span> <span class="operator">=</span> <span class="local">sub</span>
+  <span class="keyword">local</span> <span class="local">c</span> <span class="operator">=</span> <span class="local">sub</span><span class="operator">(</span><span class="local">z</span><span class="operator">,</span> <span class="local">i</span><span class="operator">,</span> <span class="local">i</span><span class="operator">)</span>
+  <span class="keyword">if</span> <span class="local">c</span> <span class="operator">==</span> <span class="string">&quot;\r&quot;</span> <span class="keyword">or</span> <span class="local">c</span> <span class="operator">==</span> <span class="string">&quot;\n&quot;</span> <span class="keyword">then</span>  <span class="comment">-- string starts with a newline?</span>
+    <span class="local">i</span> <span class="operator">=</span> <span class="local">inclinenumber</span><span class="operator">(</span><span class="local">i</span><span class="operator">)</span>  <span class="comment">-- skip it</span>
+  <span class="keyword">end</span>
+  <span class="keyword">while</span> <span class="keyword">true</span> <span class="keyword">do</span>
+    <span class="keyword">local</span> <span class="local">p</span><span class="operator">,</span> <span class="local">q</span><span class="operator">,</span> <span class="local">r</span> <span class="operator">=</span> <span class="local">find</span><span class="operator">(</span><span class="local">z</span><span class="operator">,</span> <span class="string">&quot;([\r\n%]])&quot;</span><span class="operator">,</span> <span class="local">i</span><span class="operator">)</span> <span class="comment">-- (long range match)</span>
+    <span class="keyword">if</span> <span class="keyword">not</span> <span class="local">p</span> <span class="keyword">then</span>
+      <span class="local">errorline</span><span class="operator">(</span><span class="local">is_str</span> <span class="keyword">and</span> <span class="string">&quot;unfinished long string&quot;</span> <span class="keyword">or</span>
+                <span class="string">&quot;unfinished long comment&quot;</span><span class="operator">)</span>
+    <span class="keyword">end</span>
+    <span class="local">i</span> <span class="operator">=</span> <span class="local">p</span>
+    <span class="keyword">if</span> <span class="local">r</span> <span class="operator">==</span> <span class="string">&quot;]&quot;</span> <span class="keyword">then</span>                    <span class="comment">-- delimiter test</span>
+      <span class="keyword">if</span> <span class="local">skip_sep</span><span class="operator">(</span><span class="local">i</span><span class="operator">)</span> <span class="operator">==</span> <span class="local">sep</span> <span class="keyword">then</span>
+        <span class="local">buff</span> <span class="operator">=</span> <span class="local">sub</span><span class="operator">(</span><span class="local">z</span><span class="operator">,</span> <span class="local">buff</span><span class="operator">,</span> <span class="local">I</span><span class="operator">)</span>
+        <span class="local">I</span> <span class="operator">=</span> <span class="local">I</span> <span class="operator">+</span> <span class="number">1</span>  <span class="comment">-- skip 2nd &apos;]&apos;</span>
+        <span class="keyword">return</span> <span class="local">buff</span>
+      <span class="keyword">end</span>
+      <span class="local">i</span> <span class="operator">=</span> <span class="local">I</span>
+    <span class="keyword">else</span>                                <span class="comment">-- newline</span>
+      <span class="local">buff</span> <span class="operator">=</span> <span class="local">buff</span><span class="operator">..</span><span class="string">&quot;\n&quot;</span>
+      <span class="local">i</span> <span class="operator">=</span> <span class="local">inclinenumber</span><span class="operator">(</span><span class="local">i</span><span class="operator">)</span>
+    <span class="keyword">end</span>
+  <span class="keyword">end</span><span class="comment">--while</span>
+<span class="keyword">end</span>
+
+<span class="comment">----------------------------------------------------------------------</span>
+<span class="comment">-- reads a string</span>
+<span class="comment">----------------------------------------------------------------------</span>
+
+<span class="keyword">local</span> <span class="keyword">function</span> <span class="local">read_string</span><span class="operator">(</span><span class="local">del</span><span class="operator">)</span>
+  <span class="keyword">local</span> <span class="local">i</span> <span class="operator">=</span> <span class="local">I</span>
+  <span class="keyword">local</span> <span class="local">find</span> <span class="operator">=</span> <span class="local">find</span>
+  <span class="keyword">local</span> <span class="local">sub</span> <span class="operator">=</span> <span class="local">sub</span>
+  <span class="keyword">while</span> <span class="keyword">true</span> <span class="keyword">do</span>
+    <span class="keyword">local</span> <span class="local">p</span><span class="operator">,</span> <span class="local">q</span><span class="operator">,</span> <span class="local">r</span> <span class="operator">=</span> <span class="local">find</span><span class="operator">(</span><span class="local">z</span><span class="operator">,</span> <span class="string">&quot;([\n\r\\\&quot;\&apos;])&quot;</span><span class="operator">,</span> <span class="local">i</span><span class="operator">)</span> <span class="comment">-- (long range match)</span>
+    <span class="keyword">if</span> <span class="local">p</span> <span class="keyword">then</span>
+      <span class="keyword">if</span> <span class="local">r</span> <span class="operator">==</span> <span class="string">&quot;\n&quot;</span> <span class="keyword">or</span> <span class="local">r</span> <span class="operator">==</span> <span class="string">&quot;\r&quot;</span> <span class="keyword">then</span>
+        <span class="local">errorline</span><span class="operator">(</span><span class="string">&quot;unfinished string&quot;</span><span class="operator">)</span>
+      <span class="keyword">end</span>
+      <span class="local">i</span> <span class="operator">=</span> <span class="local">p</span>
+      <span class="keyword">if</span> <span class="local">r</span> <span class="operator">==</span> <span class="string">&quot;\\&quot;</span> <span class="keyword">then</span>                         <span class="comment">-- handle escapes</span>
+        <span class="local">i</span> <span class="operator">=</span> <span class="local">i</span> <span class="operator">+</span> <span class="number">1</span>
+        <span class="local">r</span> <span class="operator">=</span> <span class="local">sub</span><span class="operator">(</span><span class="local">z</span><span class="operator">,</span> <span class="local">i</span><span class="operator">,</span> <span class="local">i</span><span class="operator">)</span>
+        <span class="keyword">if</span> <span class="local">r</span> <span class="operator">==</span> <span class="string">&quot;&quot;</span> <span class="keyword">then</span> <span class="keyword">break</span> <span class="keyword">end</span> <span class="comment">-- (EOZ error)</span>
+        <span class="local">p</span> <span class="operator">=</span> <span class="local">find</span><span class="operator">(</span><span class="string">&quot;abfnrtv\n\r&quot;</span><span class="operator">,</span> <span class="local">r</span><span class="operator">,</span> <span class="number">1</span><span class="operator">,</span> <span class="keyword">true</span><span class="operator">)</span>
+        <span class="comment">------------------------------------------------------</span>
+        <span class="keyword">if</span> <span class="local">p</span> <span class="keyword">then</span>                               <span class="comment">-- special escapes</span>
+          <span class="keyword">if</span> <span class="local">p</span> <span class="operator">&gt;</span> <span class="number">7</span> <span class="keyword">then</span>
+            <span class="local">i</span> <span class="operator">=</span> <span class="local">inclinenumber</span><span class="operator">(</span><span class="local">i</span><span class="operator">)</span>
+          <span class="keyword">else</span>
+            <span class="local">i</span> <span class="operator">=</span> <span class="local">i</span> <span class="operator">+</span> <span class="number">1</span>
+          <span class="keyword">end</span>
+        <span class="comment">------------------------------------------------------</span>
+        <span class="keyword">elseif</span> <span class="local">find</span><span class="operator">(</span><span class="local">r</span><span class="operator">,</span> <span class="string">&quot;%D&quot;</span><span class="operator">)</span> <span class="keyword">then</span>               <span class="comment">-- other non-digits</span>
+          <span class="local">i</span> <span class="operator">=</span> <span class="local">i</span> <span class="operator">+</span> <span class="number">1</span>
+        <span class="comment">------------------------------------------------------</span>
+        <span class="keyword">else</span>                                    <span class="comment">-- \xxx sequence</span>
+          <span class="keyword">local</span> <span class="local">p</span><span class="operator">,</span> <span class="local">q</span><span class="operator">,</span> <span class="local">s</span> <span class="operator">=</span> <span class="local">find</span><span class="operator">(</span><span class="local">z</span><span class="operator">,</span> <span class="string">&quot;^(%d%d?%d?)&quot;</span><span class="operator">,</span> <span class="local">i</span><span class="operator">)</span>
+          <span class="local">i</span> <span class="operator">=</span> <span class="local">q</span> <span class="operator">+</span> <span class="number">1</span>
+          <span class="keyword">if</span> <span class="local">s</span> <span class="operator">+</span> <span class="number">1</span> <span class="operator">&gt;</span> <span class="number">256</span> <span class="keyword">then</span> <span class="comment">-- UCHAR_MAX</span>
+            <span class="local">errorline</span><span class="operator">(</span><span class="string">&quot;escape sequence too large&quot;</span><span class="operator">)</span>
+          <span class="keyword">end</span>
+        <span class="comment">------------------------------------------------------</span>
+        <span class="keyword">end</span><span class="comment">--if p</span>
+      <span class="keyword">else</span>
+        <span class="local">i</span> <span class="operator">=</span> <span class="local">i</span> <span class="operator">+</span> <span class="number">1</span>
+        <span class="keyword">if</span> <span class="local">r</span> <span class="operator">==</span> <span class="local">del</span> <span class="keyword">then</span>                        <span class="comment">-- ending delimiter</span>
+          <span class="local">I</span> <span class="operator">=</span> <span class="local">i</span>
+          <span class="keyword">return</span> <span class="local">sub</span><span class="operator">(</span><span class="local">z</span><span class="operator">,</span> <span class="local">buff</span><span class="operator">,</span> <span class="local">i</span> <span class="operator">-</span> <span class="number">1</span><span class="operator">)</span>            <span class="comment">-- return string</span>
+        <span class="keyword">end</span>
+      <span class="keyword">end</span><span class="comment">--if r</span>
+    <span class="keyword">else</span>
+      <span class="keyword">break</span> <span class="comment">-- (error)</span>
+    <span class="keyword">end</span><span class="comment">--if p</span>
+  <span class="keyword">end</span><span class="comment">--while</span>
+  <span class="local">errorline</span><span class="operator">(</span><span class="string">&quot;unfinished string&quot;</span><span class="operator">)</span>
+<span class="keyword">end</span>
+
+<span class="comment">------------------------------------------------------------------------</span>
+<span class="comment">-- main lexer function</span>
+<span class="comment">------------------------------------------------------------------------</span>
+
+<span class="keyword">function</span> <span class="global">llex</span><span class="operator">(</span><span class="operator">)</span>
+  <span class="keyword">local</span> <span class="local">find</span> <span class="operator">=</span> <span class="local">find</span>
+  <span class="keyword">local</span> <span class="local">match</span> <span class="operator">=</span> <span class="local">match</span>
+  <span class="keyword">while</span> <span class="keyword">true</span> <span class="keyword">do</span><span class="comment">--outer</span>
+    <span class="keyword">local</span> <span class="local">i</span> <span class="operator">=</span> <span class="local">I</span>
+    <span class="comment">-- inner loop allows break to be used to nicely section tests</span>
+    <span class="keyword">while</span> <span class="keyword">true</span> <span class="keyword">do</span><span class="comment">--inner</span>
+      <span class="comment">----------------------------------------------------------------</span>
+      <span class="keyword">local</span> <span class="local">p</span><span class="operator">,</span> <span class="local">_</span><span class="operator">,</span> <span class="local">r</span> <span class="operator">=</span> <span class="local">find</span><span class="operator">(</span><span class="local">z</span><span class="operator">,</span> <span class="string">&quot;^([_%a][_%w]*)&quot;</span><span class="operator">,</span> <span class="local">i</span><span class="operator">)</span>
+      <span class="keyword">if</span> <span class="local">p</span> <span class="keyword">then</span>
+        <span class="local">I</span> <span class="operator">=</span> <span class="local">i</span> <span class="operator">+</span> <span class="operator">#</span><span class="local">r</span>
+        <span class="keyword">if</span> <span class="local">kw</span><span class="operator">[</span><span class="local">r</span><span class="operator">]</span> <span class="keyword">then</span>
+          <span class="local">addtoken</span><span class="operator">(</span><span class="string">&quot;TK_KEYWORD&quot;</span><span class="operator">,</span> <span class="local">r</span><span class="operator">)</span>             <span class="comment">-- reserved word (keyword)</span>
+        <span class="keyword">else</span>
+          <span class="local">addtoken</span><span class="operator">(</span><span class="string">&quot;TK_NAME&quot;</span><span class="operator">,</span> <span class="local">r</span><span class="operator">)</span>                <span class="comment">-- identifier</span>
+        <span class="keyword">end</span>
+        <span class="keyword">break</span> <span class="comment">-- (continue)</span>
+      <span class="keyword">end</span>
+      <span class="comment">----------------------------------------------------------------</span>
+      <span class="keyword">local</span> <span class="local">p</span><span class="operator">,</span> <span class="local">_</span><span class="operator">,</span> <span class="local">r</span> <span class="operator">=</span> <span class="local">find</span><span class="operator">(</span><span class="local">z</span><span class="operator">,</span> <span class="string">&quot;^(%.?)%d&quot;</span><span class="operator">,</span> <span class="local">i</span><span class="operator">)</span>
+      <span class="keyword">if</span> <span class="local">p</span> <span class="keyword">then</span>                                 <span class="comment">-- numeral</span>
+        <span class="keyword">if</span> <span class="local">r</span> <span class="operator">==</span> <span class="string">&quot;.&quot;</span> <span class="keyword">then</span> <span class="local">i</span> <span class="operator">=</span> <span class="local">i</span> <span class="operator">+</span> <span class="number">1</span> <span class="keyword">end</span>
+        <span class="keyword">local</span> <span class="local">_</span><span class="operator">,</span> <span class="local">q</span><span class="operator">,</span> <span class="local">r</span> <span class="operator">=</span> <span class="local">find</span><span class="operator">(</span><span class="local">z</span><span class="operator">,</span> <span class="string">&quot;^%d*[%.%d]*([eE]?)&quot;</span><span class="operator">,</span> <span class="local">i</span><span class="operator">)</span>
+        <span class="local">i</span> <span class="operator">=</span> <span class="local">q</span> <span class="operator">+</span> <span class="number">1</span>
+        <span class="keyword">if</span> <span class="operator">#</span><span class="local">r</span> <span class="operator">==</span> <span class="number">1</span> <span class="keyword">then</span>                         <span class="comment">-- optional exponent</span>
+          <span class="keyword">if</span> <span class="local">match</span><span class="operator">(</span><span class="local">z</span><span class="operator">,</span> <span class="string">&quot;^[%+%-]&quot;</span><span class="operator">,</span> <span class="local">i</span><span class="operator">)</span> <span class="keyword">then</span>        <span class="comment">-- optional sign</span>
+            <span class="local">i</span> <span class="operator">=</span> <span class="local">i</span> <span class="operator">+</span> <span class="number">1</span>
+          <span class="keyword">end</span>
+        <span class="keyword">end</span>
+        <span class="keyword">local</span> <span class="local">_</span><span class="operator">,</span> <span class="local">q</span> <span class="operator">=</span> <span class="local">find</span><span class="operator">(</span><span class="local">z</span><span class="operator">,</span> <span class="string">&quot;^[_%w]*&quot;</span><span class="operator">,</span> <span class="local">i</span><span class="operator">)</span>
+        <span class="local">I</span> <span class="operator">=</span> <span class="local">q</span> <span class="operator">+</span> <span class="number">1</span>
+        <span class="keyword">local</span> <span class="local">v</span> <span class="operator">=</span> <span class="local">sub</span><span class="operator">(</span><span class="local">z</span><span class="operator">,</span> <span class="local">p</span><span class="operator">,</span> <span class="local">q</span><span class="operator">)</span>                  <span class="comment">-- string equivalent</span>
+        <span class="keyword">if</span> <span class="keyword">not</span> <span class="local">base</span><span class="operator">.</span><span class="name">tonumber</span><span class="operator">(</span><span class="local">v</span><span class="operator">)</span> <span class="keyword">then</span>            <span class="comment">-- handles hex test also</span>
+          <span class="local">errorline</span><span class="operator">(</span><span class="string">&quot;malformed number&quot;</span><span class="operator">)</span>
+        <span class="keyword">end</span>
+        <span class="local">addtoken</span><span class="operator">(</span><span class="string">&quot;TK_NUMBER&quot;</span><span class="operator">,</span> <span class="local">v</span><span class="operator">)</span>
+        <span class="keyword">break</span> <span class="comment">-- (continue)</span>
+      <span class="keyword">end</span>
+      <span class="comment">----------------------------------------------------------------</span>
+      <span class="keyword">local</span> <span class="local">p</span><span class="operator">,</span> <span class="local">q</span><span class="operator">,</span> <span class="local">r</span><span class="operator">,</span> <span class="local">t</span> <span class="operator">=</span> <span class="local">find</span><span class="operator">(</span><span class="local">z</span><span class="operator">,</span> <span class="string">&quot;^((%s)[ \t\v\f]*)&quot;</span><span class="operator">,</span> <span class="local">i</span><span class="operator">)</span>
+      <span class="keyword">if</span> <span class="local">p</span> <span class="keyword">then</span>
+        <span class="keyword">if</span> <span class="local">t</span> <span class="operator">==</span> <span class="string">&quot;\n&quot;</span> <span class="keyword">or</span> <span class="local">t</span> <span class="operator">==</span> <span class="string">&quot;\r&quot;</span> <span class="keyword">then</span>          <span class="comment">-- newline</span>
+          <span class="local">inclinenumber</span><span class="operator">(</span><span class="local">i</span><span class="operator">,</span> <span class="keyword">true</span><span class="operator">)</span>
+        <span class="keyword">else</span>
+          <span class="local">I</span> <span class="operator">=</span> <span class="local">q</span> <span class="operator">+</span> <span class="number">1</span>                             <span class="comment">-- whitespace</span>
+          <span class="local">addtoken</span><span class="operator">(</span><span class="string">&quot;TK_SPACE&quot;</span><span class="operator">,</span> <span class="local">r</span><span class="operator">)</span>
+        <span class="keyword">end</span>
+        <span class="keyword">break</span> <span class="comment">-- (continue)</span>
+      <span class="keyword">end</span>
+      <span class="comment">----------------------------------------------------------------</span>
+      <span class="keyword">local</span> <span class="local">r</span> <span class="operator">=</span> <span class="local">match</span><span class="operator">(</span><span class="local">z</span><span class="operator">,</span> <span class="string">&quot;^%p&quot;</span><span class="operator">,</span> <span class="local">i</span><span class="operator">)</span>
+      <span class="keyword">if</span> <span class="local">r</span> <span class="keyword">then</span>
+        <span class="local">buff</span> <span class="operator">=</span> <span class="local">i</span>
+        <span class="keyword">local</span> <span class="local">p</span> <span class="operator">=</span> <span class="local">find</span><span class="operator">(</span><span class="string">&quot;-[\&quot;\&apos;.=&lt;&gt;~&quot;</span><span class="operator">,</span> <span class="local">r</span><span class="operator">,</span> <span class="number">1</span><span class="operator">,</span> <span class="keyword">true</span><span class="operator">)</span>
+        <span class="keyword">if</span> <span class="local">p</span> <span class="keyword">then</span>
+          <span class="comment">-- two-level if block for punctuation/symbols</span>
+          <span class="comment">--------------------------------------------------------</span>
+          <span class="keyword">if</span> <span class="local">p</span> <span class="operator">&lt;=</span> <span class="number">2</span> <span class="keyword">then</span>
+            <span class="keyword">if</span> <span class="local">p</span> <span class="operator">==</span> <span class="number">1</span> <span class="keyword">then</span>                      <span class="comment">-- minus</span>
+              <span class="keyword">local</span> <span class="local">c</span> <span class="operator">=</span> <span class="local">match</span><span class="operator">(</span><span class="local">z</span><span class="operator">,</span> <span class="string">&quot;^%-%-(%[?)&quot;</span><span class="operator">,</span> <span class="local">i</span><span class="operator">)</span>
+              <span class="keyword">if</span> <span class="local">c</span> <span class="keyword">then</span>
+                <span class="local">i</span> <span class="operator">=</span> <span class="local">i</span> <span class="operator">+</span> <span class="number">2</span>
+                <span class="keyword">local</span> <span class="local">sep</span> <span class="operator">=</span> <span class="operator">-</span><span class="number">1</span>
+                <span class="keyword">if</span> <span class="local">c</span> <span class="operator">==</span> <span class="string">&quot;[&quot;</span> <span class="keyword">then</span>
+                  <span class="local">sep</span> <span class="operator">=</span> <span class="local">skip_sep</span><span class="operator">(</span><span class="local">i</span><span class="operator">)</span>
+                <span class="keyword">end</span>
+                <span class="keyword">if</span> <span class="local">sep</span> <span class="operator">&gt;=</span> <span class="number">0</span> <span class="keyword">then</span>                <span class="comment">-- long comment</span>
+                  <span class="local">addtoken</span><span class="operator">(</span><span class="string">&quot;TK_LCOMMENT&quot;</span><span class="operator">,</span> <span class="local">read_long_string</span><span class="operator">(</span><span class="keyword">false</span><span class="operator">,</span> <span class="local">sep</span><span class="operator">)</span><span class="operator">)</span>
+                <span class="keyword">else</span>                            <span class="comment">-- short comment</span>
+                  <span class="local">I</span> <span class="operator">=</span> <span class="local">find</span><span class="operator">(</span><span class="local">z</span><span class="operator">,</span> <span class="string">&quot;[\n\r]&quot;</span><span class="operator">,</span> <span class="local">i</span><span class="operator">)</span> <span class="keyword">or</span> <span class="operator">(</span><span class="operator">#</span><span class="local">z</span> <span class="operator">+</span> <span class="number">1</span><span class="operator">)</span>
+                  <span class="local">addtoken</span><span class="operator">(</span><span class="string">&quot;TK_COMMENT&quot;</span><span class="operator">,</span> <span class="local">sub</span><span class="operator">(</span><span class="local">z</span><span class="operator">,</span> <span class="local">buff</span><span class="operator">,</span> <span class="local">I</span> <span class="operator">-</span> <span class="number">1</span><span class="operator">)</span><span class="operator">)</span>
+                <span class="keyword">end</span>
+                <span class="keyword">break</span> <span class="comment">-- (continue)</span>
+              <span class="keyword">end</span>
+              <span class="comment">-- (fall through for &quot;-&quot;)</span>
+            <span class="keyword">else</span>                                <span class="comment">-- [ or long string</span>
+              <span class="keyword">local</span> <span class="local">sep</span> <span class="operator">=</span> <span class="local">skip_sep</span><span class="operator">(</span><span class="local">i</span><span class="operator">)</span>
+              <span class="keyword">if</span> <span class="local">sep</span> <span class="operator">&gt;=</span> <span class="number">0</span> <span class="keyword">then</span>
+                <span class="local">addtoken</span><span class="operator">(</span><span class="string">&quot;TK_LSTRING&quot;</span><span class="operator">,</span> <span class="local">read_long_string</span><span class="operator">(</span><span class="keyword">true</span><span class="operator">,</span> <span class="local">sep</span><span class="operator">)</span><span class="operator">)</span>
+              <span class="keyword">elseif</span> <span class="local">sep</span> <span class="operator">==</span> <span class="operator">-</span><span class="number">1</span> <span class="keyword">then</span>
+                <span class="local">addtoken</span><span class="operator">(</span><span class="string">&quot;TK_OP&quot;</span><span class="operator">,</span> <span class="string">&quot;[&quot;</span><span class="operator">)</span>
+              <span class="keyword">else</span>
+                <span class="local">errorline</span><span class="operator">(</span><span class="string">&quot;invalid long string delimiter&quot;</span><span class="operator">)</span>
+              <span class="keyword">end</span>
+              <span class="keyword">break</span> <span class="comment">-- (continue)</span>
+            <span class="keyword">end</span>
+          <span class="comment">--------------------------------------------------------</span>
+          <span class="keyword">elseif</span> <span class="local">p</span> <span class="operator">&lt;=</span> <span class="number">5</span> <span class="keyword">then</span>
+            <span class="keyword">if</span> <span class="local">p</span> <span class="operator">&lt;</span> <span class="number">5</span> <span class="keyword">then</span>                       <span class="comment">-- strings</span>
+              <span class="local">I</span> <span class="operator">=</span> <span class="local">i</span> <span class="operator">+</span> <span class="number">1</span>
+              <span class="local">addtoken</span><span class="operator">(</span><span class="string">&quot;TK_STRING&quot;</span><span class="operator">,</span> <span class="local">read_string</span><span class="operator">(</span><span class="local">r</span><span class="operator">)</span><span class="operator">)</span>
+              <span class="keyword">break</span> <span class="comment">-- (continue)</span>
+            <span class="keyword">end</span>
+            <span class="local">r</span> <span class="operator">=</span> <span class="local">match</span><span class="operator">(</span><span class="local">z</span><span class="operator">,</span> <span class="string">&quot;^%.%.?%.?&quot;</span><span class="operator">,</span> <span class="local">i</span><span class="operator">)</span>        <span class="comment">-- .|..|... dots</span>
+            <span class="comment">-- (fall through)</span>
+          <span class="comment">--------------------------------------------------------</span>
+          <span class="keyword">else</span>                                  <span class="comment">-- relational</span>
+            <span class="local">r</span> <span class="operator">=</span> <span class="local">match</span><span class="operator">(</span><span class="local">z</span><span class="operator">,</span> <span class="string">&quot;^%p=?&quot;</span><span class="operator">,</span> <span class="local">i</span><span class="operator">)</span>
+            <span class="comment">-- (fall through)</span>
+          <span class="keyword">end</span>
+        <span class="keyword">end</span>
+        <span class="local">I</span> <span class="operator">=</span> <span class="local">i</span> <span class="operator">+</span> <span class="operator">#</span><span class="local">r</span>
+        <span class="local">addtoken</span><span class="operator">(</span><span class="string">&quot;TK_OP&quot;</span><span class="operator">,</span> <span class="local">r</span><span class="operator">)</span>  <span class="comment">-- for other symbols, fall through</span>
+        <span class="keyword">break</span> <span class="comment">-- (continue)</span>
+      <span class="keyword">end</span>
+      <span class="comment">----------------------------------------------------------------</span>
+      <span class="keyword">local</span> <span class="local">r</span> <span class="operator">=</span> <span class="local">sub</span><span class="operator">(</span><span class="local">z</span><span class="operator">,</span> <span class="local">i</span><span class="operator">,</span> <span class="local">i</span><span class="operator">)</span>
+      <span class="keyword">if</span> <span class="local">r</span> <span class="operator">~=</span> <span class="string">&quot;&quot;</span> <span class="keyword">then</span>
+        <span class="local">I</span> <span class="operator">=</span> <span class="local">i</span> <span class="operator">+</span> <span class="number">1</span>
+        <span class="local">addtoken</span><span class="operator">(</span><span class="string">&quot;TK_OP&quot;</span><span class="operator">,</span> <span class="local">r</span><span class="operator">)</span>                    <span class="comment">-- other single-char tokens</span>
+        <span class="keyword">break</span>
+      <span class="keyword">end</span>
+      <span class="local">addtoken</span><span class="operator">(</span><span class="string">&quot;TK_EOS&quot;</span><span class="operator">,</span> <span class="string">&quot;&quot;</span><span class="operator">)</span>                    <span class="comment">-- end of stream,</span>
+      <span class="keyword">return</span>                                    <span class="comment">-- exit here</span>
+      <span class="comment">----------------------------------------------------------------</span>
+    <span class="keyword">end</span><span class="comment">--while inner</span>
+  <span class="keyword">end</span><span class="comment">--while outer</span>
+<span class="keyword">end</span>
+</pre>
+</body>
+</html>

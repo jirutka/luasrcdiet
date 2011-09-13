@@ -5,15 +5,22 @@ LuaSrcDiet is licensed under the terms of the MIT license reproduced
 below. This means that LuaSrcDiet is free software and can be used for
 both academic and commercial purposes at absolutely no cost.
 
-Parts of LuaSrcDiet is based on Lua 5 code. See COPYRIGHT_Lua51
-(Lua 5.1.3) for Lua 5 license information.
+Think of LuaSrcDiet as a compiler or a text filter; whatever that is
+processed by LuaSrcDiet is not affected by its license. It does not add
+anything new into your source code; it only transforms code that already
+exist.
 
-For details and rationale, see http://www.lua.org/license.html .
+Hence, there is no need to tag this license onto Lua programs that are
+only processed. Given the liberal terms of this kind of license, the
+primary purpose is just to claim authorship of LuaSrcDiet.
+
+Parts of LuaSrcDiet is based on Lua 5 code. See the file COPYRIGHT_Lua51
+(Lua 5.1.4) for Lua 5's license.
 
 ===============================================================================
 
-Copyright (C) 2005-2008 Kein-Hong Man <khman@users.sf.net>
-Lua 5.1.3 Copyright (C) 1994-2008 Lua.org, PUC-Rio.
+Copyright (C) 2005-2008,2011 Kein-Hong Man <keinhong@gmail.com>
+Lua 5.1.4 Copyright (C) 1994-2008 Lua.org, PUC-Rio.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

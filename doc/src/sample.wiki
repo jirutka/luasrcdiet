@@ -1,0 +1,68 @@
+
+Text styles: normal - ''italics'' - '''bold''' - '''''bold-italic''''' - {{monospace}}
+
+
+
+Internal links: [HomePage]
+
+Page separator:
+----
+
+Escape entities: <>&"'
+
+Bulleted/indented text (tabs or 8 spaces ok):
+	* a
+	* b
+		* b-1
+			some text
+	* c
+
+External links:
+	* inline - http://www.eff.org/
+	* inline - mailto:foo@bar
+	* numbered - [http://www.eff.org/] [http://www.gnu.org/]
+	* named - [http://www.eff.org/ Electronic Frontier Foundation]
+	* inline image - http://www.eff.org/images/efflogo1.gif
+
+Preformatted text:
+{{{
+  *------>>  follow me  >>------*
+  |                             |
+  |                             |
+  *-------------<<--------------*
+}}}
+Combine indenting and preformatted text like this:
+        {{{
+this is
+indented
+}}}
+
+Lua code block:
+        {{{!Lua
+-- the foo function
+function foo(x)
+    print('input is '..tostring(x))
+    local foo = 1 + 1.234e56
+end
+}}}
+
+Section headers:
+=== This is header size 1 ===
+== This is header size 2 ==
+
+||table||
+  ||  table  ||
+
+This is a paragraph.
+
+||table||  table  ||
+||col1||col2||
+
+This is a paragraph.
+
+||'''head1'''||'''head2'''||'''head3'''||
+||''col1''||''col2''||''col3''||
+||fish and cow||fish and cow||fish and cow||
+||123||0.5||.66||
+||col1||col2||col3||
+

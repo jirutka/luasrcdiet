@@ -1,0 +1,158 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>sample</title>
+<meta name="Generator" content="fakewiki.lua">
+<style type="text/css">
+BODY {
+    background: white;
+    color: navy;
+}
+
+A:link { color: #DF6C00 }
+A:active, A:visited { color: maroon }
+
+pre.code { color: black; }
+span.comment { color: #00a000; }
+span.string  { color: #009090; }
+span.keyword { color: navy; font-weight: bold; }
+span.number { color: #993399; }
+span.c_comment { color: #00a000; }
+span.c_string { color: #009090; }
+span.c_keyword { color: navy; font-weight: bold; }
+span.c_number { color: #993399; }
+span.c_cpp { color: #7F7F00; }
+
+/* In case of block indent (implemented with table), add cue at left border. */
+dd pre.code {
+    border-left: 1px dotted maroon;
+    margin-left: -1em;
+    padding-left: 1em;
+}
+</style>
+</head>
+<body>
+<h1>sample</h1>
+
+Text styles: normal - <em>italics</em> - <strong>bold</strong> - <strong><em>bold-italic</em></strong> - <code>monospace</code>
+<p>
+Internal links: <a href="HomePage.html">HomePage</a>
+<p>
+Page separator:
+<hr>
+Escape entities: &lt;&gt;&amp;&quot;&apos;
+<p>
+Bulleted/indented text (tabs or 8 spaces ok):
+<ul>
+<li>a
+<li>b
+<ul>
+<li>b-1
+<dl>
+<dt><dd>some text
+</dl>
+</ul>
+<li>c
+</ul>
+
+External links:
+<ul>
+<li>inline - <a href="http://www.eff.org/">http://www.eff.org/</a>
+<li>inline - <a href="mailto:foo@bar">mailto:foo@bar</a>
+<li>numbered - <a href="http://www.eff.org/">[1]</a> <a href="http://www.gnu.org/">[2]</a>
+<li>named - <a href="http://www.eff.org/">Electronic Frontier Foundation</a>
+<li>inline image - <a href="http://www.eff.org/images/efflogo1.gif">http://www.eff.org/images/efflogo1.gif</a>
+</ul>
+
+Preformatted text:
+<pre>
+  *------&gt;&gt;  follow me  &gt;&gt;------*
+  |                             |
+  |                             |
+  *-------------&lt;&lt;--------------*
+</pre>
+Combine indenting and preformatted text like this:
+<dl>
+<dt><dd><pre>
+this is
+indented
+</pre></dl>
+
+<p>
+Lua code block:
+<dl>
+<dt><dd><pre class="code"><span class="comment">-- the foo function</span>
+<span class="keyword">function</span> foo(x)
+    print(<span class="string">&apos;input is &apos;</span>..tostring(x))
+    <span class="keyword">local</span> foo = <span class="number">1</span> + <span class="number">1.234e56</span>
+<span class="keyword">end</span>
+</pre></dl>
+
+<p>
+Section headers:
+<h2>This is header size 1</h2>
+<h3>This is header size 2</h3>
+
+<table style="text-align: left;" border="1" cellpadding="3" cellspacing="0">
+<tbody>
+<tr>
+<td style="vertical-align: top;">table<br></td>
+</tr>
+<tr>
+<td style="vertical-align: top;">  table  <br></td>
+</tr>
+</tbody>
+</table>
+<p>
+
+This is a paragraph.
+<p>
+<table style="text-align: left;" border="1" cellpadding="3" cellspacing="0">
+<tbody>
+<tr>
+<td style="vertical-align: top;">table<br></td>
+<td style="vertical-align: top;">  table  <br></td>
+</tr>
+<tr>
+<td style="vertical-align: top;">col1<br></td>
+<td style="vertical-align: top;">col2<br></td>
+</tr>
+</tbody>
+</table>
+<p>
+
+This is a paragraph.
+<p>
+<table style="text-align: left;" border="1" cellpadding="3" cellspacing="0">
+<tbody>
+<tr>
+<td style="vertical-align: top;"><strong>head1</strong><br></td>
+<td style="vertical-align: top;"><strong>head2</strong><br></td>
+<td style="vertical-align: top;"><strong>head3</strong><br></td>
+</tr>
+<tr>
+<td style="vertical-align: top;"><em>col1</em><br></td>
+<td style="vertical-align: top;"><em>col2</em><br></td>
+<td style="vertical-align: top;"><em>col3</em><br></td>
+</tr>
+<tr>
+<td style="vertical-align: top;">fish and cow<br></td>
+<td style="vertical-align: top;">fish and cow<br></td>
+<td style="vertical-align: top;">fish and cow<br></td>
+</tr>
+<tr>
+<td style="vertical-align: top; text-align: right;">123<br></td>
+<td style="vertical-align: top; text-align: right;">0.5<br></td>
+<td style="vertical-align: top; text-align: right;">.66<br></td>
+</tr>
+<tr>
+<td style="vertical-align: top;">col1<br></td>
+<td style="vertical-align: top;">col2<br></td>
+<td style="vertical-align: top;">col3<br></td>
+</tr>
+</tbody>
+</table>
+<p>
+
+</body>
+</html>

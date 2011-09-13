@@ -1,7 +1,122 @@
 LuaSrcDiet changelog
 --------------------
 
-*** Remember to update version and date information in LuaSrcDiet.lua ***
+2011-09-13  Kein-Hong Man  <keinhong@gmail.com>
+
+	* created a project at Google Code project hosting
+	* doc/src/Makefile: updated to generate output in separate
+	directory
+	* doc/src/sample.wiki: wiki-like source file sample
+	* doc/src/FeaturesAndUsage.wiki, doc/src/LuaSrcDiet.wiki,
+	doc/src/PerformanceStats.wiki, doc/src/TechNotes.wiki:
+	wiki-like documentation source files
+	* Version: 0.12.0
+
+2011-09-12  Kein-Hong Man  <keinhong@gmail.com>
+
+	* src/LuaSrcDiet.lua: added --opt-experimental option,
+	made error message a bit less ambiguous
+	* src/optlex.lua: implementated experimental optimization
+	for ';' operator
+	* src/lparser.lua, src/LuaSrcDiet.lua: adjustments to expose
+	parser tables to optimizers, added statement label table
+	* src/optparser.lua: implementated experimental optimization
+	for f("string") type of function calls
+	* doc/src/fakewiki.lua: updated from old codebase, added
+	simple table generation with forced align right for numbers
+	* samples/experimental1.lua: added for experimental
+	optimizations ';' and f("string")
+
+2011-09-10  Kein-Hong Man  <keinhong@gmail.com>
+
+	* src/optlex.lua: when --opt-eols, remove last EOL too
+	* src/plugin/example.lua, src/plugin/html.lua,
+	src/plugin/sloc.lua: added, and fixed past module visibility
+	issues
+	* util/onefile.lua: updated to enable embedded plugins
+	* Makefile: new Makefile to auto-generate sample files.
+	* bin/README: updated descriptions of files for the folder
+	* samples/README: updated descriptions of files for the folder
+
+2011-09-09  Kein-Hong Man  <keinhong@gmail.com>
+
+	* src/optlex.lua: fixed \ddd shortening bug when a digit
+	follows the \ddd segment for ASCII codes 0-31
+	* samples/numbers_on_diet.lua, samples/numbers_original.lua,
+	samples/strings_on_diet.lua, samples/strings_original.lua:
+	added to new samples folder
+	* samples/strings_original.lua: added \ddd bug sample entry
+	* src/LuaSrcDiet.lua (process_file): added support code for
+	calling and reporting source and binary equivalency
+	* src/LuaSrcDiet.lua (source_equiv): initial version of
+	source lexer stream equivalency comparator
+	* src/equiv.lua: moved equivalency comparison code here, also
+	made necessary changes to src/LuaSrcDiet.lua, functionality
+	unchanged
+	* src/equiv.lua: added support functions for a limited
+	capability to read binary chunks
+	* src/equiv.lua: completed binary chunk equivalency compare
+	functionality
+
+2011-09-08  Kein-Hong Man  <keinhong@gmail.com>
+
+	* README: completely revised in preparation for 0.12.0
+	* src/llex.lua, src/lparser.lua, src/optlex.lua,
+	src/optparser.lua, src/LuaSrcDiet.lua: added with module
+	semantics fixed
+	* bin/README: added explanation file for this directory
+	* util/onefile.lua: utility to insert modules into scripts
+
+2011-09-07  Kein-Hong Man  <keinhong@gmail.com>
+
+	* starting work on 0.12 release with an empty directory
+	* COPYRIGHT_Lua51, COPYRIGHT, Changelog, README: added
+
+2008-07-02  Kein-Hong Man  <khman@users.sf.net>
+
+	* doc/fakewiki.lua: added C/C++ lexer
+	* doc/fakewiki.lua (c_lexer): fixed "while true end" loop typo
+	* doc/fakewiki.lua (c_lexer): forgot to close ')' a long 'not('
+	line in if condition
+	* doc/fakewiki.lua (c_lexer): missing 'end' in for loop due to
+	cut-and-paste HTML generation code from lua_lexer
+	* doc/fakewiki.lua (c_lexer): incorrect use of 'state' in loop
+	* doc/fakewiki.lua (c_lexer): wrong index used, I instead of i
+	* doc/fakewiki.lua (c_lexer): state not updated if index same
+	* doc/fakewiki.lua (c_lexer): operator matcher forgot [] class
+	* doc/fakewiki.lua: clean up code, works
+
+2008-06-10  Kein-Hong Man  <khman@users.sf.net>
+
+	* llex.lua (read_long_string): deleted a local variable that does
+	nothing
+	* doc/LuaSrcDiet.wiki, doc/UsageNotes.wiki: added more static wiki
+	source files
+	* doc/Makefile: updated
+	* Manifest: updated
+	* README: removed lots of material destined for wiki pages
+
+2008-06-09  Kein-Hong Man  <khman@users.sf.net>
+
+	* doc/fakewiki.lua: fixed recognition of CamelCase with punctuation
+	suffix
+	* doc/Makefile: added technotes.txt entries
+	* technotes.txt: removed, using static wiki-like files now
+	* Manifest: updated
+	* doc/LexerNotes.wiki, doc/LexerOptimizations.wiki,
+	doc/LocalVariableOptimization.wiki, doc/OptimizationIdeas.wiki,
+	doc/TechNotes.wiki: source files for technical notes wiki pages
+
+2008-06-09  Kein-Hong Man  <khman@users.sf.net>
+
+	* plugin/html.lua: added style for numbers
+	* doc/: created for documentation text
+	* doc/Makefile: to automatically build docs from wiki sources
+	* doc/fakewiki.lua: script to generate static wiki pages
+
+2008-06-08  Kein-Hong Man  <khman@users.sf.net>
+
+	* lparser.lua: adjusted to use less locals, slightly smaller
 
 2008-06-08  Kein-Hong Man  <khman@users.sf.net>
 

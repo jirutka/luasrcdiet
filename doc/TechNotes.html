@@ -1,0 +1,679 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<title>TechNotes</title>
+<meta name="Generator" content="fakewiki.lua">
+<style type="text/css">
+BODY {
+    background: white;
+    color: navy;
+}
+
+A:link { color: #DF6C00 }
+A:active, A:visited { color: maroon }
+
+pre.code { color: black; }
+span.comment { color: #00a000; }
+span.string  { color: #009090; }
+span.keyword { color: navy; font-weight: bold; }
+span.number { color: #993399; }
+span.c_comment { color: #00a000; }
+span.c_string { color: #009090; }
+span.c_keyword { color: navy; font-weight: bold; }
+span.c_number { color: #993399; }
+span.c_cpp { color: #7F7F00; }
+
+/* In case of block indent (implemented with table), add cue at left border. */
+dd pre.code {
+    border-left: 1px dotted maroon;
+    margin-left: -1em;
+    padding-left: 1em;
+}
+</style>
+</head>
+<body>
+<h1>TechNotes</h1>
+
+<hr>
+<ul>
+<li><strong><a href="LuaSrcDiet.html">LuaSrcDiet</a></strong> | <strong><a href="FeaturesAndUsage.html">FeaturesAndUsage</a></strong> | <strong><a href="PerformanceStats.html">PerformanceStats</a></strong> | <strong>TechNotes</strong>
+<ul>
+<li>Lexer Notes | Lexer Optimizations | Local Variable Renaming | Ideas
+</ul>
+</ul>
+
+<hr>
+<h2>Lexer Notes</h2>
+
+The lexer (<code>llex.lua</code>) is a version of the native 5.1.x lexer from
+Yueliang 0.4.0, with significant modifications. It does have several
+limitations:
+<p>
+<ul>
+<li>The decimal point must be &apos;.&apos; (period). There is no localized decimal point replacement magic.
+<li>There is no support for nested <code>[[</code>...<code>]]</code> long strings. (No <code>LUA_COMPAT_LSTR</code>.)
+<li>The lexer may not properly lex source code with characters beyond the normal ASCII character set. Identifiers with accented characters (or any character beyond a byte value of 127) cannot be recognized.
+</ul>
+
+Instead of returning one token on each call, <code>llex.lua</code> processes an
+entire string (all data from an entire file) and returns. Two lists
+(tokens and semantic information items) are set up in the module for use
+by the caller.
+<p>
+For maximum flexibility during processing, the lexer returns non-grammar
+lexical elements as tokens too. Non-grammar elements, such as comments,
+whitespace, line endings, are classified along with &apos;normal&apos; tokens. The
+lexer classifies 7 kinds of grammar tokens and 4 kinds of non-grammar
+tokens, as follows:
+<p>
+<table style="text-align: left;" border="1" cellpadding="3" cellspacing="0">
+<tbody>
+<tr>
+<td style="vertical-align: top;"> <strong>Grammar Token</strong> <br></td>
+<td style="vertical-align: top;"> <strong>Description</strong> <br></td>
+</tr>
+<tr>
+<td style="vertical-align: top;"> <code>TK_KEYWORD</code> <br></td>
+<td style="vertical-align: top;"> keywords <br></td>
+</tr>
+<tr>
+<td style="vertical-align: top;"> <code>TK_NAME</code> <br></td>
+<td style="vertical-align: top;"> identifiers <br></td>
+</tr>
+<tr>
+<td style="vertical-align: top;"> <code>TK_NUMBER</code> <br></td>
+<td style="vertical-align: top;"> numbers (unconverted, kept in original form) <br></td>
+</tr>
+<tr>
+<td style="vertical-align: top;"> <code>TK_STRING</code> <br></td>
+<td style="vertical-align: top;"> strings (no translation is done, includes delimiters) <br></td>
+</tr>
+<tr>
+<td style="vertical-align: top;"> <code>TK_LSTRING</code> <br></td>
+<td style="vertical-align: top;"> long strings (no translation is done, includes delimiters) <br></td>
+</tr>
+<tr>
+<td style="vertical-align: top;"> <code>TK_OP</code> <br></td>
+<td style="vertical-align: top;"> operators and punctuation (most single-char, some double) <br></td>
+</tr>
+<tr>
+<td style="vertical-align: top;"> <code>TK_EOS</code> <br></td>
+<td style="vertical-align: top;"> end-of-stream (there is only one for each file/stream) <br></td>
+</tr>
+</tbody>
+</table>
+<p>
+
+<table style="text-align: left;" border="1" cellpadding="3" cellspacing="0">
+<tbody>
+<tr>
+<td style="vertical-align: top;"> <strong>Whitespace Token</strong> <br></td>
+<td style="vertical-align: top;"> <strong>Description</strong> <br></td>
+</tr>
+<tr>
+<td style="vertical-align: top;"> <code>TK_SPACE</code> <br></td>
+<td style="vertical-align: top;"> whitespace (generally, spaces, \t, \v and \f) <br></td>
+</tr>
+<tr>
+<td style="vertical-align: top;"> <code>TK_COMMENT</code> <br></td>
+<td style="vertical-align: top;"> comments (includes delimiters, also includes special first line shbang, which is handled specially in the optimizer) <br></td>
+</tr>
+<tr>
+<td style="vertical-align: top;"> <code>TK_LCOMMENT</code> <br></td>
+<td style="vertical-align: top;"> block comments (includes delimiters) <br></td>
+</tr>
+<tr>
+<td style="vertical-align: top;"> <code>TK_EOL</code> <br></td>
+<td style="vertical-align: top;"> end-of-lines (excludes those embedded in strings) <br></td>
+</tr>
+</tbody>
+</table>
+<p>
+
+A list of tokens can be generated by using the <em>--dump-lexer</em> option, like this:
+<p>
+<dl>
+<dt><dd><pre>
+lua LuaSrcDiet.lua --dump-lexer llex.lua &gt; dump_llex.dat
+</pre></dl>
+
+<p>
+<hr>
+<h2>Lexer Optimizations</h2>
+
+We aim to keep lexer-based optimizations free of parser considerations,
+i.e. we allow for generalized optimization of token sequences. The table
+below considers the requirements for all combinations of significant
+tokens (except <code>TK_EOS</code>). Other tokens are whitespace-like. Comments
+can be considered to be a special kind of whitespace, e.g. a short
+comment needs to have a following EOL token, if we do not want to
+optimize away short comments.
+<p>
+<table style="text-align: left;" border="1" cellpadding="3" cellspacing="0">
+<tbody>
+<tr>
+<td style="vertical-align: top;"> <br></td>
+<td style="vertical-align: top;"> <em>Second Token</em> <br></td>
+<td style="vertical-align: top;"> <br></td>
+<td style="vertical-align: top;"> <br></td>
+<td style="vertical-align: top;"> <br></td>
+<td style="vertical-align: top;"> <br></td>
+<td style="vertical-align: top;"> <br></td>
+</tr>
+<tr>
+<td style="vertical-align: top;"> <em>First Token</em> <br></td>
+<td style="vertical-align: top;"> <strong>Keyword</strong> <br></td>
+<td style="vertical-align: top;"> <strong>Name</strong> <br></td>
+<td style="vertical-align: top;"> <strong>Number</strong> <br></td>
+<td style="vertical-align: top;"> <strong>String</strong> <br></td>
+<td style="vertical-align: top;"> <strong>LString</strong> <br></td>
+<td style="vertical-align: top;"> <strong>Oper</strong> <br></td>
+</tr>
+<tr>
+<td style="vertical-align: top;"> <strong>Keyword</strong> <br></td>
+<td style="vertical-align: top;"> [S] <br></td>
+<td style="vertical-align: top;"> [S] <br></td>
+<td style="vertical-align: top;"> [S] <br></td>
+<td style="vertical-align: top;"> - <br></td>
+<td style="vertical-align: top;"> - <br></td>
+<td style="vertical-align: top;"> - <br></td>
+</tr>
+<tr>
+<td style="vertical-align: top;"> <strong>Name</strong> <br></td>
+<td style="vertical-align: top;"> [S] <br></td>
+<td style="vertical-align: top;"> [S] <br></td>
+<td style="vertical-align: top;"> [S] <br></td>
+<td style="vertical-align: top;"> -  <br></td>
+<td style="vertical-align: top;"> - <br></td>
+<td style="vertical-align: top;"> - <br></td>
+</tr>
+<tr>
+<td style="vertical-align: top;"> <strong>Number</strong> <br></td>
+<td style="vertical-align: top;"> [S] <br></td>
+<td style="vertical-align: top;"> [S] <br></td>
+<td style="vertical-align: top;"> [S] <br></td>
+<td style="vertical-align: top;"> - <br></td>
+<td style="vertical-align: top;"> - <br></td>
+<td style="vertical-align: top;"> [1] <br></td>
+</tr>
+<tr>
+<td style="vertical-align: top;"> <strong>String</strong> <br></td>
+<td style="vertical-align: top;"> - <br></td>
+<td style="vertical-align: top;"> - <br></td>
+<td style="vertical-align: top;"> - <br></td>
+<td style="vertical-align: top;"> - <br></td>
+<td style="vertical-align: top;"> - <br></td>
+<td style="vertical-align: top;"> - <br></td>
+</tr>
+<tr>
+<td style="vertical-align: top;"> <strong>LString</strong> <br></td>
+<td style="vertical-align: top;"> - <br></td>
+<td style="vertical-align: top;"> - <br></td>
+<td style="vertical-align: top;"> - <br></td>
+<td style="vertical-align: top;"> - <br></td>
+<td style="vertical-align: top;"> - <br></td>
+<td style="vertical-align: top;"> - <br></td>
+</tr>
+<tr>
+<td style="vertical-align: top;"> <strong>Oper</strong> <br></td>
+<td style="vertical-align: top;"> - <br></td>
+<td style="vertical-align: top;"> - <br></td>
+<td style="vertical-align: top;"> [1] <br></td>
+<td style="vertical-align: top;"> - <br></td>
+<td style="vertical-align: top;"> - <br></td>
+<td style="vertical-align: top;"> [2] <br></td>
+</tr>
+</tbody>
+</table>
+<p>
+
+A dash (&apos;-&apos;) in the above means that the first token can abut the second
+token.
+<p>
+<dl>
+<dt><dd><code><strong>[S]</strong></code> Need at least one whitespace, set as either a space or kept as an EOL.
+</dl>
+
+<dl>
+<dt><dd><code><strong>[1]</strong></code> Need a space if operator is a &apos;.&apos;, all others okay. A &apos;+&apos; or &apos;-&apos; is used as part of a floating-point spec, but there does not appear to be any way of creating a float by joining with number with a a &apos;+&apos; or &apos;-&apos; plus another number. Since an &apos;e&apos; has to be somewhere in the first token, this can&apos;t be done.
+</dl>
+
+<dl>
+<dt><dd><code><strong>[2]</strong></code> Normally there cannot be consecutive operators, but we plan to allow for generalized optimization of token sequences, i.e. even sequences that are grammatically illegal; so disallow adjacent operators if:
+<ul>
+<li>the first is in [=&lt;&gt;] and the second is &apos;=&apos;
+<li>disallow dot sequences to be adjacent, but &quot;...&quot; first okay
+<li>disallow &apos;[&apos; followed by &apos;=&apos; or &apos;[&apos; (not optimal)
+</ul>
+</dl>
+
+Also, a minus &apos;-&apos; cannot preceed a Comment or LComment, because comments
+start with a &apos;--&apos; prefix. Apart from that, all Comment or LComment
+tokens can be set abut with a real token.
+<p>
+<hr>
+<h2>Local Variable Renaming</h2>
+
+<p>
+The following discusses the problem of local variable optimization,
+specifically <em>local variable renaming</em> in order to reduce source code
+size.
+<p>
+<h3><code>TK_NAME</code> Token Considerations</h3>
+
+A <code>TK_NAME</code> token means a number of things, and some of these cannot
+be renamed without analyzing the source code. We are interested in the
+use of <code>TK_NAME</code> in the following:
+<p>
+<dl>
+<dt><dd>(a) global variable access
+<dt><dd>(b) local variable declaration, including <code>local</code> statements, <code>local</code> functions, function parameters, implicit &quot;<code>self</code>&quot; locals
+<dt><dd>(c) local variable access, including upvalue access
+</dl>
+
+<code>TK_NAME</code> is also used in parts of the grammar as constant strings --
+these tokens cannot be optimized without user assistance. These include
+usage as:
+<p>
+<dl>
+<dt><dd>(d) keys in <code>key=value</code> pairs in table construction
+<dt><dd>(e) field or method names in <code>a:b</code> or <code>a.b</code> syntax forms
+</dl>
+
+For the local variable name optimization scheme used, we do not consider
+(d) and (e), and while global variables cannot be renamed without some
+kind of user assistance, they need to be considered or tracked as part
+of Lua&apos;s variable access scheme.
+<p>
+<h3>Lifetime of a Local Variable</h3>
+
+Consider the following example:
+<p>
+<dl>
+<dt><dd><pre class="code"><span class="keyword">local</span> string, table = string, table
+</pre></dl>
+
+<p>
+In the example, the two locals are assigned the values of the globals
+with the same names. When Lua encounters the declaration portion:
+<p>
+<dl>
+<dt><dd><pre class="code"><span class="keyword">local</span> string, table
+</pre></dl>
+
+<p>
+the parser cannot immediately make the two local variable available to
+following code. In the parser and code generator, locals are inactive
+when entries are created. They are activated only when the function
+<code>adjustlocalvars()</code> is called to activate the appropriate local
+variables. (Note that the terminology used here may not be identical to
+the ones used in the Dragon Book -- they merely follow the LuaSrcDiet
+code as it was written before I have read the Dragon Book.)
+<p>
+In the example, the two local variables are activated only after the
+whole statement has been parsed, that is, after the last &quot;<code>table</code>&quot;
+token. Hence, the statement works as expected. Also, once the two local
+variables goes out of scope, <code>removevars()</code> is called to deactivate
+them, allowing other variables of the same name to become visible again.
+<p>
+Another example worth mentioning is:
+<p>
+<dl>
+<dt><dd><pre class="code"><span class="keyword">local</span> a, a, a, = <span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>
+</pre></dl>
+
+<p>
+The above will assign 3 to &apos;a&apos;.
+<p>
+Thus, when optimizing local variable names, (1) we need to consider
+accesses of global variable names affecting the namespace, (2) for the
+local variable names themselves, we need to consider when they are
+declared, activated and removed, and (3) within the &apos;live&apos; time of
+locals, we need to know when they are accessed (since locals that are
+never accessed don&apos;t really matter.)
+<p>
+<h3>Local Variable Tracking</h3>
+
+Every local variable declaration is considered an object to be renamed.
+<p>
+From the parser, we have the original name of the local variable, the
+token positions for declaration, activation and removal, and the token
+position for all the <code>TK_NAME</code> tokens which references this local. All
+instances of the implicit &quot;<code>self</code>&quot; local variable are also flagged as
+such.
+<p>
+In addition to local variable information, all global variable accesses
+are tabled, one object entry for one name, and each object has a
+corresponding list of token positions for the <code>TK_NAME</code> tokens, which
+is where the global variables were accessed.
+<p>
+The key criteria is: <strong>Our act of renaming cannot change the visibility
+of any of these locals and globals at the time they are accessed</strong>.
+However, <em>their scope of visibility may be changed during which they
+are not accessed</em>, so someone who tries to insert a variable reference
+somewhere into a program that has its locals renamed may find that it
+now refers to a different variable.
+<p>
+Of course, if every variable has a unique name, then there is no need
+for a name allocation algorithm, as there will be no conflict. But, in
+order to maximize utilization of short identifier names to reduce the
+final code size, we want to reuse the names as much as possible. In
+addition, fewer names will likely reduce symbol entropy and may slightly
+improve compressibility of the source code. LuaSrcDiet avoids the use of
+non-ASCII letters, so there are only 53 single-character variable names.
+<p>
+<h3>Name Allocation Theory</h3>
+
+To understand the renaming algorithm, first we need to establish how
+different local and global variables can operate happily without
+interfering with each other.
+<p>
+Consider three objects, local object A, local object B and global object
+G. A and B involve declaration, activation and removal, and within the
+period it is active, there may be zero or more accesses of the local.
+For G, there are only global variable accesses to look into.
+<p>
+Assume that we have assigned a new name to A and we wish to consider its
+effects on other locals and globals, for which we choose B and G as
+examples. We assume local B has not been assigned a new name as we
+expect our algorithm to take care of collisions.
+<p>
+A&apos;s lifetime is something like this:
+<p>
+<pre>
+        Decl            Act                             Rem
+        +               +-------------------------------+
+        -------------------------------------------------
+</pre>
+<p>
+where &apos;Decl&apos; is the time of declaration, &apos;Act&apos; is the time of
+activation, and &apos;Rem&apos; is the time of removal. Between &apos;Act&apos; and &apos;Rem&apos;,
+the local is alive or &apos;live&apos; and Lua can see it if its corresponding
+<code>TK_NAME</code> identifier comes up.
+<p>
+<pre>
+        Decl            Act                             Rem
+        +               +-------------------------------+
+        -------------------------------------------------
+   *            *             *                              *
+  (1)          (2)           (3)                            (4)
+</pre>
+<p>
+Recall that the key criteria is to not change the visibility of globals
+and locals during when they are accessed. Consider local and global
+accesses at (1), (2), (3) and (4).
+<p>
+A global G of the same name as A will only collide at (3), where Lua
+will see A and not G. Since G must be accessed at (3) according to what
+the parser says, and we cannot modify the positions of &apos;Decl&apos;, &apos;Act&apos; and
+&apos;Rem&apos;, it follows that A cannot have the same name as G.
+<p>
+<pre>
+                Decl    Act                     Rem
+                +       +-----------------------+
+                ---------------------------------
+ (1)+   +---+   (2)+   +---+      (3)+   +---+	    (4)+   +---+
+    ---------      ---------         ---------         ---------
+</pre>
+<p>
+For the case of A and B having the same names and colliding, consider
+the cases for which B is at (1), (2), (3) or (4) in the above.
+<p>
+(1) and (4) means that A and B are completely isolated from each other,
+hence in the two cases, A and B can safely use the same variable names.
+To be specific, since we have assigned A, B is considered completely
+isolated from A if B&apos;s activation-to-removal period is isolated from
+the time of A&apos;s first access to last access, meaning B&apos;s active time
+will never affect any of A&apos;s accesses.
+<p>
+For (2) and (3), we have two cases where we need to consider which one
+has been activated first. For (2), B is active before A, so A cannot
+impose on B. But A&apos;s accesses are valid while B is active, since A can
+override B. For no collision in the case of (2), we simply need to
+ensure that the last access of B occurs before A is activated.
+<p>
+For (3), B is activated before A, hence B can override A&apos;s accesses. For
+no collision, all of A&apos;s accesses cannot happen while B is active. Thus
+position (3) follows the &quot;A is never accessed when B is active&quot; rule in
+a general way. Local variables of a child function are in the position
+of (3). To illustrate, the local B can use the same name as local A and
+live in a child function or block scope if each time A is accessed, Lua
+sees A and not B. So we have to check all accesses of A and see whether
+they collide with the active period of B. If A is not accessed during
+that period, then B can be active with the same name.
+<p>
+The above appears to resolve all sorts of cases where the active times
+of A and B overlap. Note that in the above, the allocator does not need
+to know how locals are separated according to function prototypes.
+Perhaps the allocator can be simplified if knowledge of function
+structure is utilized. This scheme was implemented in a hurry in 2008 --
+it could probably be simpler if Lua grammar is considered, but
+LuaSrcDiet mainly processes various index values in tables.
+<p>
+<h3>Name Allocation Algorithm</h3>
+
+To begin with, the name generator is mostly separate from the name
+allocation algorithm. The name generator returns the next shortest name
+for the algorithm to apply to local variables. To attempt to reduce
+symbol entropy (which benefit compression algorithms), the name
+generator follows English frequent letter usage. There is also an option
+to calculate an actual symbol entropy table from the input data.
+<p>
+Since there are 53 one-character identifiers and (53*63-4) two-character
+identifiers (minus a few keywords), there isn&apos;t a pressing need to
+optimally maximize name reuse. The single-file version of LuaSrcDiet
+0.12.0, at just over 3000 SLOC and 156KB in size, currently allocates
+around 55 unique local variable names.
+<p>
+In theory, we should need no more than 260 local identifiers by default.
+Why? Since <code>LUAI_MAXVARS</code> is 200 and <code>LUAI_MAXUPVALUES</code> is 60, at
+any block scope, there can be at most <code>(LUAI_MAXVARS +
+LUAI_MAXUPVALUES)</code> locals referenced, or 260. Also, those from outer
+scopes not referenced in inner scopes can reuse identifiers. The net
+effect of this is that a local variable name allocation method should
+not allocate more than 260 identifier names for locals.
+<p>
+The current algorithm is a simple first-come first-served scheme:
+<p>
+<dl>
+<dt><dd>(a) One local object that use the most tokens is named first.
+<dt><dd>(b) Any other non-conflicting locals with respect to the first object are assigned the same name.
+<dt><dd>(c) Assigned locals are removed from consideration and the procedure is repeated for objects that have not been assigned new names.
+<dt><dd>(d) Steps (a) to (c) repeats until no local objects are left.
+</dl>
+
+In addition, there are a few extra issues to take care of:
+<p>
+<dl>
+<dt><dd>(e) Implicit &quot;<code>self</code>&quot; locals that have been flagged as such are already &quot;assigned to&quot; and so they are left unmodified.
+<dt><dd>(f) The name generator skips &quot;<code>self</code>&quot; to avoid conflicts. This is not optimal but it is unlikely a script will use so many local variables as to reach &quot;<code>self</code>&quot;.
+<dt><dd>(g) Keywords are also skipped for the name generator.
+<dt><dd>(h) Global name conflict resolution.
+</dl>
+
+For (h), global name conflict resolution is handled just after the new
+name is generated. The name can still be used for some locals even if it
+conflicts with other locals. To remove conflicts, global variable
+accesses for the particular identifier name is checked. Any local
+variables that are active when a global access is made is marked to be
+skipped. The rest of the local objects can then use that name.
+<p>
+The algorithm has additional code for handling locals that use the same
+name in the same scope. This extends the basic algorithm that was
+discussed earlier. For example:
+<p>
+<dl>
+<dt><dd><pre class="code"><span class="keyword">local</span> foo = <span class="number">10</span> <span class="comment">-- (1)</span>
+...
+<span class="keyword">local</span> foo = <span class="number">20</span> <span class="comment">-- (2)</span>
+...
+print(e)
+</pre></dl>
+
+<p>
+Since we are considering name visibility, the first &apos;<code>foo</code>&apos; does not
+really cease to exist when the second &apos;<code>foo</code>&apos; is declared, because if
+we were to make that assumption, and the first &apos;<code>foo</code>&apos; is removed
+before (2), then I should be able to use &apos;<code>e</code>&apos; as the name for the
+first &apos;<code>foo</code>&apos; and after (2), it should not conflict with variables in
+the outer scope with the same name. To illustrate:
+<p>
+<dl>
+<dt><dd><pre class="code"><span class="keyword">local</span> e = <span class="number">10</span> <span class="comment">-- &apos;foo &apos; renamed to &apos;e&apos;</span>
+...
+<span class="keyword">local</span> t = <span class="number">20</span> <span class="comment">-- error if we assumed &apos;e&apos; removed here</span>
+...
+print(e)
+</pre></dl>
+
+<p>
+Since &apos;<code>e</code>&apos; is a global in the example, we now have an error as the
+name as been taken over by a local. Thus, the first &apos;<code>foo</code>&apos; local must
+have its active time extend to the end of the current scope. If there is
+no conflict between the first and second &apos;<code>foo</code>&apos;, the algorithm may
+still assign the same names to them.
+<p>
+The current fix to deal with the above chains local objects in order to
+find the removal position. It may be possible to handle this in a clean
+manner -- LuaSrcDiet handles it as a fix to the basic algorithm.
+<p>
+<hr>
+<h2>Ideas</h2>
+
+The following is a list of optimization ideas that do not require
+heavy-duty source code parsing and comprehension.
+<p>
+<h3>Lexer-Based Optimization Ideas</h3>
+
+<ul>
+<li>Convert long strings to normal strings, vice versa.
+</ul>
+<dl>
+<dt><dd><em>A little desperate for a few bytes, can be done, but not real keen on implementing it.</em>
+</dl>
+
+<ul>
+<li>Special number forms to take advantage of constant number folding.
+</ul>
+<dl>
+<dt><dd><em>For example, 65536 can be represented using 2^16, and so on. An expression must be evaluated in the same way, otherwise this seems unsafe.</em>
+</dl>
+
+<ul>
+<li>Warn if a number has too many digits.
+</ul>
+<dl>
+<dt><dd><em>Should we warn or &quot;test and truncate&quot;? Not really an optimization that will see much use.</em>
+</dl>
+
+<ul>
+<li>Warn of opportunity for using a <code>local</code> to zap a bunch of globals.
+</ul>
+<dl>
+<dt><dd><em>Current recommendation is to use the HTML plugin to display globals in red. The developer can then visually analyze the source code and make the appropriate fixes. I think this is better than having the program guess the intentions of the developer.</em>
+</dl>
+
+<ul>
+<li>Spaces to tabs in comments, long comments, or long strings.
+</ul>
+<dl>
+<dt><dd><em>For long strings, need to know user&apos;s intention. Would rather not implement.</em>
+</dl>
+
+<h3>Parser-Based Optimization Ideas</h3>
+
+Heavy-duty optimizations will need more data to be generated by the
+parser. A full AST may eventually be needed. The most attractive idea
+that can be quickly implemented with a significant code size &apos;win&apos; is to
+reduce the number of <code>local</code> keywords.
+<p>
+<ul>
+<li>Remove unused <code>local</code>s that can be removed in the source.
+</ul>
+<dl>
+<dt><dd><em>Need to consider unused <code>local</code>s in multiple assignments.</em>
+</dl>
+
+<ul>
+<li>Simplify declaration of <code>local</code>s that can be merged.
+</ul>
+<dl>
+<dt><dd><em>From:</em>
+</dl>
+<dl>
+<dl>
+<dt><dd><pre class="code"><span class="comment">-- separate locals</span>
+<span class="keyword">local</span> foo
+<span class="keyword">local</span> bar
+<span class="comment">-- separate locals with assignments</span>
+<span class="keyword">local</span> foo = <span class="number">123</span>
+<span class="keyword">local</span> bar = <span class="string">&quot;pqr&quot;</span>
+</pre></dl>
+</dl>
+
+<dl>
+<dt><dd><em>To:</em>
+</dl>
+<dl>
+<dl>
+<dt><dd><pre class="code"><span class="comment">-- merged locals</span>
+<span class="keyword">local</span> foo,bar
+<span class="comment">-- merged locals with assignments</span>
+<span class="keyword">local</span> foo,bar=<span class="number">123</span>,<span class="string">&quot;pqr&quot;</span>
+</pre></dl>
+</dl>
+
+<ul>
+<li>Simplify declarations using <code>nil</code>.
+</ul>
+<dl>
+<dt><dd><em>From:</em>
+</dl>
+<dl>
+<dl>
+<dt><dd><pre class="code"><span class="keyword">local</span> foo, bar = <span class="keyword">nil</span>, <span class="keyword">nil</span>
+</pre></dl>
+</dl>
+
+<dl>
+<dt><dd><em>To:</em>
+</dl>
+<dl>
+<dl>
+<dt><dd><pre class="code"><span class="keyword">local</span> foo,bar
+</pre></dl>
+</dl>
+
+<p>
+<ul>
+<li>Simplify <code>return</code>s using <code>nil</code>.
+</ul>
+<dl>
+<dt><dd><em>How desirable is this? From Lua list discussions, it seems to be potentially unsafe unless all return locations are known and checked.</em>
+</dl>
+
+<ul>
+<li>Removal of optional semicolons in statements and removal of commas or semicolons in table constructors.
+</ul>
+<dl>
+<dt><dd><em>Yeah, this might save a few bytes.</em>
+</dl>
+
+<ul>
+<li>Remove table constructor elements using <code>nil</code>.
+</ul>
+<dl>
+<dt><dd><em>Not sure if this is safe to do.</em>
+</dl>
+
+<ul>
+<li>Simplify logical or relational operator expressions.
+</ul>
+<dl>
+<dt><dd><em>This is more suitable for an optimizing compiler project.</em>
+</dl>
+
+<hr>
+<em>2011-09-13 khman</em>
+</body>
+</html>
