@@ -2175,7 +2175,7 @@ local function do_lcomment(I)
   local info = sinfos[I]
   local delim1 = match(info, "^%-%-%[=*%[")  
   local sep = #delim1
-  local delim2 = sub(info, -sep, -1)
+  local delim2 = sub(info, -(sep - 2), -1)
   local z = sub(info, sep + 1, -(sep - 1))  
   local y = ""
   local i = 1
@@ -2833,39 +2833,6 @@ end
 
 
 
-
-
-local function del_token(id)
-  if id < 1 or id >= #tokpar then
-    return  
-  end
-  local i2 = xrefpar[id]        
-  local idend, i2end =          
-    #tokpar, #toklist
-  for i = id + 1, idend do      
-    tokpar[i - 1] = tokpar[i]
-    seminfopar[i - 1] = seminfopar[i]
-    xrefpar[i - 1] = xrefpar[i] - 1
-    statinfo[i - 1] = statinfo[i]
-  end
-  tokpar[idend] = nil
-  seminfopar[idend] = nil
-  xrefpar[idend] = nil
-  statinfo[idend] = nil
-  for i = i2 + 1, i2end do      
-    toklist[i - 1] = toklist[i]
-    seminfolist[i - 1] = seminfolist[i]
-  end
-  toklist[i2end] = nil
-  seminfolist[i2end] = nil
-end
-
-
-
-
-
-
-
 local function optimize_func1()
   
   local function is_strcall(j)          
@@ -2877,20 +2844,63 @@ local function optimize_func1()
     end
   end
   
-  local starti = 1
-  while true do
-    local i, found = starti, false
-    while i <= #tokpar do               
-      local id = statinfo[i]
-      if id == "call" and is_strcall(i) then  
-        del_token(i + 1)        
-        del_token(i + 2)        
-        found = true
-        starti = i + 2
-      end
+  local del_list = {}           
+  local i = 1                   
+  while i <= #tokpar do
+    local id = statinfo[i]
+    if id == "call" and is_strcall(i) then  
+      del_list[i + 1] = true    
+      del_list[i + 3] = true    
+      i = i + 3
+    end
+    i = i + 1
+  end
+  
+  
+  
+  
+  
+  
+  
+  local i, dst, idend = 1, 1, #tokpar
+  local del_list2 = {}
+  while dst <= idend do         
+    if del_list[i] then         
+      del_list2[xrefpar[i]] = true
       i = i + 1
     end
-    if not found then break end
+    if i > dst then
+      if i <= idend then        
+        tokpar[dst] = tokpar[i]
+        seminfopar[dst] = seminfopar[i]
+        xrefpar[dst] = xrefpar[i] - (i - dst)
+        statinfo[dst] = statinfo[i]
+      else                      
+        tokpar[dst] = nil
+        seminfopar[dst] = nil
+        xrefpar[dst] = nil
+        statinfo[dst] = nil
+      end
+    end
+    i = i + 1
+    dst = dst + 1
+  end
+  local i, dst, idend = 1, 1, #toklist
+  while dst <= idend do         
+    if del_list2[i] then        
+      i = i + 1
+    end
+    if i > dst then
+      if i <= idend then        
+        toklist[dst] = toklist[i]
+        seminfolist[dst] = seminfolist[i]
+      else                      
+        toklist[dst] = nil
+        seminfolist[dst] = nil
+      end
+    end
+    i = i + 1
+    dst = dst + 1
   end
 end
 
@@ -3142,6 +3152,7 @@ function optimize(option, _toklist, _seminfolist, xinfo)
   
   if option["opt-experimental"] then    
     optimize_func1()
+    
   end
 end
 
@@ -3911,7 +3922,7 @@ local plugin
 
 local MSG_TITLE = [[
 LuaSrcDiet: Puts your Lua 5.1 source code on a diet
-Version 0.12.0 (20110913)  Copyright (c) 2005-2008,2011 Kein-Hong Man
+Version 0.12.1 (20120407)  Copyright (c) 2012 Kein-Hong Man
 The COPYRIGHT file describes the conditions under which this
 software may be distributed.
 ]]

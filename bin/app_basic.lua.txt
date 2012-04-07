@@ -1,5 +1,5 @@
 LuaSrcDiet: Puts your Lua 5.1 source code on a diet
-Version 0.12.0 (20110913)  Copyright (c) 2005-2008,2011 Kein-Hong Man
+Version 0.12.1 (20120407)  Copyright (c) 2012 Kein-Hong Man
 The COPYRIGHT file describes the conditions under which this
 software may be distributed.
 
@@ -14,21 +14,21 @@ Statistics for: LuaSrcDiet.lua -> app_basic.lua
 Lexical            Input   Input     Input  Output  Output    Output
 Elements           Count   Bytes   Average   Count   Bytes   Average
 --------------------------------------------------------------------
-TK_KEYWORD          3083   12247      3.97    3083   12247      3.97
-TK_NAME             5401   24121      4.47    5401   24121      4.47
-TK_NUMBER            467     494      1.06     467     494      1.06
+TK_KEYWORD          3088   12257      3.97    3088   12257      3.97
+TK_NAME             5421   24160      4.46    5421   24160      4.46
+TK_NUMBER            468     495      1.06     468     495      1.06
 TK_STRING            787    7983     10.14     787    7983     10.14
-TK_LSTRING            14    3453    246.64      14    3453    246.64
-TK_OP               6381    6861      1.08    6381    6861      1.08
+TK_LSTRING            14    3443    245.93      14    3443    245.93
+TK_OP               6405    6888      1.08    6405    6888      1.08
 TK_EOS                 1       0      0.00       1       0      0.00
 --------------------------------------------------------------------
-TK_COMMENT          1611   72339     44.90       1      18     18.00
-TK_LCOMMENT           18    4404    244.67       0       0      0.00
-TK_EOL              4419    4419      1.00    2966    2966      1.00
-TK_SPACE           10439   24475      2.34    2076    2076      1.00
+TK_COMMENT          1616   72434     44.82       1      18     18.00
+TK_LCOMMENT           18    4409    244.94       0       0      0.00
+TK_EOL              4430    4430      1.00    2978    2978      1.00
+TK_SPACE           10490   24704      2.36    2074    2074      1.00
 --------------------------------------------------------------------
-Total Elements     32621  160796      4.93   21177   60219      2.84
+Total Elements     32738  161203      4.92   21237   60296      2.84
 --------------------------------------------------------------------
-Total Tokens       16134   55159      3.42   16134   55159      3.42
+Total Tokens       16184   55226      3.41   16184   55226      3.41
 --------------------------------------------------------------------
 

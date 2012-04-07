@@ -5,7 +5,7 @@
   Compresses Lua source code by removing unnecessary characters.
   For Lua 5.1.x source code.
 
-  Copyright (c) 2008,2011 Kein-Hong Man <keinhong@gmail.com>
+  Copyright (c) 2008,2011,2012 Kein-Hong Man <keinhong@gmail.com>
   The COPYRIGHT file describes the conditions
   under which this software may be distributed.
 
@@ -44,7 +44,7 @@ local plugin
 
 local MSG_TITLE = [[
 LuaSrcDiet: Puts your Lua 5.1 source code on a diet
-Version 0.12.0 (20110913)  Copyright (c) 2005-2008,2011 Kein-Hong Man
+Version 0.12.1 (20120407)  Copyright (c) 2012 Kein-Hong Man
 The COPYRIGHT file describes the conditions under which this
 software may be distributed.
 ]]

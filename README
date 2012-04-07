@@ -2,13 +2,22 @@
   LuaSrcDiet
   Compresses Lua source code by removing unnecessary characters.
 
-  Copyright (c) 2005-2008,2011 Kein-Hong Man <keinhong@gmail.com>
+  Copyright (c) 2005-2008,2011,2012 Kein-Hong Man <keinhong@gmail.com>
   The COPYRIGHT file describes the conditions
   under which this software may be distributed.
 
   http://code.google.com/p/luasrcdiet/
 
 ========================================================================
+
+WHAT'S NEW IN VERSION 0.12.1
+----------------------------
+
+* Fixed a long comment glitch when using the --keep option. (Two
+  extra characters were duplicated before the ending brackets.)
+
+* Faster function call syntax sugar optimization using a one-pass
+  token deletion loop.
 
 WHAT'S NEW IN VERSION 0.12.0
 ----------------------------
@@ -74,7 +83,7 @@ separate software and each program should stick to its own license.
 Programs you process using LuaSrcDiet are of course not affected at all
 by LuaSrcDiet's license; it's just a text filter. See COPYRIGHT. If you
 insist on extreme COPYRIGHT views, then better delete this whole thing
-right away, then gouge your eyes out.
+right away, then gouge your eyes out. :-p
 
 OLDER STUFF
 -----------
@@ -87,10 +96,13 @@ still need the older stuff, they can be found in:
 
 * Lua 5.1.x old codebase: last seen in version 0.11.2.
 
-Future plans: Lua 5.1.x releases for LuaSrcDiet will pretty much
-stagnate at 0.12.1 after implementation of a couple more experimental
-optimizations, and effort will be shifted towards something for Lua
-5.2.x.
+FUTURE PLANS
+------------
+
+Lua 5.1.x releases for LuaSrcDiet will pretty much stagnate at 0.12.1
+after implementation of a couple more experimental optimizations, and
+effort will be shifted towards something for Lua 5.2.x. The timeline for
+this is indeterminate.
 
 ========================================================================
 
@@ -125,4 +137,4 @@ Enjoy!
 
 Kein-Hong Man (esq.)
 Kuala Lumpur
-Malaysia 20110913
+Malaysia 20120407

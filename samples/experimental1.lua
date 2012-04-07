@@ -1,5 +1,5 @@
 
--- ';' ootimization
+-- ';' optimization
 -------------------
 
 -- in-between

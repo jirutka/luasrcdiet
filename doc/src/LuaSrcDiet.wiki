@@ -84,6 +84,9 @@ As of version 0.12.0, LuaSrcDiet has been moved to a new project host
 site at: [http://code.google.com/p/luasrcdiet/
 http://code.google.com/p/luasrcdiet/]
 
+	'''Version 0.12.1 (2012-04-07):'''
+		* BUG FIX: Long comment adds an extra 2 characters when using --keep option.
+		* Faster function call syntax sugar optimization using a one-pass token deletion loop.
 	'''Version 0.12.0 (2011-09-13):'''
 		* Added convenient single-file versions of LuaSrcDiet in various sizes.
 		* BUG FIX: String optimization of "\ddd" -- "\00101" was incorrectly optimized to "\101".
@@ -136,4 +139,4 @@ which is in turn based on the [http://www.lua.org/ Lua] sources.
 
 ----
 
-''2011-09-13 khman''
+''2012-04-07 khman''

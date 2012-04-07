@@ -1,6 +1,16 @@
 LuaSrcDiet changelog
 --------------------
 
+2012-04-07  Kein-Hong Man  <keinhong@gmail.com>
+
+	* src/optlex.lua (do_lcomment): fixed ending delimiter
+	extraction from long comment leading to 2 extra chars
+	when using --keep option
+	* src/optparser.lua (optimize_func1): implemented faster
+	one-pass token deletion
+	* doc/src/LuaSrcDiet.wiki: updated notes for release
+	* Version: 0.12.1
+
 2011-09-13  Kein-Hong Man  <keinhong@gmail.com>
 
 	* created a project at Google Code project hosting

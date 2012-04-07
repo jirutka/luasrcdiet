@@ -3,7 +3,7 @@
   optlex.lua: does lexer-based optimizations
   This file is part of LuaSrcDiet.
 
-  Copyright (c) 2008,2011 Kein-Hong Man <keinhong@gmail.com>
+  Copyright (c) 2008,2011,2012 Kein-Hong Man <keinhong@gmail.com>
   The COPYRIGHT file describes the conditions
   under which this software may be distributed.
 
@@ -521,7 +521,7 @@ local function do_lcomment(I)
   local info = sinfos[I]
   local delim1 = match(info, "^%-%-%[=*%[")  -- cut out delimiters
   local sep = #delim1
-  local delim2 = sub(info, -sep, -1)
+  local delim2 = sub(info, -(sep - 2), -1)
   local z = sub(info, sep + 1, -(sep - 1))  -- comment without delims
   local y = ""
   local i = 1

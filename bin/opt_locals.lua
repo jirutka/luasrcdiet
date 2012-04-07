@@ -5,7 +5,7 @@
   Compresses Lua source code by removing unnecessary characters.
   For Lua 5.1.x source code.
 
-  Copyright (c) 2008,2011 Kein-Hong Man <keinhong@gmail.com>
+  Copyright (c) 2008,2011,2012 Kein-Hong Man <keinhong@gmail.com>
   The COPYRIGHT file describes the conditions
   under which this software may be distributed.
 
@@ -24,17 +24,17 @@
 local s = string
 local e = math
 local ee = table
-local g = require
-local p = print
-local y = s.sub
-local Z = s.gmatch
-local X = s.match
+local j = require
+local y = print
+local f = s.sub
+local G = s.gmatch
+local B = s.match
 
 -- modules incorporated as preload functions follows
-local v = package.preload
+local p = package.preload
 local a = _G
 
-local te = {
+local Z = {
   html = "html    generates a HTML file for checking globals",
   sloc = "sloc    calculates SLOC for given source file",
 }
@@ -45,22 +45,22 @@ local W = {
 }
 
 -- preload function for module llex
-v.llex =
+p.llex =
 function()
 --start of inserted module
 module "llex"
 
-local r = a.require "string"
-local u = r.find
-local m = r.match
-local s = r.sub
+local h = a.require "string"
+local u = h.find
+local c = h.match
+local n = h.sub
 
 ----------------------------------------------------------------------
 -- initialize keyword list, variables
 ----------------------------------------------------------------------
 
 local f = {}
-for e in r.gmatch([[
+for e in h.gmatch([[
 and break do else elseif end false for function if in
 local nil not or repeat return then true until while]], "%S+") do
   f[e] = true
@@ -72,8 +72,8 @@ end
 local e,                -- source stream
       l,         -- name of source
       o,                -- position of lexer
-      n,             -- buffer for strings
-      h                -- line number
+      s,             -- buffer for strings
+      r                -- line number
 
 ----------------------------------------------------------------------
 -- add information to token listing
@@ -83,15 +83,15 @@ local function i(t, a)
   local e = #tok + 1
   tok[e] = t
   seminfo[e] = a
-  tokln[e] = h
+  tokln[e] = r
 end
 
 ----------------------------------------------------------------------
 -- handles line number incrementation and end-of-line characters
 ----------------------------------------------------------------------
 
-local function d(t, r)
-  local n = s
+local function d(t, s)
+  local n = n
   local a = n(e, t, t)
   t = t + 1  -- skip '\n' or '\r'
   local e = n(e, t, t)
@@ -99,8 +99,8 @@ local function d(t, r)
     t = t + 1  -- skip '\n\r' or '\r\n'
     a = a..e
   end
-  if r then i("TK_EOL", a) end
-  h = h + 1
+  if s then i("TK_EOL", a) end
+  r = r + 1
   o = t
   return t
 end
@@ -109,11 +109,11 @@ end
 -- initialize lexer for given source _z and source name _sourceid
 ----------------------------------------------------------------------
 
-function init(t, a)
-  e = t                        -- source
-  l = a          -- name of source
+function init(a, t)
+  e = a                        -- source
+  l = t          -- name of source
   o = 1                         -- lexer's position in source
-  h = 1                        -- line number
+  r = 1                        -- line number
   tok = {}                      -- lexed token list*
   seminfo = {}                  -- lexed semantic information list*
   tokln = {}                    -- line numbers for messages*
@@ -121,11 +121,11 @@ function init(t, a)
   --------------------------------------------------------------------
   -- initial processing (shbang handling)
   --------------------------------------------------------------------
-  local t, n, e, a = u(e, "^(#[^\r\n]*)(\r?\n?)")
-  if t then                             -- skip first line
+  local a, n, e, t = u(e, "^(#[^\r\n]*)(\r?\n?)")
+  if a then                             -- skip first line
     o = o + #e
     i("TK_COMMENT", e)
-    if #a > 0 then d(o, true) end
+    if #t > 0 then d(o, true) end
   end
 end
 
@@ -134,8 +134,8 @@ end
 ----------------------------------------------------------------------
 
 function chunkid()
-  if l and m(l, "^[=@]") then
-    return s(l, 2)  -- remove first char
+  if l and c(l, "^[=@]") then
+    return n(l, 2)  -- remove first char
   end
   return "[string]"
 end
@@ -145,9 +145,9 @@ end
 -- * a simplified version, does not report what token was responsible
 ----------------------------------------------------------------------
 
-function errorline(e, t)
-  local a = error or a.error
-  a(r.format("%s:%d: %s", chunkid(), t or h, e))
+function errorline(o, t)
+  local e = error or a.error
+  e(h.format("%s:%d: %s", chunkid(), t or r, o))
 end
 local r = errorline
 
@@ -155,11 +155,11 @@ local r = errorline
 -- count separators ("=") in a long string delimiter
 ------------------------------------------------------------------------
 
-local function c(t)
-  local i = s
+local function m(t)
+  local i = n
   local n = i(e, t, t)
   t = t + 1
-  local a = #m(e, "=*", t)
+  local a = #c(e, "=*", t)
   t = t + a
   o = t
   return (i(e, t, t) == n) and a or (-a) - 1
@@ -169,29 +169,29 @@ end
 -- reads a long string or long comment
 ----------------------------------------------------------------------
 
-local function w(l, h)
+local function w(h, l)
   local t = o + 1  -- skip 2nd '['
-  local a = s
-  local i = a(e, t, t)
-  if i == "\r" or i == "\n" then  -- string starts with a newline?
+  local i = n
+  local a = i(e, t, t)
+  if a == "\r" or a == "\n" then  -- string starts with a newline?
     t = d(t)  -- skip it
   end
   while true do
-    local i, u, s = u(e, "([\r\n%]])", t) -- (long range match)
-    if not i then
-      r(l and "unfinished long string" or
+    local a, u, n = u(e, "([\r\n%]])", t) -- (long range match)
+    if not a then
+      r(h and "unfinished long string" or
                 "unfinished long comment")
     end
-    t = i
-    if s == "]" then                    -- delimiter test
-      if c(t) == h then
-        n = a(e, n, o)
+    t = a
+    if n == "]" then                    -- delimiter test
+      if m(t) == l then
+        s = i(e, s, o)
         o = o + 1  -- skip 2nd ']'
-        return n
+        return s
       end
       t = o
     else                                -- newline
-      n = n.."\n"
+      s = s.."\n"
       t = d(t)
     end
   end--while
@@ -204,7 +204,7 @@ end
 local function y(l)
   local t = o
   local h = u
-  local s = s
+  local n = n
   while true do
     local i, u, a = h(e, "([\n\r\\\"\'])", t) -- (long range match)
     if i then
@@ -214,7 +214,7 @@ local function y(l)
       t = i
       if a == "\\" then                         -- handle escapes
         t = t + 1
-        a = s(e, t, t)
+        a = n(e, t, t)
         if a == "" then break end -- (EOZ error)
         i = h("abfnrtv\n\r", a, 1, true)
         ------------------------------------------------------
@@ -229,9 +229,9 @@ local function y(l)
           t = t + 1
         ------------------------------------------------------
         else                                    -- \xxx sequence
-          local o, a, e = h(e, "^(%d%d?%d?)", t)
-          t = a + 1
-          if e + 1 > 256 then -- UCHAR_MAX
+          local o, e, a = h(e, "^(%d%d?%d?)", t)
+          t = e + 1
+          if a + 1 > 256 then -- UCHAR_MAX
             r("escape sequence too large")
           end
         ------------------------------------------------------
@@ -240,7 +240,7 @@ local function y(l)
         t = t + 1
         if a == l then                        -- ending delimiter
           o = t
-          return s(e, n, t - 1)            -- return string
+          return n(e, s, t - 1)            -- return string
         end
       end--if r
     else
@@ -256,14 +256,14 @@ end
 
 function llex()
   local h = u
-  local l = m
+  local l = c
   while true do--outer
     local t = o
     -- inner loop allows break to be used to nicely section tests
     while true do--inner
       ----------------------------------------------------------------
-      local m, p, u = h(e, "^([_%a][_%w]*)", t)
-      if m then
+      local c, p, u = h(e, "^([_%a][_%w]*)", t)
+      if c then
         o = t + #u
         if f[u] then
           i("TK_KEYWORD", u)             -- reserved word (keyword)
@@ -273,19 +273,19 @@ function llex()
         break -- (continue)
       end
       ----------------------------------------------------------------
-      local u, f, m = h(e, "^(%.?)%d", t)
+      local u, f, c = h(e, "^(%.?)%d", t)
       if u then                                 -- numeral
-        if m == "." then t = t + 1 end
-        local c, n, d = h(e, "^%d*[%.%d]*([eE]?)", t)
-        t = n + 1
+        if c == "." then t = t + 1 end
+        local c, s, d = h(e, "^%d*[%.%d]*([eE]?)", t)
+        t = s + 1
         if #d == 1 then                         -- optional exponent
           if l(e, "^[%+%-]", t) then        -- optional sign
             t = t + 1
           end
         end
-        local n, t = h(e, "^[_%w]*", t)
+        local s, t = h(e, "^[_%w]*", t)
         o = t + 1
-        local e = s(e, u, t)                  -- string equivalent
+        local e = n(e, u, t)                  -- string equivalent
         if not a.tonumber(e) then            -- handles hex test also
           r("malformed number")
         end
@@ -293,20 +293,20 @@ function llex()
         break -- (continue)
       end
       ----------------------------------------------------------------
-      local f, u, m, a = h(e, "^((%s)[ \t\v\f]*)", t)
-      if f then
+      local c, f, u, a = h(e, "^((%s)[ \t\v\f]*)", t)
+      if c then
         if a == "\n" or a == "\r" then          -- newline
           d(t, true)
         else
-          o = u + 1                             -- whitespace
-          i("TK_SPACE", m)
+          o = f + 1                             -- whitespace
+          i("TK_SPACE", u)
         end
         break -- (continue)
       end
       ----------------------------------------------------------------
       local a = l(e, "^%p", t)
       if a then
-        n = t
+        s = t
         local d = h("-[\"\'.=<>~", a, 1, true)
         if d then
           -- two-level if block for punctuation/symbols
@@ -318,19 +318,19 @@ function llex()
                 t = t + 2
                 local a = -1
                 if r == "[" then
-                  a = c(t)
+                  a = m(t)
                 end
                 if a >= 0 then                -- long comment
                   i("TK_LCOMMENT", w(false, a))
                 else                            -- short comment
                   o = h(e, "[\n\r]", t) or (#e + 1)
-                  i("TK_COMMENT", s(e, n, o - 1))
+                  i("TK_COMMENT", n(e, s, o - 1))
                 end
                 break -- (continue)
               end
               -- (fall through for "-")
             else                                -- [ or long string
-              local e = c(t)
+              local e = m(t)
               if e >= 0 then
                 i("TK_LSTRING", w(true, e))
               elseif e == -1 then
@@ -360,7 +360,7 @@ function llex()
         break -- (continue)
       end
       ----------------------------------------------------------------
-      local e = s(e, t, t)
+      local e = n(e, t, t)
       if e ~= "" then
         o = t + 1
         i("TK_OP", e)                    -- other single-char tokens
@@ -376,12 +376,12 @@ end
 end
 
 -- preload function for module lparser
-v.lparser =
+p.lparser =
 function()
 --start of inserted module
 module "lparser"
 
-local k = a.require "string"
+local v = a.require "string"
 
 --[[--------------------------------------------------------------------
 -- variable and data structure initialization
@@ -391,34 +391,34 @@ local k = a.require "string"
 -- initialization: main variables
 ----------------------------------------------------------------------
 
-local j,                  -- grammar-only token tables (token table,
-      g,              -- semantic information table, line number
-      x,                -- table, cross-reference table)
+local E,                  -- grammar-only token tables (token table,
+      k,              -- semantic information table, line number
+      A,                -- table, cross-reference table)
       S,
       s,                     -- token position
 
-      h,                     -- start line # for error messages
-      L,                   -- last line # for ambiguous syntax chk
-      t, T, r, m,   -- token, semantic info, line
-      p,                  -- proper position of <name> token
+      u,                     -- start line # for error messages
+      Y,                   -- last line # for ambiguous syntax chk
+      t, T, d, f,   -- token, semantic info, line
+      y,                  -- proper position of <name> token
       o,                       -- current function state
-      W,                   -- top-level function state
+      P,                   -- top-level function state
 
       _,               -- global variable information table
       D,             -- global variable name lookup table
-      u,                -- local variable information table
+      l,                -- local variable information table
       b,               -- inactive locals (prior to activation)
-      N,               -- corresponding references to activate
-      E                  -- statements labeled by type
+      I,               -- corresponding references to activate
+      z                  -- statements labeled by type
 
 -- forward references for local functions
-local y, c, q, O, I, z
+local q, r, g, N, O, x
 
 ----------------------------------------------------------------------
 -- initialization: data structures
 ----------------------------------------------------------------------
 
-local e = k.gmatch
+local e = v.gmatch
 
 local R = {}         -- lookahead check in chunk(), returnstat()
 for e in e("else elseif end until <eof>", "%S+") do
@@ -426,21 +426,21 @@ for e in e("else elseif end until <eof>", "%S+") do
 end
 
 local H = {}          -- binary operators, left priority
-local Y = {}         -- binary operators, right priority
-for e, t, a in e([[
+local V = {}         -- binary operators, right priority
+for e, a, t in e([[
 {+ 6 6}{- 6 6}{* 7 7}{/ 7 7}{% 7 7}
 {^ 10 9}{.. 5 4}
 {~= 3 3}{== 3 3}
 {< 3 3}{<= 3 3}{> 3 3}{>= 3 3}
 {and 2 2}{or 1 1}
 ]], "{(%S+)%s(%d+)%s(%d+)}") do
-  H[e] = t + 0
-  Y[e] = a + 0
+  H[e] = a + 0
+  V[e] = t + 0
 end
 
-local ee = { ["not"] = true, ["-"] = true,
+local te = { ["not"] = true, ["-"] = true,
                 ["#"] = true, } -- unary operators
-local Z = 8        -- priority for unary operators
+local ee = 8        -- priority for unary operators
 
 --[[--------------------------------------------------------------------
 -- support functions
@@ -453,7 +453,7 @@ local Z = 8        -- priority for unary operators
 
 local function i(e, t)
   local a = error or a.error
-  a(k.format("(source):%d: %s", t or r, e))
+  a(v.format("(source):%d: %s", t or d, e))
 end
 
 ----------------------------------------------------------------------
@@ -463,22 +463,22 @@ end
 
 -- reads in next token
 local function e()
-  L = x[s]
-  t, T, r, m
-    = j[s], g[s], x[s], S[s]
+  Y = A[s]
+  t, T, d, f
+    = E[s], k[s], A[s], S[s]
   s = s + 1
 end
 
 -- peek at next token (single lookahead for table constructor)
-local function X()
-  return j[s]
+local function Z()
+  return E[s]
 end
 
 ----------------------------------------------------------------------
 -- throws a syntax error, or if token expected is not there
 ----------------------------------------------------------------------
 
-local function d(a)
+local function h(a)
   local e = t
   if e ~= "<number>" and e ~= "<string>" then
     if e == "<name>" then e = T end
@@ -487,8 +487,8 @@ local function d(a)
   i(a.." near "..e)
 end
 
-local function f(e)
-  d("'"..e.."' expected")
+local function m(e)
+  h("'"..e.."' expected")
 end
 
 ----------------------------------------------------------------------
@@ -504,8 +504,8 @@ end
 -- check for existence of a token, throws error if not found
 ----------------------------------------------------------------------
 
-local function F(e)
-  if t ~= e then f(e) end
+local function M(e)
+  if t ~= e then m(e) end
 end
 
 ----------------------------------------------------------------------
@@ -513,27 +513,27 @@ end
 ----------------------------------------------------------------------
 
 local function n(t)
-  F(t); e()
+  M(t); e()
 end
 
 ----------------------------------------------------------------------
 -- throws error if condition not matched
 ----------------------------------------------------------------------
 
-local function P(e, t)
-  if not e then d(t) end
+local function X(e, t)
+  if not e then h(t) end
 end
 
 ----------------------------------------------------------------------
 -- verifies token conditions are met or else throw error
 ----------------------------------------------------------------------
 
-local function l(e, a, t)
+local function c(e, a, t)
   if not i(e) then
-    if t == r then
-      f(e)
+    if t == d then
+      m(e)
     else
-      d("'"..e.."' expected (to close '"..a.."' at line "..t..")")
+      h("'"..e.."' expected (to close '"..a.."' at line "..t..")")
     end
   end
 end
@@ -542,10 +542,10 @@ end
 -- expect that token is a name, return the name
 ----------------------------------------------------------------------
 
-local function f()
-  F("<name>")
+local function w()
+  M("<name>")
   local t = T
-  p = m
+  y = f
   e()
   return t
 end
@@ -554,7 +554,7 @@ end
 -- adds given string s in string pool, sets e as VK
 ----------------------------------------------------------------------
 
-local function M(e, t)
+local function F(e, t)
   e.k = "VK"
 end
 
@@ -562,8 +562,8 @@ end
 -- consume a name token, adds it to string pool
 ----------------------------------------------------------------------
 
-local function C(e)
-  M(e, f())
+local function U(e)
+  F(e, w())
 end
 
 --[[--------------------------------------------------------------------
@@ -582,30 +582,30 @@ end
 --   localfunc(), localstat()
 ----------------------------------------------------------------------
 
-local function w(i, a)
-  local e = o.bl
-  local t
+local function m(i, a)
+  local t = o.bl
+  local e
   -- locate locallist in current block object or function root object
-  if e then
-    t = e.locallist
+  if t then
+    e = t.locallist
   else
-    t = o.locallist
+    e = o.locallist
   end
   -- build local variable information object and set localinfo
-  local e = #u + 1
-  u[e] = {             -- new local variable object
+  local t = #l + 1
+  l[t] = {             -- new local variable object
     name = i,                -- local variable name
-    xref = { p },         -- xref, first value is declaration
-    decl = p,             -- location of declaration, = xref[1]
+    xref = { y },         -- xref, first value is declaration
+    decl = y,             -- location of declaration, = xref[1]
   }
   if a then               -- "self" must be not be changed
-    u[e].isself = true
+    l[t].isself = true
   end
   -- this can override a local with the same name in the same scope
   -- but first, keep it inactive until it gets activated
   local a = #b + 1
-  b[a] = e
-  N[a] = t
+  b[a] = t
+  I[a] = e
 end
 
 ----------------------------------------------------------------------
@@ -614,7 +614,7 @@ end
 -- * used in parlist(), forbody(), localfunc(), localstat(), body()
 ----------------------------------------------------------------------
 
-local function A(e)
+local function j(e)
   local t = #b
   -- i goes from left to right, in order of local allocation, because
   -- of something like: local a,a,a = 1,2,3 which gives a = 3
@@ -622,15 +622,15 @@ local function A(e)
     e = e - 1
     local e = t - e
     local a = b[e]            -- local's id
-    local t = u[a]
+    local t = l[a]
     local o = t.name               -- name of local
-    t.act = m                      -- set activation location
+    t.act = f                      -- set activation location
     b[e] = nil
-    local i = N[e]     -- ref to lookup table to update
-    N[e] = nil
+    local i = I[e]     -- ref to lookup table to update
+    I[e] = nil
     local e = i[o]    -- if existing, remove old first!
     if e then                    -- do not overlap, set special
-      t = u[e]         -- form of rem, as -id
+      t = l[e]         -- form of rem, as -id
       t.rem = -a
     end
     i[o] = a                -- activate, now visible to Lua
@@ -643,7 +643,7 @@ end
 -- * used in leaveblock(), close_func()
 ----------------------------------------------------------------------
 
-local function U()
+local function L()
   local t = o.bl
   local e
   -- locate locallist in current block object or function root object
@@ -654,8 +654,8 @@ local function U()
   end
   -- enumerate the local list at current scope and deactivate 'em
   for t, e in a.pairs(e) do
-    local e = u[e]
-    e.rem = m                      -- set deactivation location
+    local e = l[e]
+    e.rem = f                      -- set deactivation location
   end
 end
 
@@ -667,11 +667,11 @@ end
 -- * used in fornum(), forlist(), parlist(), body()
 ----------------------------------------------------------------------
 
-local function m(e, t)
-  if k.sub(e, 1, 1) == "(" then  -- can skip internal locals
+local function f(e, t)
+  if v.sub(e, 1, 1) == "(" then  -- can skip internal locals
     return
   end
-  w(e, t)
+  m(e, t)
 end
 
 ----------------------------------------------------------------------
@@ -680,7 +680,7 @@ end
 -- * used only in singlevaraux()
 ----------------------------------------------------------------------
 
-local function V(o, a)
+local function C(o, a)
   local t = o.bl
   local e
   if t then
@@ -701,19 +701,19 @@ end
 -- * used only in singlevar()
 ----------------------------------------------------------------------
 
-local function k(t, a, e)
+local function v(t, o, e)
   if t == nil then  -- no more levels?
     e.k = "VGLOBAL"  -- default is global variable
     return "VGLOBAL"
   else
-    local o = V(t, a)  -- look up at current level
-    if o >= 0 then
+    local a = C(t, o)  -- look up at current level
+    if a >= 0 then
       e.k = "VLOCAL"
-      e.id = o
+      e.id = a
       --  codegen may need to deal with upvalue here
       return "VLOCAL"
     else  -- not found at current level; try upper one
-      if k(t.prev, a, e) == "VGLOBAL" then
+      if v(t.prev, o, e) == "VGLOBAL" then
         return "VGLOBAL"
       end
       -- else was LOCAL or UPVAL, handle here
@@ -728,9 +728,9 @@ end
 -- * used in prefixexp(), funcname()
 ----------------------------------------------------------------------
 
-local function J(a)
-  local t = f()
-  k(o, t, a)
+local function K(a)
+  local t = w()
+  v(o, t, a)
   ------------------------------------------------------------------
   -- variable tracking
   ------------------------------------------------------------------
@@ -741,18 +741,18 @@ local function J(a)
       e = #_ + 1
       _[e] = {                -- new global variable object
         name = t,                    -- global variable name
-        xref = { p },             -- xref, first value is declaration
+        xref = { y },             -- xref, first value is declaration
       }
       D[t] = e           -- remember it
     else
       local e = _[e].xref
-      e[#e + 1] = p           -- add xref
+      e[#e + 1] = y           -- add xref
     end
   else
     -- local/upvalue is being accessed, keep track of it
     local e = a.id
-    local e = u[e].xref
-    e[#e + 1] = p             -- add xref
+    local e = l[e].xref
+    e[#e + 1] = y             -- add xref
   end
 end
 
@@ -764,7 +764,7 @@ end
 -- enters a code unit, initializes elements
 ----------------------------------------------------------------------
 
-local function p(t)
+local function y(t)
   local e = {}  -- per-block state
   e.isbreakable = t
   e.prev = o.bl
@@ -776,9 +776,9 @@ end
 -- leaves a code unit, close any upvalues
 ----------------------------------------------------------------------
 
-local function k()
+local function v()
   local e = o.bl
-  U()
+  L()
   o.bl = e.prev
 end
 
@@ -789,10 +789,10 @@ end
 -- * used in parser() and body()
 ----------------------------------------------------------------------
 
-local function B()
+local function G()
   local e  -- per-function state
   if not o then  -- top_fs is created early
-    e = W
+    e = P
   else
     e = {}
   end
@@ -807,8 +807,8 @@ end
 -- * used in parser() and body()
 ----------------------------------------------------------------------
 
-local function G()
-  U()
+local function Q()
+  L()
   o = o.prev
 end
 
@@ -822,12 +822,12 @@ end
 -- * used in primaryexp(), funcname()
 ----------------------------------------------------------------------
 
-local function U(a)
+local function C(t)
   -- field -> ['.' | ':'] NAME
-  local t = {}
+  local a = {}
   e()  -- skip the dot or colon
-  C(t)
-  a.k = "VINDEXED"
+  U(a)
+  t.k = "VINDEXED"
 end
 
 ----------------------------------------------------------------------
@@ -835,10 +835,10 @@ end
 -- * used in recfield(), primaryexp()
 ----------------------------------------------------------------------
 
-local function V(t)
+local function J(t)
   -- index -> '[' expr ']'
   e()  -- skip the '['
-  c(t)
+  r(t)
   n("]")
 end
 
@@ -847,16 +847,16 @@ end
 -- * used in constructor()
 ----------------------------------------------------------------------
 
-local function a(e)
+local function W(e)
   -- recfield -> (NAME | '['exp1']') = exp1
   local e, a = {}, {}
   if t == "<name>" then
-    C(e)
+    U(e)
   else-- tok == '['
-    V(e)
+    J(e)
   end
   n("=")
-  c(a)
+  r(a)
 end
 
 ----------------------------------------------------------------------
@@ -865,7 +865,7 @@ end
 -- * used in constructor()
 ----------------------------------------------------------------------
 
-local function K(e)
+local function a(e)
   if e.v.k == "VVOID" then return end  -- there is no list item
   e.v.k = "VVOID"
 end
@@ -875,8 +875,8 @@ end
 -- * used in constructor()
 ----------------------------------------------------------------------
 
-local function Q(e)
-  c(e.v)
+local function L(e)
+  r(e.v)
 end
 
 ----------------------------------------------------------------------
@@ -884,15 +884,15 @@ end
 -- * used in funcargs(), simpleexp()
 ----------------------------------------------------------------------
 
-local function K(o)
+local function B(a)
   -- constructor -> '{' [ field { fieldsep field } [ fieldsep ] ] '}'
   -- field -> recfield | listfield
   -- fieldsep -> ',' | ';'
-  local s = r
+  local o = d
   local e = {}
   e.v = {}
-  e.t = o
-  o.k = "VRELOCABLE"
+  e.t = a
+  a.k = "VRELOCABLE"
   e.v.k = "VVOID"
   n("{")
   repeat
@@ -900,18 +900,18 @@ local function K(o)
     -- closelistfield(cc) here
     local t = t
     if t == "<name>" then  -- may be listfields or recfields
-      if X() ~= "=" then  -- look ahead: expression?
-        Q(e)
+      if Z() ~= "=" then  -- look ahead: expression?
+        L(e)
       else
-        a(e)
+        W(e)
       end
     elseif t == "[" then  -- constructor_item -> recfield
-      a(e)
+      W(e)
     else  -- constructor_part -> listfield
-      Q(e)
+      L(e)
     end
   until not i(",") and not i(";")
-  l("}", "{", s)
+  c("}", "{", o)
   -- lastlistfield(cc) here
 end
 
@@ -920,24 +920,24 @@ end
 -- * used in body()
 ----------------------------------------------------------------------
 
-local function X()
+local function Z()
   -- parlist -> [ param { ',' param } ]
   local a = 0
   if t ~= ")" then  -- is 'parlist' not empty?
     repeat
       local t = t
       if t == "<name>" then  -- param -> NAME
-        w(f())
+        m(w())
         a = a + 1
       elseif t == "..." then
         e()
         o.is_vararg = true
       else
-        d("<name> or '...' expected")
+        h("<name> or '...' expected")
       end
     until o.is_vararg or not i(",")
   end--if
-  A(a)
+  j(a)
 end
 
 ----------------------------------------------------------------------
@@ -946,28 +946,28 @@ end
 -- * used in primaryexp()
 ----------------------------------------------------------------------
 
-local function Q(n)
+local function W(n)
   local a = {}
-  local i = r
+  local i = d
   local o = t
   if o == "(" then  -- funcargs -> '(' [ explist1 ] ')'
-    if i ~= L then
-      d("ambiguous syntax (function call x new statement)")
+    if i ~= Y then
+      h("ambiguous syntax (function call x new statement)")
     end
     e()
     if t == ")" then  -- arg list is empty?
       a.k = "VVOID"
     else
-      y(a)
+      q(a)
     end
-    l(")", "(", i)
+    c(")", "(", i)
   elseif o == "{" then  -- funcargs -> constructor
-    K(a)
+    B(a)
   elseif o == "<string>" then  -- funcargs -> STRING
-    M(a, T)
+    F(a, T)
     e()  -- must use 'seminfo' before 'next'
   else
-    d("function arguments expected")
+    h("function arguments expected")
     return
   end--if c
   n.k = "VCALL"
@@ -982,18 +982,18 @@ end
 -- * used in primaryexp()
 ----------------------------------------------------------------------
 
-local function te(a)
+local function Y(a)
   -- prefixexp -> NAME | '(' expr ')'
   local t = t
   if t == "(" then
-    local t = r
+    local t = d
     e()
-    c(a)
-    l(")", "(", t)
+    r(a)
+    c(")", "(", t)
   elseif t == "<name>" then
-    J(a)
+    K(a)
   else
-    d("unexpected symbol")
+    h("unexpected symbol")
   end--if c
 end
 
@@ -1006,21 +1006,21 @@ end
 local function L(a)
   -- primaryexp ->
   --    prefixexp { '.' NAME | '[' exp ']' | ':' NAME funcargs | funcargs }
-  te(a)
+  Y(a)
   while true do
     local t = t
     if t == "." then  -- field
-      U(a)
+      C(a)
     elseif t == "[" then  -- '[' exp1 ']'
       local e = {}
-      V(e)
+      J(e)
     elseif t == ":" then  -- ':' NAME funcargs
       local t = {}
       e()
-      C(t)
-      Q(a)
+      U(t)
+      W(a)
     elseif t == "(" or t == "<string>" or t == "{" then  -- funcargs
-      Q(a)
+      W(a)
     else
       return
     end--if c
@@ -1032,14 +1032,14 @@ end
 -- * used in subexpr()
 ----------------------------------------------------------------------
 
-local function C(a)
+local function U(a)
   -- simpleexp -> NUMBER | STRING | NIL | TRUE | FALSE | ... |
   --              constructor | FUNCTION body | primaryexp
   local t = t
   if t == "<number>" then
     a.k = "VKNUM"
   elseif t == "<string>" then
-    M(a, T)
+    F(a, T)
   elseif t == "nil" then
     a.k = "VNIL"
   elseif t == "true" then
@@ -1047,15 +1047,15 @@ local function C(a)
   elseif t == "false" then
     a.k = "VFALSE"
   elseif t == "..." then  -- vararg
-    P(o.is_vararg == true,
+    X(o.is_vararg == true,
                     "cannot use '...' outside a vararg function");
     a.k = "VVARARG"
   elseif t == "{" then  -- constructor
-    K(a)
+    B(a)
     return
   elseif t == "function" then
     e()
-    I(a, false, r)
+    O(a, false, d)
     return
   else
     L(a)
@@ -1079,12 +1079,12 @@ local function T(o, i)
   --   * where 'binop' is any binary operator with a priority
   --     higher than 'limit'
   local a = t
-  local n = ee[a]
+  local n = te[a]
   if n then
     e()
-    T(o, Z)
+    T(o, ee)
   else
-    C(o)
+    U(o)
   end
   -- expand while operators have priorities higher than 'limit'
   a = t
@@ -1093,7 +1093,7 @@ local function T(o, i)
     local o = {}
     e()
     -- read sub-expression with higher priority
-    local e = T(o, Y[a])
+    local e = T(o, V[a])
     a = e
     t = H[a]
   end
@@ -1109,7 +1109,7 @@ end
 ----------------------------------------------------------------------
 
 -- this is a forward-referenced local
-function c(e)
+function r(e)
   -- expr -> subexpr
   T(e, 0)
 end
@@ -1124,20 +1124,20 @@ end
 -- * used in expr_stat()
 ------------------------------------------------------------------------
 
-local function T(e)
+local function H(e)
   local t = {}
   local e = e.v.k
-  P(e == "VLOCAL" or e == "VUPVAL" or e == "VGLOBAL"
+  X(e == "VLOCAL" or e == "VUPVAL" or e == "VGLOBAL"
                   or e == "VINDEXED", "syntax error")
   if i(",") then  -- assignment -> ',' primaryexp assignment
     local e = {}  -- expdesc
     e.v = {}
     L(e.v)
     -- lparser.c deals with some register usage conflict here
-    T(e)
+    H(e)
   else  -- assignment -> '=' explist1
     n("=")
-    y(t)
+    q(t)
     return  -- avoid default
   end
   t.k = "VNONRELOC"
@@ -1151,10 +1151,10 @@ end
 local function a(e, t)
   -- forbody -> DO block
   n("do")
-  p(false)  -- scope for declared variables
-  A(e)
-  q()
-  k()  -- end of scope for declared variables
+  y(false)  -- scope for declared variables
+  j(e)
+  g()
+  v()  -- end of scope for declared variables
 end
 
 ----------------------------------------------------------------------
@@ -1162,19 +1162,19 @@ end
 -- * used in for_stat()
 ----------------------------------------------------------------------
 
-local function C(e)
+local function U(e)
   -- fornum -> NAME = exp1, exp1 [, exp1] DO body
-  local t = h
-  m("(for index)")
-  m("(for limit)")
-  m("(for step)")
-  w(e)
+  local t = u
+  f("(for index)")
+  f("(for limit)")
+  f("(for step)")
+  m(e)
   n("=")
-  O()  -- initial value
+  N()  -- initial value
   n(",")
-  O()  -- limit
+  N()  -- limit
   if i(",") then
-    O()  -- optional step
+    N()  -- optional step
   else
     -- default step = 1
   end
@@ -1186,23 +1186,23 @@ end
 -- * used in for_stat()
 ----------------------------------------------------------------------
 
-local function H(e)
+local function W(e)
   -- forlist -> NAME {, NAME} IN explist1 DO body
   local t = {}
   -- create control variables
-  m("(for generator)")
-  m("(for state)")
-  m("(for control)")
+  f("(for generator)")
+  f("(for state)")
+  f("(for control)")
   -- create declared variables
-  w(e)
+  m(e)
   local e = 1
   while i(",") do
-    w(f())
+    m(w())
     e = e + 1
   end
   n("in")
-  local o = h
-  y(t)
+  local o = u
+  q(t)
   a(e, false)
 end
 
@@ -1211,16 +1211,16 @@ end
 -- * used in func_stat()
 ----------------------------------------------------------------------
 
-local function M(e)
+local function F(e)
   -- funcname -> NAME {field} [':' NAME]
   local a = false
-  J(e)
+  K(e)
   while t == "." do
-    U(e)
+    C(e)
   end
   if t == ":" then
     a = true
-    U(e)
+    C(e)
   end
   return a
 end
@@ -1231,10 +1231,10 @@ end
 ----------------------------------------------------------------------
 
 -- this is a forward-referenced local
-function O()
+function N()
   -- exp1 -> expr
   local e = {}
-  c(e)
+  r(e)
 end
 
 ----------------------------------------------------------------------
@@ -1245,7 +1245,7 @@ end
 local function a()
   -- cond -> expr
   local e = {}
-  c(e)  -- read condition
+  r(e)  -- read condition
 end
 
 ----------------------------------------------------------------------
@@ -1253,12 +1253,12 @@ end
 -- * used in if_stat()
 ----------------------------------------------------------------------
 
-local function O()
+local function T()
   -- test_then_block -> [IF | ELSEIF] cond THEN block
   e()  -- skip IF or ELSEIF
   a()
   n("then")
-  q()  -- 'then' part
+  g()  -- 'then' part
 end
 
 ----------------------------------------------------------------------
@@ -1266,13 +1266,13 @@ end
 -- * used in local_stat()
 ----------------------------------------------------------------------
 
-local function Y()
+local function N()
   -- localfunc -> NAME body
   local t, e = {}
-  w(f())
+  m(w())
   t.k = "VLOCAL"
-  A(1)
-  I(e, false, r)
+  j(1)
+  O(e, false, d)
 end
 
 ----------------------------------------------------------------------
@@ -1280,20 +1280,20 @@ end
 -- * used in local_stat()
 ----------------------------------------------------------------------
 
-local function U()
+local function C()
   -- localstat -> NAME {',' NAME} ['=' explist1]
   local e = 0
   local t = {}
   repeat
-    w(f())
+    m(w())
     e = e + 1
   until not i(",")
   if i("=") then
-    y(t)
+    q(t)
   else
     t.k = "VVOID"
   end
-  A(e)
+  j(e)
 end
 
 ----------------------------------------------------------------------
@@ -1303,11 +1303,11 @@ end
 ----------------------------------------------------------------------
 
 -- this is a forward-referenced local
-function y(e)
+function q(e)
   -- explist1 -> expr { ',' expr }
-  c(e)
+  r(e)
   while i(",") do
-    c(e)
+    r(e)
   end
 end
 
@@ -1317,19 +1317,19 @@ end
 ----------------------------------------------------------------------
 
 -- this is a forward-referenced local
-function I(a, t, e)
+function O(a, t, e)
   -- body ->  '(' parlist ')' chunk END
-  B()
+  G()
   n("(")
   if t then
-    m("self", true)
-    A(1)
+    f("self", true)
+    j(1)
   end
-  X()
+  Z()
   n(")")
-  z()
-  l("end", "function", e)
-  G()
+  x()
+  c("end", "function", e)
+  Q()
 end
 
 ----------------------------------------------------------------------
@@ -1339,11 +1339,11 @@ end
 ----------------------------------------------------------------------
 
 -- this is a forward-referenced local
-function q()
+function g()
   -- block -> chunk
-  p(false)
-  z()
-  k()
+  y(false)
+  x()
+  v()
 end
 
 --[[--------------------------------------------------------------------
@@ -1359,22 +1359,22 @@ end
 -- * used in stat()
 ----------------------------------------------------------------------
 
-local function A()
+local function f()
   -- stat -> for_stat -> FOR (fornum | forlist) END
-  local o = h
-  p(true)  -- scope for loop and control variables
+  local o = u
+  y(true)  -- scope for loop and control variables
   e()  -- skip 'for'
-  local a = f()  -- first variable name
+  local a = w()  -- first variable name
   local e = t
   if e == "=" then
-    C(a)
+    U(a)
   elseif e == "," or e == "in" then
-    H(a)
+    W(a)
   else
-    d("'=' or 'in' expected")
+    h("'=' or 'in' expected")
   end
-  l("end", "for", o)
-  k()  -- loop scope (`break' jumps to this point)
+  c("end", "for", o)
+  v()  -- loop scope (`break' jumps to this point)
 end
 
 ----------------------------------------------------------------------
@@ -1382,16 +1382,16 @@ end
 -- * used in stat()
 ----------------------------------------------------------------------
 
-local function f()
+local function m()
   -- stat -> while_stat -> WHILE cond DO block END
-  local t = h
+  local t = u
   e()  -- skip WHILE
   a()  -- parse condition
-  p(true)
+  y(true)
   n("do")
-  q()
-  l("end", "while", t)
-  k()
+  g()
+  c("end", "while", t)
+  v()
 end
 
 ----------------------------------------------------------------------
@@ -1402,18 +1402,18 @@ end
 -- * used in stat()
 ----------------------------------------------------------------------
 
-local function m()
+local function w()
   -- stat -> repeat_stat -> REPEAT block UNTIL cond
-  local t = h
-  p(true)  -- loop block
-  p(false)  -- scope block
+  local t = u
+  y(true)  -- loop block
+  y(false)  -- scope block
   e()  -- skip REPEAT
-  z()
-  l("until", "repeat", t)
+  x()
+  c("until", "repeat", t)
   a()
   -- close upvalues at scope level below
-  k()  -- finish scope
-  k()  -- finish loop
+  v()  -- finish scope
+  v()  -- finish loop
 end
 
 ----------------------------------------------------------------------
@@ -1421,20 +1421,20 @@ end
 -- * used in stat()
 ----------------------------------------------------------------------
 
-local function c()
+local function j()
   -- stat -> if_stat -> IF cond THEN block
   --                    {ELSEIF cond THEN block} [ELSE block] END
-  local a = h
+  local a = u
   local o = {}
-  O()  -- IF cond THEN block
+  T()  -- IF cond THEN block
   while t == "elseif" do
-    O()  -- ELSEIF cond THEN block
+    T()  -- ELSEIF cond THEN block
   end
   if t == "else" then
     e()  -- skip ELSE
-    q()  -- 'else' part
+    g()  -- 'else' part
   end
-  l("end", "if", a)
+  c("end", "if", a)
 end
 
 ----------------------------------------------------------------------
@@ -1442,7 +1442,7 @@ end
 -- * used in stat()
 ----------------------------------------------------------------------
 
-local function w()
+local function v()
   -- stat -> return_stat -> RETURN explist
   local a = {}
   e()  -- skip RETURN
@@ -1450,7 +1450,7 @@ local function w()
   if R[e] or e == ";" then
     -- return no values
   else
-    y(a)  -- optional return values
+    q(a)  -- optional return values
   end
 end
 
@@ -1459,7 +1459,7 @@ end
 -- * used in stat()
 ----------------------------------------------------------------------
 
-local function p()
+local function y()
   -- stat -> break_stat -> BREAK
   local t = o.bl
   e()  -- skip BREAK
@@ -1467,7 +1467,7 @@ local function p()
     t = t.prev
   end
   if not t then
-    d("no loop to break")
+    h("no loop to break")
   end
 end
 
@@ -1478,7 +1478,7 @@ end
 -- * used in stat()
 ----------------------------------------------------------------------
 
-local function y()
+local function r()
   local t = s - 1
   -- stat -> expr_stat -> func | assignment
   local e = {}
@@ -1486,11 +1486,11 @@ local function y()
   L(e.v)
   if e.v.k == "VCALL" then  -- stat -> func
     -- call statement uses no results
-    E[t] = "call"
+    z[t] = "call"
   else  -- stat -> assignment
     e.prev = nil
-    T(e)
-    E[t] = "assign"
+    H(e)
+    z[t] = "assign"
   end
 end
 
@@ -1499,13 +1499,13 @@ end
 -- * used in stat()
 ----------------------------------------------------------------------
 
-local function d()
+local function h()
   -- stat -> function_stat -> FUNCTION funcname body
-  local o = h
-  local t, a = {}, {}
+  local o = u
+  local a, t = {}, {}
   e()  -- skip FUNCTION
-  local e = M(t)
-  I(a, e, o)
+  local e = F(a)
+  O(t, e, o)
 end
 
 ----------------------------------------------------------------------
@@ -1515,10 +1515,10 @@ end
 
 local function a()
   -- stat -> do_stat -> DO block END
-  local t = h
+  local t = u
   e()  -- skip DO
-  q()
-  l("end", "do", t)
+  g()
+  c("end", "do", t)
 end
 
 ----------------------------------------------------------------------
@@ -1531,9 +1531,9 @@ local function n()
   --                    -> LOCAL localstat
   e()  -- skip LOCAL
   if i("function") then  -- local function?
-    Y()
+    N()
   else
-    U()
+    C()
   end
 end
 
@@ -1548,33 +1548,33 @@ end
 -- * used in chunk()
 ----------------------------------------------------------------------
 
-local a = {             -- lookup for calls in stat()
-  ["if"] = c,
-  ["while"] = f,
+local n = {             -- lookup for calls in stat()
+  ["if"] = j,
+  ["while"] = m,
   ["do"] = a,
-  ["for"] = A,
-  ["repeat"] = m,
-  ["function"] = d,
+  ["for"] = f,
+  ["repeat"] = w,
+  ["function"] = h,
   ["local"] = n,
-  ["return"] = w,
-  ["break"] = p,
+  ["return"] = v,
+  ["break"] = y,
 }
 
-local function n()
+local function a()
   -- stat -> if_stat while_stat do_stat for_stat repeat_stat
   --         function_stat local_stat return_stat break_stat
   --         expr_stat
-  h = r  -- may be needed for error messages
+  u = d  -- may be needed for error messages
   local e = t
-  local t = a[e]
+  local t = n[e]
   -- handles: if while do for repeat function local return break
   if t then
-    E[s - 1] = e
+    z[s - 1] = e
     t()
     -- return or break must be last statement
     if e == "return" or e == "break" then return true end
   else
-    y()
+    r()
   end
   return false
 end
@@ -1585,11 +1585,11 @@ end
 ----------------------------------------------------------------------
 
 -- this is a forward-referenced local
-function z()
+function x()
   -- chunk -> { stat [';'] }
   local e = false
   while not e and not R[t] do
-    e = n()
+    e = a()
     i(";")
   end
 end
@@ -1599,19 +1599,19 @@ end
 ----------------------------------------------------------------------
 
 function parser()
-  B()
+  G()
   o.is_vararg = true  -- main func. is always vararg
   e()  -- read first token
-  z()
-  F("<eof>")
-  G()
+  x()
+  M("<eof>")
+  Q()
   return {  -- return everything
     globalinfo = _,
-    localinfo = u,
-    statinfo = E,
-    toklist = j,
-    seminfolist = g,
-    toklnlist = x,
+    localinfo = l,
+    statinfo = z,
+    toklist = E,
+    seminfolist = k,
+    toklnlist = A,
     xreflist = S,
   }
 end
@@ -1622,14 +1622,14 @@ end
 
 function init(e, i, n)
   s = 1                      -- token position
-  W = {}                   -- reset top level function state
+  P = {}                   -- reset top level function state
   ------------------------------------------------------------------
   -- set up grammar-only token tables; impedance-matching...
   -- note that constants returned by the lexer is source-level, so
   -- for now, fake(!) constant tokens (TK_NUMBER|TK_STRING|TK_LSTRING)
   ------------------------------------------------------------------
   local t = 1
-  j, g, x, S = {}, {}, {}, {}
+  E, k, A, S = {}, {}, {}, {}
   for a = 1, #e do
     local e = e[a]
     local o = true
@@ -1637,13 +1637,13 @@ function init(e, i, n)
       e = i[a]
     elseif e == "TK_NAME" then
       e = "<name>"
-      g[t] = i[a]
+      k[t] = i[a]
     elseif e == "TK_NUMBER" then
       e = "<number>"
-      g[t] = 0  -- fake!
+      k[t] = 0  -- fake!
     elseif e == "TK_STRING" or e == "TK_LSTRING" then
       e = "<string>"
-      g[t] = ""  -- fake!
+      k[t] = ""  -- fake!
     elseif e == "TK_EOS" then
       e = "<eof>"
     else
@@ -1651,8 +1651,8 @@ function init(e, i, n)
       o = false
     end
     if o then  -- set rest of the information
-      j[t] = e
-      x[t] = n[a]
+      E[t] = e
+      A[t] = n[a]
       S[t] = a
       t = t + 1
     end
@@ -1660,25 +1660,25 @@ function init(e, i, n)
   ------------------------------------------------------------------
   -- initialize data structures for variable tracking
   ------------------------------------------------------------------
-  _, D, u = {}, {}, {}
-  b, N = {}, {}
-  E = {}  -- experimental
+  _, D, l = {}, {}, {}
+  b, I = {}, {}
+  z = {}  -- experimental
 end
 --end of inserted module
 end
 
 -- preload function for module optlex
-v.optlex =
+p.optlex =
 function()
 --start of inserted module
 module "optlex"
 
-local m = a.require "string"
-local i = m.match
-local e = m.sub
-local d = m.find
-local u = m.rep
-local c
+local c = a.require "string"
+local i = c.match
+local e = c.sub
+local h = c.find
+local d = c.rep
+local f
 
 ------------------------------------------------------------------------
 -- variables and data structures
@@ -1691,7 +1691,7 @@ warn = {}                       -- table for warning flags
 
 local n, o, l    -- source lists
 
-local p = {          -- significant (grammar) tokens
+local y = {          -- significant (grammar) tokens
   TK_KEYWORD = true,
   TK_NAME = true,
   TK_NUMBER = true,
@@ -1700,7 +1700,7 @@ local p = {          -- significant (grammar) tokens
   TK_OP = true,
   TK_EOS = true,
 }
-local g = {          -- whitespace (non-grammar) tokens
+local v = {          -- whitespace (non-grammar) tokens
   TK_COMMENT = true,
   TK_LCOMMENT = true,
   TK_EOL = true,
@@ -1729,12 +1729,12 @@ end
 -- * skips over deleted tokens via recursion
 ------------------------------------------------------------------------
 
-local function k(t)
+local function g(t)
   local e = n[t + 1]
   if t >= #n or e == "TK_EOL" or e == "TK_EOS" then
     return true
   elseif e == "" then
-    return k(t + 1)
+    return g(t + 1)
   end
   return false
 end
@@ -1744,16 +1744,16 @@ end
 -- * in order to keep line numbering, EOLs need to be reinserted
 ------------------------------------------------------------------------
 
-local function T(t)
-  local a = #i(t, "^%-%-%[=*%[")
-  local a = e(t, a + 1, -(a - 1))  -- remove delims
+local function A(a)
+  local t = #i(a, "^%-%-%[=*%[")
+  local a = e(a, t + 1, -(t - 1))  -- remove delims
   local e, t = 1, 0
   while true do
-    local o, n, i, a = d(a, "([\r\n])([\r\n]?)", e)
-    if not o then break end     -- if no matches, done
-    e = o + 1
+    local a, n, i, o = h(a, "([\r\n])([\r\n]?)", e)
+    if not a then break end     -- if no matches, done
+    e = a + 1
     t = t + 1
-    if #a > 0 and i ~= a then   -- skip CRLF or LFCR
+    if #o > 0 and i ~= o then   -- skip CRLF or LFCR
       e = e + 1
     end
   end
@@ -1769,7 +1769,7 @@ end
 -- * NOTE: this doesn't work at the start or the end or for EOS!
 ------------------------------------------------------------------------
 
-local function y(s, h)
+local function k(s, h)
   local a = i
   local t, e = n[s], n[h]
   --------------------------------------------------------------------
@@ -1811,16 +1811,16 @@ end
 ------------------------------------------------------------------------
 
 local function w()
-  local a, s, i = {}, {}, {}
+  local h, s, a = {}, {}, {}
   local e = 1
   for t = 1, #n do
-    local n = n[t]
-    if n ~= "" then
-      a[e], s[e], i[e] = n, o[t], l[t]
+    local i = n[t]
+    if i ~= "" then
+      h[e], s[e], a[e] = i, o[t], l[t]
       e = e + 1
     end
   end
-  n, o, l = a, s, i
+  n, o, l = h, s, a
 end
 
 ------------------------------------------------------------------------
@@ -1862,7 +1862,7 @@ end
 --       integer, with fraction, scientific
 ------------------------------------------------------------------------
 
-local function z(h)
+local function O(h)
   local t = o[h]      -- 'before'
   local t = t              -- working representation
   local n                       -- 'after', if better
@@ -1920,10 +1920,10 @@ local function z(h)
     local t, o = i(t, "^([^eE]+)[eE]([%+%-]?%d+)$")
     o = a.tonumber(o)
     -- if got ".", shift out fractional portion of significand
-    local h, s = i(t, "^(%d*)%.(%d*)$")
-    if h then
-      o = o - #s
-      t = h..s
+    local s, h = i(t, "^(%d*)%.(%d*)$")
+    if s then
+      o = o - #h
+      t = s..h
     end
     if t + 0 == 0 then
       n = "0"  -- basic zero
@@ -1940,7 +1940,7 @@ local function z(h)
       if o == 0 then  -- it's just an integer
         n = t
       elseif o > 0 and (o <= 1 + #a) then  -- a number
-        n = t..u("0", o)
+        n = t..d("0", o)
       elseif o < 0 and (o >= -#t) then  -- fraction, e.g. .123
         s = #t + o
         n = e(t, 1, s).."."..e(t, s + 1)
@@ -1949,7 +1949,7 @@ local function z(h)
         -- gives: #sig + 1 + #nex >= 1 + (-ex - #sig) + #sig
         --     -> #nex >= -ex - #sig
         s = -o - #t
-        n = "."..u("0", s)..t
+        n = "."..d("0", s)..t
       else  -- non-canonical scientific representation
         n = t.."e"..o
       end
@@ -1958,7 +1958,7 @@ local function z(h)
   --------------------------------------------------------------------
   if n and n ~= o[h] then
     if r then
-      c("<number> (line "..l[h]..") "..o[h].." -> "..n)
+      f("<number> (line "..l[h]..") "..o[h].." -> "..n)
       r = r + 1
     end
     o[h] = n
@@ -1984,13 +1984,13 @@ end
 -- * switch delimiters if string becomes shorter
 ------------------------------------------------------------------------
 
-local function _(u)
+local function E(u)
   local t = o[u]
   local s = e(t, 1, 1)                 -- delimiter used
   local w = (s == "'") and '"' or "'"  -- opposite " <-> '
   local t = e(t, 2, -2)                    -- actual string
   local a = 1
-  local f, h = 0, 0                -- "/' counts
+  local m, d = 0, 0                -- "/' counts
   --------------------------------------------------------------------
   while a <= #t do
     local u = e(t, a, a)
@@ -1998,7 +1998,7 @@ local function _(u)
     if u == "\\" then                   -- escaped stuff
       local o = a + 1
       local r = e(t, o, o)
-      local n = d("abfnrtv\\\n\r\"\'0123456789", r, 1, true)
+      local n = h("abfnrtv\\\n\r\"\'0123456789", r, 1, true)
       ------------------------------------------------------------
       if not n then                     -- \<char> -- remove \
         t = e(t, 1, a - 1)..e(t, o)
@@ -2018,10 +2018,10 @@ local function _(u)
       ------------------------------------------------------------
       elseif n <= 12 then               -- \"\' -- remove \ for ndelim
         if r == s then
-          f = f + 1
+          m = m + 1
           a = a + 2
         else
-          h = h + 1
+          d = d + 1
           t = e(t, 1, a - 1)..e(t, o)
           a = a + 1
         end
@@ -2030,10 +2030,10 @@ local function _(u)
         local n = i(t, "^(%d%d?%d?)", o)
         o = a + 1 + #n                  -- skip to location
         local l = n + 0
-        local r = m.char(l)
-        local d = d("\a\b\f\n\r\t\v", r, 1, true)
-        if d then                       -- special escapes
-          n = "\\"..e("abfnrtv", d, d)
+        local r = c.char(l)
+        local h = h("\a\b\f\n\r\t\v", r, 1, true)
+        if h then                       -- special escapes
+          n = "\\"..e("abfnrtv", h, h)
         elseif l < 32 then             -- normalized \ddd
           if i(e(t, o, o), "%d") then
             -- if a digit follows, \ddd cannot be shortened
@@ -2043,13 +2043,13 @@ local function _(u)
           end
         elseif r == s then         -- \<delim>
           n = "\\"..r
-          f = f + 1
+          m = m + 1
         elseif r == "\\" then          -- \\
           n = "\\\\"
         else                            -- literal character
           n = r
           if r == w then
-            h = h + 1
+            d = d + 1
           end
         end
         t = e(t, 1, a - 1)..n..e(t, o)
@@ -2060,7 +2060,7 @@ local function _(u)
     else-- c ~= "\\"                    -- <other> -- no change
       a = a + 1
       if u == w then  -- count ndelim, for switching delimiters
-        h = h + 1
+        d = d + 1
       end
     ----------------------------------------------------------------
     end--if c
@@ -2070,10 +2070,10 @@ local function _(u)
   -- (1) delim takes 2+2*c_delim bytes, ndelim takes c_ndelim bytes
   -- (2) delim becomes c_delim bytes, ndelim becomes 2+2*c_ndelim bytes
   -- simplifying the condition (1)>(2) --> c_delim > c_ndelim
-  if f > h then
+  if m > d then
     a = 1
     while a <= #t do
-      local o, n, i = d(t, "([\'\"])", a)
+      local o, n, i = h(t, "([\'\"])", a)
       if not o then break end
       if i == s then                -- \<delim> -> <delim>
         t = e(t, 1, o - 2)..e(t, o)
@@ -2089,7 +2089,7 @@ local function _(u)
   t = s..t..s
   if t ~= o[u] then
     if r then
-      c("<string> (line "..l[u]..") "..o[u].." -> "..t)
+      f("<string> (line "..l[u]..") "..o[u].." -> "..t)
       r = r + 1
     end
     o[u] = t
@@ -2104,28 +2104,28 @@ end
 -- * reduce '=' separators in delimiters if possible
 ------------------------------------------------------------------------
 
-local function E(s)
-  local t = o[s]
+local function T(u)
+  local t = o[u]
   local r = i(t, "^%[=*%[")  -- cut out delimiters
   local a = #r
   local c = e(t, -a, -1)
-  local h = e(t, a + 1, -(a + 1))  -- lstring without delims
+  local s = e(t, a + 1, -(a + 1))  -- lstring without delims
   local n = ""
   local t = 1
   --------------------------------------------------------------------
   while true do
-    local a, o, d, r = d(h, "([\r\n])([\r\n]?)", t)
+    local a, o, r, h = h(s, "([\r\n])([\r\n]?)", t)
     -- deal with a single line
     local o
     if not a then
-      o = e(h, t)
+      o = e(s, t)
     elseif a >= t then
-      o = e(h, t, a - 1)
+      o = e(s, t, a - 1)
     end
     if o ~= "" then
       -- flag a warning if there are trailing spaces, won't optimize!
       if i(o, "%s+$") then
-        warn.LSTRING = "trailing whitespace in long string near line "..l[s]
+        warn.LSTRING = "trailing whitespace in long string near line "..l[u]
       end
       n = n..o
     end
@@ -2135,7 +2135,7 @@ local function E(s)
     -- deal with line endings, normalize them
     t = a + 1
     if a then
-      if #r > 0 and d ~= r then  -- skip CRLF or LFCR
+      if #h > 0 and r ~= h then  -- skip CRLF or LFCR
         t = t + 1
       end
       -- skip first newline, which can be safely deleted
@@ -2150,17 +2150,17 @@ local function E(s)
     local e, t = a - 1
     -- loop to test ending delimiter with less of '=' down to zero
     while e >= 2 do
-      local a = "%]"..u("=", e - 2).."%]"
+      local a = "%]"..d("=", e - 2).."%]"
       if not i(n, a) then t = e end
       e = e - 1
     end
     if t then  -- change delimiters
-      a = u("=", t - 2)
+      a = d("=", t - 2)
       r, c = "["..a.."[", "]"..a.."]"
     end
   end
   --------------------------------------------------------------------
-  o[s] = r..n..c
+  o[u] = r..n..c
 end
 
 ------------------------------------------------------------------------
@@ -2171,23 +2171,23 @@ end
 -- * reduce '=' separators in delimiters if possible
 ------------------------------------------------------------------------
 
-local function q(r)
-  local a = o[r]
-  local s = i(a, "^%-%-%[=*%[")  -- cut out delimiters
-  local t = #s
-  local l = e(a, -t, -1)
-  local h = e(a, t + 1, -(t - 1))  -- comment without delims
+local function q(u)
+  local a = o[u]
+  local r = i(a, "^%-%-%[=*%[")  -- cut out delimiters
+  local t = #r
+  local l = e(a, -(t - 2), -1)
+  local s = e(a, t + 1, -(t - 1))  -- comment without delims
   local n = ""
   local a = 1
   --------------------------------------------------------------------
   while true do
-    local o, t, r, s = d(h, "([\r\n])([\r\n]?)", a)
+    local o, t, r, h = h(s, "([\r\n])([\r\n]?)", a)
     -- deal with a single line, extract and check trailing whitespace
     local t
     if not o then
-      t = e(h, a)
+      t = e(s, a)
     elseif o >= a then
-      t = e(h, a, o - 1)
+      t = e(s, a, o - 1)
     end
     if t ~= "" then
       -- trim trailing whitespace if non-empty line
@@ -2201,7 +2201,7 @@ local function q(r)
     -- deal with line endings, normalize them
     a = o + 1
     if o then
-      if #s > 0 and r ~= s then  -- skip CRLF or LFCR
+      if #h > 0 and r ~= h then  -- skip CRLF or LFCR
         a = a + 1
       end
       n = n.."\n"
@@ -2214,17 +2214,17 @@ local function q(r)
     local e, a = t - 1
     -- loop to test ending delimiter with less of '=' down to zero
     while e >= 2 do
-      local t = "%]"..u("=", e - 2).."%]"
+      local t = "%]"..d("=", e - 2).."%]"
       if not i(n, t) then a = e end
       e = e - 1
     end
     if a then  -- change delimiters
-      t = u("=", a - 2)
-      s, l = "--["..t.."[", "]"..t.."]"
+      t = d("=", a - 2)
+      r, l = "--["..t.."[", "]"..t.."]"
     end
   end
   --------------------------------------------------------------------
-  o[r] = s..n..l
+  o[u] = r..n..l
 end
 
 ------------------------------------------------------------------------
@@ -2232,13 +2232,13 @@ end
 -- * trim trailing whitespace
 ------------------------------------------------------------------------
 
-local function x(n)
-  local t = o[n]
-  local a = i(t, "%s*$")        -- just look from end of string
-  if #a > 0 then
-    t = e(t, 1, -(a + 1))      -- trim trailing whitespace
+local function j(a)
+  local t = o[a]
+  local i = i(t, "%s*$")        -- just look from end of string
+  if #i > 0 then
+    t = e(t, 1, -(i + 1))      -- trim trailing whitespace
   end
-  o[n] = t
+  o[a] = t
 end
 
 ------------------------------------------------------------------------
@@ -2246,13 +2246,13 @@ end
 -- * this is a feature to keep copyright or license texts
 ------------------------------------------------------------------------
 
-local function N(o, t)
+local function _(o, t)
   if not o then return false end  -- option not set
   local a = i(t, "^%-%-%[=*%[")  -- cut out delimiters
   local a = #a
   local i = e(t, -a, -1)
   local e = e(t, a + 1, -(a - 1))  -- comment without delims
-  if d(e, o, 1, true) then  -- try to match
+  if h(e, o, 1, true) then  -- try to match
     return true
   end
 end
@@ -2266,32 +2266,32 @@ end
 --   processing is a little messy or convoluted
 ------------------------------------------------------------------------
 
-function optimize(t, h, s, i)
+function optimize(t, s, i, h)
   --------------------------------------------------------------------
   -- set option flags
   --------------------------------------------------------------------
-  local m = t["opt-comments"]
-  local d = t["opt-whitespace"]
-  local f = t["opt-emptylines"]
-  local j = t["opt-eols"]
-  local A = t["opt-strings"]
-  local O = t["opt-numbers"]
-  local v = t["opt-experimental"]
-  local I = t.KEEP
+  local c = t["opt-comments"]
+  local u = t["opt-whitespace"]
+  local m = t["opt-emptylines"]
+  local p = t["opt-eols"]
+  local z = t["opt-strings"]
+  local I = t["opt-numbers"]
+  local x = t["opt-experimental"]
+  local N = t.KEEP
   r = t.DETAILS and 0  -- upvalues for details display
-  c = c or a.print
-  if j then  -- forced settings, otherwise won't work properly
+  f = f or a.print
+  if p then  -- forced settings, otherwise won't work properly
+    c = true
+    u = true
     m = true
-    d = true
-    f = true
-  elseif v then
-    d = true
+  elseif x then
+    u = true
   end
   --------------------------------------------------------------------
   -- variable initialization
   --------------------------------------------------------------------
   n, o, l                -- set source lists
-    = h, s, i
+    = s, i, h
   local t = 1                           -- token position
   local a, h                       -- current token
   local s    -- position of last grammar token
@@ -2307,7 +2307,7 @@ function optimize(t, h, s, i)
   --------------------------------------------------------------------
   -- experimental optimization for ';' operator
   --------------------------------------------------------------------
-  if v then
+  if x then
     while true do
       a, h = n[t], o[t]
       if a == "TK_EOS" then           -- end of stream/pass
@@ -2344,52 +2344,52 @@ function optimize(t, h, s, i)
       s = t
     ----------------------------------------------------------------
     elseif a == "TK_NUMBER" then      -- numbers
-      if O then
-        z(t)  -- optimize
+      if I then
+        O(t)  -- optimize
       end
       s = t
     ----------------------------------------------------------------
     elseif a == "TK_STRING" or        -- strings, long strings
            a == "TK_LSTRING" then
-      if A then
+      if z then
         if a == "TK_STRING" then
-          _(t)  -- optimize
-        else
           E(t)  -- optimize
+        else
+          T(t)  -- optimize
         end
       end
       s = t
     ----------------------------------------------------------------
     elseif a == "TK_COMMENT" then     -- short comments
-      if m then
+      if c then
         if t == 1 and e(h, 1, 1) == "#" then
           -- keep shbang comment, trim whitespace
-          x(t)
+          j(t)
         else
           -- safe to delete, as a TK_EOL (or TK_EOS) always follows
           i()  -- remove entirely
         end
-      elseif d then        -- trim whitespace only
-        x(t)
+      elseif u then        -- trim whitespace only
+        j(t)
       end
     ----------------------------------------------------------------
     elseif a == "TK_LCOMMENT" then    -- long comments
-      if N(I, h) then
+      if _(N, h) then
         ------------------------------------------------------------
         -- if --keep, we keep a long comment if <msg> is found;
         -- this is a feature to keep copyright or license texts
-        if d then          -- trim whitespace only
+        if u then          -- trim whitespace only
           q(t)
         end
         s = t
-      elseif m then
-        local e = T(h)
+      elseif c then
+        local e = A(h)
         ------------------------------------------------------------
         -- prepare opt_emptylines case first, if a disposable token
         -- follows, current one is safe to dump, else keep a space;
         -- it is implied that the operation is safe for '-', because
         -- current is a TK_LCOMMENT, and must be separate from a '-'
-        if g[n[t + 1]] then
+        if v[n[t + 1]] then
           i()  -- remove entirely
           a = ""
         else
@@ -2398,25 +2398,25 @@ function optimize(t, h, s, i)
         ------------------------------------------------------------
         -- if there are embedded EOLs to keep and opt_emptylines is
         -- disabled, then switch the token into one or more EOLs
-        if not f and e > 0 then
-          i("TK_EOL", u("\n", e))
+        if not m and e > 0 then
+          i("TK_EOL", d("\n", e))
         end
         ------------------------------------------------------------
         -- if optimizing whitespaces, force reinterpretation of the
         -- token to give a chance for the space to be optimized away
-        if d and a ~= "" then
+        if u and a ~= "" then
           t = t - 1  -- to reinterpret
         end
         ------------------------------------------------------------
       else                              -- disabled case
-        if d then          -- trim whitespace only
+        if u then          -- trim whitespace only
           q(t)
         end
         s = t
       end
     ----------------------------------------------------------------
     elseif a == "TK_EOL" then         -- line endings
-      if r and f then
+      if r and m then
         i()  -- remove entirely
       elseif h == "\r\n" or h == "\n\r" then
         -- normalize the rest of the EOLs for CRLF/LFCR only
@@ -2425,8 +2425,8 @@ function optimize(t, h, s, i)
       end
     ----------------------------------------------------------------
     elseif a == "TK_SPACE" then       -- whitespace
-      if d then
-        if r or k(t) then
+      if u then
+        if r or g(t) then
           -- delete leading and trailing whitespace
           i()  -- remove entirely
         else
@@ -2443,7 +2443,7 @@ function optimize(t, h, s, i)
             -- prev must be a grammar token; consecutive TK_SPACE
             -- tokens is impossible when optimizing whitespace
             local e = n[t + 1]
-            if g[e] then
+            if v[e] then
               -- handle special case where a '-' cannot abut with
               -- either a short comment or a long comment
               if (e == "TK_COMMENT" or e == "TK_LCOMMENT") and
@@ -2455,7 +2455,7 @@ function optimize(t, h, s, i)
             else--is_realtoken
               -- check a pair of grammar tokens, if can abut, then
               -- delete space token entirely, otherwise keep one space
-              local e = y(s, t + 1)
+              local e = k(s, t + 1)
               if e == "" then
                 i()  -- remove entirely
               else
@@ -2477,7 +2477,7 @@ function optimize(t, h, s, i)
   --------------------------------------------------------------------
   -- processing loop (PASS 2)
   --------------------------------------------------------------------
-  if j then
+  if p then
     t = 1
     -- aggressive EOL removal only works with most non-grammar tokens
     -- optimized away because it is a rather simple scheme -- basically
@@ -2494,8 +2494,8 @@ function optimize(t, h, s, i)
       --------------------------------------------------------------
       elseif a == "TK_EOL" then       -- consider each TK_EOL
         local a, e = n[t - 1], n[t + 1]
-        if p[a] and p[e] then  -- sanity check
-          local t = y(t - 1, t + 1)
+        if y[a] and y[e] then  -- sanity check
+          local t = k(t - 1, t + 1)
           if t == "" or e == "TK_EOS" then
             i()  -- remove entirely
           end
@@ -2507,19 +2507,19 @@ function optimize(t, h, s, i)
     w()
   end
   --------------------------------------------------------------------
-  if r and r > 0 then c() end -- spacing
+  if r and r > 0 then f() end -- spacing
   return n, o, l
 end
 --end of inserted module
 end
 
 -- preload function for module optparser
-v.optparser =
+p.optparser =
 function()
 --start of inserted module
 module "optparser"
 
-local s = a.require "string"
+local n = a.require "string"
 local g = a.require "table"
 
 ----------------------------------------------------------------------
@@ -2534,16 +2534,16 @@ local g = a.require "table"
 ----------------------------------------------------------------------
 
 local i = "etaoinshrdlucmfwypvbgkqjxz_ETAOINSHRDLUCMFWYPVBGKQJXZ"
-local r = "etaoinshrdlucmfwypvbgkqjxz_0123456789ETAOINSHRDLUCMFWYPVBGKQJXZ"
+local d = "etaoinshrdlucmfwypvbgkqjxz_0123456789ETAOINSHRDLUCMFWYPVBGKQJXZ"
 
 -- names or identifiers that must be skipped
 -- * the first two lines are for keywords
-local T = {}
-for e in s.gmatch([[
+local A = {}
+for e in n.gmatch([[
 and break do else elseif end false for function if in
 local nil not or repeat return then true until while
 self]], "%S+") do
-  T[e] = true
+  A[e] = true
 end
 
 ------------------------------------------------------------------------
@@ -2551,50 +2551,50 @@ end
 ------------------------------------------------------------------------
 
 local h, c,             -- token lists (lexer output)
-      n, k, y,      -- token lists (parser output)
-      x, o,            -- variable information tables
+      s, k, v,      -- token lists (parser output)
+      _, o,            -- variable information tables
       w,                         -- statment type table
-      q, E,            -- unique name tables
-      b,                          -- index of new variable names
-      l                           -- list of output variables
+      b, O,            -- unique name tables
+      q,                          -- index of new variable names
+      r                           -- list of output variables
 
 ----------------------------------------------------------------------
 -- preprocess information table to get lists of unique names
 ----------------------------------------------------------------------
 
 local function z(e)
-  local o = {}
+  local i = {}
   for n = 1, #e do              -- enumerate info table
-    local e = e[n]
-    local i = e.name
+    local t = e[n]
+    local o = t.name
     --------------------------------------------------------------------
-    if not o[i] then         -- not found, start an entry
-      o[i] = {
+    if not i[o] then         -- not found, start an entry
+      i[o] = {
         decl = 0, token = 0, size = 0,
       }
     end
     --------------------------------------------------------------------
-    local t = o[i]        -- count declarations, tokens, size
-    t.decl = t.decl + 1
-    local o = e.xref
-    local a = #o
-    t.token = t.token + a
-    t.size = t.size + a * #i
+    local e = i[o]        -- count declarations, tokens, size
+    e.decl = e.decl + 1
+    local i = t.xref
+    local a = #i
+    e.token = e.token + a
+    e.size = e.size + a * #o
     --------------------------------------------------------------------
-    if e.decl then            -- if local table, create first,last pairs
-      e.id = n
-      e.xcount = a
+    if t.decl then            -- if local table, create first,last pairs
+      t.id = n
+      t.xcount = a
       if a > 1 then        -- if ==1, means local never accessed
-        e.first = o[2]
-        e.last = o[a]
+        t.first = i[2]
+        t.last = i[a]
       end
     --------------------------------------------------------------------
     else                        -- if global table, add a back ref
-      t.id = n
+      e.id = n
     end
     --------------------------------------------------------------------
   end--for
-  return o
+  return i
 end
 
 ----------------------------------------------------------------------
@@ -2605,9 +2605,9 @@ end
 -- * yes, this will miss --keep block comments too...
 ----------------------------------------------------------------------
 
-local function O(e)
-  local d = s.byte
-  local s = s.char
+local function I(e)
+  local s = n.byte
+  local n = n.char
   -- table of token classes to accept in calculating symbol frequency
   local t = {
     TK_KEYWORD = true, TK_NAME = true, TK_NUMBER = true,
@@ -2639,7 +2639,7 @@ local function O(e)
     local o, a = h[o], a[o]
     if t[o] then
       for t = 1, #a do
-        local t = d(a, t)
+        local t = s(a, t)
         e[t] = e[t] + 1
       end
     end--if
@@ -2647,10 +2647,10 @@ local function O(e)
   --------------------------------------------------------------------
   -- function to re-sort symbols according to actual frequencies
   --------------------------------------------------------------------
-  local function n(o)
+  local function a(o)
     local t = {}
     for a = 1, #o do              -- prepare table to sort
-      local o = d(o, a)
+      local o = s(o, a)
       t[a] = { c = o, freq = e[o], }
     end
     g.sort(t,                 -- sort selected symbols
@@ -2660,13 +2660,13 @@ local function O(e)
     )
     local e = {}                 -- reconstitute the string
     for a = 1, #t do
-      e[a] = s(t[a].c)
+      e[a] = n(t[a].c)
     end
     return g.concat(e)
   end
   --------------------------------------------------------------------
-  i = n(i)             -- change letter arrangement
-  r = n(r)
+  i = a(i)             -- change letter arrangement
+  d = a(d)
 end
 
 ----------------------------------------------------------------------
@@ -2675,34 +2675,34 @@ end
 -- * trapping keywords and other names like 'self' is done elsewhere
 ----------------------------------------------------------------------
 
-local function I()
+local function S()
   local t
-  local n, h = #i, #r
-  local e = b
-  if e < n then                  -- single char
+  local s, h = #i, #d
+  local e = q
+  if e < s then                  -- single char
     e = e + 1
-    t = s.sub(i, e, e)
+    t = n.sub(i, e, e)
   else                                  -- longer names
-    local o, a = n, 1       -- calculate # chars fit
+    local o, a = s, 1       -- calculate # chars fit
     repeat
       e = e - o
       o = o * h
       a = a + 1
     until o > e
-    local o = e % n              -- left side cycles faster
-    e = (e - o) / n              -- do first char first
+    local o = e % s              -- left side cycles faster
+    e = (e - o) / s              -- do first char first
     o = o + 1
-    t = s.sub(i, o, o)
+    t = n.sub(i, o, o)
     while a > 1 do
       local o = e % h
       e = (e - o) / h
       o = o + 1
-      t = t..s.sub(r, o, o)
+      t = t..n.sub(d, o, o)
       a = a - 1
     end
   end
-  b = b + 1
-  return t, q[t] ~= nil
+  q = q + 1
+  return t, b[t] ~= nil
 end
 
 ----------------------------------------------------------------------
@@ -2710,15 +2710,15 @@ end
 -- * probably better in main source, put here for now
 ----------------------------------------------------------------------
 
-local function N(E, O, A, i)
-  local e = p or a.print
-  local t = s.format
-  local I = i.DETAILS
+local function N(T, I, O, i)
+  local e = y or a.print
+  local t = n.format
+  local f = i.DETAILS
   if i.QUIET then return end
-  local m , w, y, T, z,  -- stats needed
-        q, p, f, _, x,
-        h, c, u, k, j,
-        n, d, r, v, b
+  local w , y, p, A, _,  -- stats needed
+        j, v, m, E, z,
+        s, c, l, q, x,
+        h, u, d, b, k
     = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0, 0, 0
   local function i(e, t)              -- safe average function
@@ -2728,70 +2728,70 @@ local function N(E, O, A, i)
   --------------------------------------------------------------------
   -- collect statistics (note: globals do not have declarations!)
   --------------------------------------------------------------------
-  for t, e in a.pairs(E) do
-    m = m + 1
-    h = h + e.token
-    n = n + e.size
+  for t, e in a.pairs(T) do
+    w = w + 1
+    s = s + e.token
+    h = h + e.size
+  end
+  for t, e in a.pairs(I) do
+    y = y + 1
+    v = v + e.decl
+    c = c + e.token
+    u = u + e.size
   end
   for t, e in a.pairs(O) do
-    w = w + 1
-    p = p + e.decl
-    c = c + e.token
+    p = p + 1
+    m = m + e.decl
+    l = l + e.token
     d = d + e.size
   end
-  for t, e in a.pairs(A) do
-    y = y + 1
-    f = f + e.decl
-    u = u + e.token
-    r = r + e.size
-  end
-  T = m + w
-  _ = q + p
-  k = h + c
-  v = n + d
-  z = m + y
-  x = q + f
-  j = h + u
-  b = n + r
+  A = w + y
+  E = j + v
+  q = s + c
+  b = h + u
+  _ = w + p
+  z = j + m
+  x = s + l
+  k = h + d
   --------------------------------------------------------------------
   -- detailed stats: global list
   --------------------------------------------------------------------
-  if I then
-    local m = {} -- sort table of unique global names by size
-    for t, e in a.pairs(E) do
+  if f then
+    local f = {} -- sort table of unique global names by size
+    for t, e in a.pairs(T) do
       e.name = t
-      m[#m + 1] = e
+      f[#f + 1] = e
     end
-    g.sort(m,
-      function(e, t)
-        return e.size > t.size
+    g.sort(f,
+      function(t, e)
+        return t.size > e.size
       end
     )
     local a, y = "%8s%8s%10s  %s", "%8d%8d%10.2f  %s"
-    local w = s.rep("-", 44)
+    local w = n.rep("-", 44)
     e("*** global variable list (sorted by size) ***\n"..w)
     e(t(a, "Token",  "Input", "Input", "Global"))
     e(t(a, "Count", "Bytes", "Average", "Name"))
     e(w)
-    for a = 1, #m do
-      local a = m[a]
+    for a = 1, #f do
+      local a = f[a]
       e(t(y, a.token, a.size, i(a.token, a.size), a.name))
     end
     e(w)
-    e(t(y, h, n, i(h, n), "TOTAL"))
+    e(t(y, s, h, i(s, h), "TOTAL"))
     e(w.."\n")
   --------------------------------------------------------------------
   -- detailed stats: local list
   --------------------------------------------------------------------
-    local a, m = "%8s%8s%8s%10s%8s%10s  %s", "%8d%8d%8d%10.2f%8d%10.2f  %s"
-    local s = s.rep("-", 70)
-    e("*** local variable list (sorted by allocation order) ***\n"..s)
+    local a, f = "%8s%8s%8s%10s%8s%10s  %s", "%8d%8d%8d%10.2f%8d%10.2f  %s"
+    local n = n.rep("-", 70)
+    e("*** local variable list (sorted by allocation order) ***\n"..n)
     e(t(a, "Decl.", "Token",  "Input", "Input", "Output", "Output", "Global"))
     e(t(a, "Count", "Count", "Bytes", "Average", "Bytes", "Average", "Name"))
-    e(s)
-    for a = 1, #l do  -- iterate according to order assigned
-      local s = l[a]
-      local a = A[s]
+    e(n)
+    for a = 1, #r do  -- iterate according to order assigned
+      local s = r[a]
+      local a = O[s]
       local h, n = 0, 0
       for t = 1, #o do  -- find corresponding old names and calculate
         local e = o[t]
@@ -2800,64 +2800,31 @@ local function N(E, O, A, i)
           n = n + e.xcount * #e.oldname
         end
       end
-      e(t(m, a.decl, a.token, n, i(h, n),
+      e(t(f, a.decl, a.token, n, i(h, n),
                 a.size, i(a.token, a.size), s))
     end
-    e(s)
-    e(t(m, f, u, d, i(c, d),
-              r, i(u, r), "TOTAL"))
-    e(s.."\n")
+    e(n)
+    e(t(f, m, l, u, i(c, u),
+              d, i(l, d), "TOTAL"))
+    e(n.."\n")
   end--if opt_details
   --------------------------------------------------------------------
   -- display output
   --------------------------------------------------------------------
-  local l, o = "%-16s%8s%8s%8s%8s%10s", "%-16s%8d%8d%8d%8d%10.2f"
-  local a = s.rep("-", 58)
+  local r, o = "%-16s%8s%8s%8s%8s%10s", "%-16s%8d%8d%8d%8d%10.2f"
+  local a = n.rep("-", 58)
   e("*** local variable optimization summary ***\n"..a)
-  e(t(l, "Variable",  "Unique", "Decl.", "Token", "Size", "Average"))
-  e(t(l, "Types", "Names", "Count", "Count", "Bytes", "Bytes"))
+  e(t(r, "Variable",  "Unique", "Decl.", "Token", "Size", "Average"))
+  e(t(r, "Types", "Names", "Count", "Count", "Bytes", "Bytes"))
   e(a)
-  e(t(o, "Global", m, q, h, n, i(h, n)))
+  e(t(o, "Global", w, j, s, h, i(s, h)))
   e(a)
-  e(t(o, "Local (in)", w, p, c, d, i(c, d)))
-  e(t(o, "TOTAL (in)", T, _, k, v, i(k, v)))
+  e(t(o, "Local (in)", y, v, c, u, i(c, u)))
+  e(t(o, "TOTAL (in)", A, E, q, b, i(q, b)))
   e(a)
-  e(t(o, "Local (out)", y, f, u, r, i(u, r)))
-  e(t(o, "TOTAL (out)", z, x, j, b, i(j, b)))
+  e(t(o, "Local (out)", p, m, l, d, i(l, d)))
+  e(t(o, "TOTAL (out)", _, z, x, k, i(x, k)))
   e(a.."\n")
-end
-
-----------------------------------------------------------------------
--- delete a token and adjust all relevant tables
--- * horribly inefficient... luckily it's an off-line processor
--- * currently invalidates globalinfo and localinfo (not updated),
---   so any other optimization is done after processing locals
---   (of course, we can also lex the source data again...)
-----------------------------------------------------------------------
-
-local function i(e)
-  if e < 1 or e >= #n then
-    return  -- ignore if invalid (id == #tokpar is <eof> token)
-  end
-  local o = y[e]        -- position in lexer lists
-  local t, a =          -- final indices
-    #n, #h
-  for e = e + 1, t do      -- shift parser tables
-    n[e - 1] = n[e]
-    k[e - 1] = k[e]
-    y[e - 1] = y[e] - 1
-    w[e - 1] = w[e]
-  end
-  n[t] = nil
-  k[t] = nil
-  y[t] = nil
-  w[t] = nil
-  for e = o + 1, a do      -- shift lexer tables
-    h[e - 1] = h[e]
-    c[e - 1] = c[e]
-  end
-  h[a] = nil
-  c[a] = nil
 end
 
 ----------------------------------------------------------------------
@@ -2866,31 +2833,74 @@ end
 --   kinds of strings can abut with anything else
 ----------------------------------------------------------------------
 
-local function d()
+local function l()
   ------------------------------------------------------------------
   local function o(e)          -- find f("string") pattern
-    local t = n[e + 1] or ""
-    local a = n[e + 2] or ""
-    local e = n[e + 3] or ""
+    local t = s[e + 1] or ""
+    local a = s[e + 2] or ""
+    local e = s[e + 3] or ""
     if t == "(" and a == "<string>" and e == ")" then
       return true
     end
   end
   ------------------------------------------------------------------
-  local t = 1
-  while true do
-    local e, a = t, false
-    while e <= #n do               -- scan for function pattern
-      local n = w[e]
-      if n == "call" and o(e) then  -- found, delete ()
-        i(e + 1)        -- '('
-        i(e + 2)        -- ')' (index shifted by -1)
-        a = true
-        t = e + 2
+  local a = {}           -- scan for function pattern,
+  local e = 1                   -- tokens to be deleted are marked
+  while e <= #s do
+    local t = w[e]
+    if t == "call" and o(e) then  -- found & mark ()
+      a[e + 1] = true    -- '('
+      a[e + 3] = true    -- ')'
+      e = e + 3
+    end
+    e = e + 1
+  end
+  ------------------------------------------------------------------
+  -- delete a token and adjust all relevant tables
+  -- * currently invalidates globalinfo and localinfo (not updated),
+  --   so any other optimization is done after processing locals
+  --   (of course, we can also lex the source data again...)
+  -- * faster one-pass token deletion
+  ------------------------------------------------------------------
+  local t, e, o = 1, 1, #s
+  local i = {}
+  while e <= o do         -- process parser tables
+    if a[t] then         -- found a token to delete?
+      i[v[t]] = true
+      t = t + 1
+    end
+    if t > e then
+      if t <= o then        -- shift table items lower
+        s[e] = s[t]
+        k[e] = k[t]
+        v[e] = v[t] - (t - e)
+        w[e] = w[t]
+      else                      -- nil out excess entries
+        s[e] = nil
+        k[e] = nil
+        v[e] = nil
+        w[e] = nil
       end
+    end
+    t = t + 1
+    e = e + 1
+  end
+  local e, t, a = 1, 1, #h
+  while t <= a do         -- process lexer tables
+    if i[e] then        -- found a token to delete?
       e = e + 1
     end
-    if not a then break end
+    if e > t then
+      if e <= a then        -- shift table items lower
+        h[t] = h[e]
+        c[t] = c[e]
+      else                      -- nil out excess entries
+        h[t] = nil
+        c[t] = nil
+      end
+    end
+    e = e + 1
+    t = t + 1
   end
 end
 
@@ -2899,15 +2909,15 @@ end
 ----------------------------------------------------------------------
 
 local function u(h)
-  b = 0                           -- reset variable name allocator
-  l = {}
+  q = 0                           -- reset variable name allocator
+  r = {}
   ------------------------------------------------------------------
   -- preprocess global/local tables, handle entropy reduction
   ------------------------------------------------------------------
-  q = z(x)
-  E = z(o)
+  b = z(_)
+  O = z(o)
   if h["opt-entropy"] then         -- for entropy improvement
-    O(h)
+    I(h)
   end
   ------------------------------------------------------------------
   -- build initial declared object table, then sort according to
@@ -2930,14 +2940,14 @@ local function u(h)
   -- * the allocator below will never use "self", so it is safe to
   --   keep those implicit declarations as-is
   ------------------------------------------------------------------
-  local a, t, r = {}, 1, false
+  local a, t, d = {}, 1, false
   for o = 1, #e do
     local e = e[o]
     if not e.isself then
       a[t] = e
       t = t + 1
     else
-      r = true
+      d = true
     end
   end
   e = a
@@ -2951,26 +2961,26 @@ local function u(h)
   ------------------------------------------------------------------
   local s = #e
   while s > 0 do
-    local n, t
+    local n, a
     repeat
-      n, t = I()  -- collect a variable name
-    until not T[n]          -- skip all special names
-    l[#l + 1] = n       -- keep a list
-    local a = s
+      n, a = S()  -- collect a variable name
+    until not A[n]          -- skip all special names
+    r[#r + 1] = n       -- keep a list
+    local t = s
     ------------------------------------------------------------------
     -- if variable name collides with an existing global, the name
     -- cannot be used by a local when the name is accessed as a global
     -- during which the local is alive (between 'act' to 'rem'), so
     -- we drop objects that collides with the corresponding global
     ------------------------------------------------------------------
-    if t then
+    if a then
       -- find the xref table of the global
-      local i = x[q[n].id].xref
+      local i = _[b[n].id].xref
       local n = #i
       -- enumerate for all current objects; all are valid at this point
-      for t = 1, s do
-        local t = e[t]
-        local s, e = t.act, t.rem  -- 'live' range of local
+      for a = 1, s do
+        local a = e[a]
+        local s, e = a.act, a.rem  -- 'live' range of local
         -- if rem < 0, it is a -id to a local that had the same name
         -- so follow rem to extend it; does this make sense?
         while e < 0 do
@@ -2982,8 +2992,8 @@ local function u(h)
           if t >= s and t <= e then o = true end  -- in range?
         end
         if o then
-          t.skip = true
-          a = a - 1
+          a.skip = true
+          t = t - 1
         end
       end--for
     end--if gcollide
@@ -2999,23 +3009,23 @@ local function u(h)
     --   => anytime A is accessed, it cannot be when B is 'live'
     --   => to speed up things, we have first/last accesses noted
     ------------------------------------------------------------------
-    while a > 0 do
-      local t = 1
-      while e[t].skip do  -- scan for first object
-        t = t + 1
+    while t > 0 do
+      local a = 1
+      while e[a].skip do  -- scan for first object
+        a = a + 1
       end
       ------------------------------------------------------------------
       -- first object is free for assignment of the variable name
       -- [first,last] gives the access range for collision checking
       ------------------------------------------------------------------
-      a = a - 1
-      local i = e[t]
-      t = t + 1
+      t = t - 1
+      local i = e[a]
+      a = a + 1
       i.newname = n
       i.skip = true
       i.done = true
-      local s, r = i.first, i.last
-      local h = i.xref
+      local s, h = i.first, i.last
+      local r = i.xref
       ------------------------------------------------------------------
       -- then, scan all the rest and drop those colliding
       -- if A was never accessed then it'll never collide with anything
@@ -3024,22 +3034,22 @@ local function u(h)
       -- * B was removed before A's first access (first > rem)
       -- if not, see detailed skip below...
       ------------------------------------------------------------------
-      if s and a > 0 then  -- must have at least 1 access
-        local n = a
+      if s and t > 0 then  -- must have at least 1 access
+        local n = t
         while n > 0 do
-          while e[t].skip do  -- next valid object
-            t = t + 1
+          while e[a].skip do  -- next valid object
+            a = a + 1
           end
           n = n - 1
-          local e = e[t]
-          t = t + 1
-          local n, t = e.act, e.rem  -- live range of B
+          local e = e[a]
+          a = a + 1
+          local n, a = e.act, e.rem  -- live range of B
           -- if rem < 0, extend range of rem thru' following local
-          while t < 0 do
-            t = o[-t].rem
+          while a < 0 do
+            a = o[-a].rem
           end
           --------------------------------------------------------
-          if not(r < n or s > t) then  -- possible collision
+          if not(h < n or s > a) then  -- possible collision
             --------------------------------------------------------
             -- B is activated later than A or at the same statement,
             -- this means for no collision, A cannot be accessed when B
@@ -3047,9 +3057,9 @@ local function u(h)
             --------------------------------------------------------
             if n >= i.act then
               for o = 1, i.xcount do  -- ... then check every access
-                local o = h[o]
-                if o >= n and o <= t then  -- A accessed when B live!
-                  a = a - 1
+                local o = r[o]
+                if o >= n and o <= a then  -- A accessed when B live!
+                  t = t - 1
                   e.skip = true
                   break
                 end
@@ -3061,13 +3071,13 @@ local function u(h)
             --------------------------------------------------------
             else
               if e.last and e.last >= i.act then
-                a = a - 1
+                t = t - 1
                 e.skip = true
               end
             end
           end
           --------------------------------------------------------
-          if a == 0 then break end
+          if t == 0 then break end
         end
       end--if first
       ------------------------------------------------------------------
@@ -3096,10 +3106,10 @@ local function u(h)
   ------------------------------------------------------------------
   for e = 1, #o do  -- enumerate all locals
     local e = o[e]
-    local a = e.xref
+    local t = e.xref
     if e.newname then                 -- if got new name, patch it in
-      for t = 1, e.xcount do
-        local t = a[t]               -- xrefs indexes the token list
+      for a = 1, e.xcount do
+        local t = t[a]               -- xrefs indexes the token list
         c[t] = e.newname
       end
       e.name, e.oldname             -- adjust names
@@ -3111,11 +3121,11 @@ local function u(h)
   ------------------------------------------------------------------
   -- deal with statistics output
   ------------------------------------------------------------------
-  if r then  -- add 'self' to end of list
-    l[#l + 1] = "self"
+  if d then  -- add 'self' to end of list
+    r[#r + 1] = "self"
   end
   local e = z(o)
-  N(q, E, e, h)
+  N(b, O, e, h)
 end
 
 
@@ -3127,9 +3137,9 @@ function optimize(t, i, a, e)
   -- set tables
   h, c                  -- from lexer
     = i, a
-  n, k, y           -- from parser
+  s, k, v           -- from parser
     = e.toklist, e.seminfolist, e.xreflist
-  x, o, w       -- from parser
+  _, o, w       -- from parser
     = e.globalinfo, e.localinfo, e.statinfo
   ------------------------------------------------------------------
   -- optimize locals
@@ -3141,24 +3151,25 @@ function optimize(t, i, a, e)
   -- other optimizations
   ------------------------------------------------------------------
   if t["opt-experimental"] then    -- experimental
-    d()
+    l()
+    -- WARNING globalinfo and localinfo now invalidated!
   end
 end
 --end of inserted module
 end
 
 -- preload function for module equiv
-v.equiv =
+p.equiv =
 function()
 --start of inserted module
 module "equiv"
 
 local e = a.require "string"
-local r = a.loadstring
+local d = a.loadstring
 local u = e.sub
-local d = e.match
+local r = e.match
 local s = e.dump
-local p = e.byte
+local v = e.byte
 
 --[[--------------------------------------------------------------------
 -- variable and data initialization
@@ -3184,10 +3195,10 @@ local i, e, h
 -- initialization function
 ------------------------------------------------------------------------
 
-function init(o, t, a)
+function init(o, a, t)
   i = o
-  e = t
-  h = a
+  e = a
+  h = t
 end
 
 ------------------------------------------------------------------------
@@ -3220,7 +3231,7 @@ function source(t, l)
   -- function to return a dumped string for seminfo compares
   --------------------------------------------------------------------
   local function u(e)
-    local e = r("return "..e, "z")
+    local e = d("return "..e, "z")
     if e then
       return s(e)
     end
@@ -3235,15 +3246,15 @@ function source(t, l)
   --------------------------------------------------------------------
   -- get lexer streams for both source strings, compare
   --------------------------------------------------------------------
-  local e, r = n(t)        -- original
+  local e, d = n(t)        -- original
   local a, h = n(l)      -- compressed
   --------------------------------------------------------------------
   -- compare shbang lines ignoring EOL
   --------------------------------------------------------------------
-  local n = d(t, "^(#[^\r\n]*)")
-  local t = d(l, "^(#[^\r\n]*)")
-  if n or t then
-    if not n or not t or n ~= t then
+  local t = r(t, "^(#[^\r\n]*)")
+  local n = r(l, "^(#[^\r\n]*)")
+  if t or n then
+    if not t or not n or t ~= n then
       o("shbang lines different")
     end
   end
@@ -3259,7 +3270,7 @@ function source(t, l)
   --------------------------------------------------------------------
   for t = 1, #e do
     local e, s = e[t], a[t]
-    local a, n = r[t], h[t]
+    local n, a = d[t], h[t]
     if e ~= s then  -- by type
       o("type ["..t.."] "..e.." "..s)
       break
@@ -3267,17 +3278,17 @@ function source(t, l)
     if e == "TK_KEYWORD" or e == "TK_NAME" or e == "TK_OP" then
       if e == "TK_NAME" and i["opt-locals"] then
         -- can't compare identifiers of locals that are optimized
-      elseif a ~= n then  -- by semantic info (simple)
-        o("seminfo ["..t.."] "..e.." "..a.." "..n)
+      elseif n ~= a then  -- by semantic info (simple)
+        o("seminfo ["..t.."] "..e.." "..n.." "..a)
         break
       end
     elseif e == "TK_EOS" then
       -- no seminfo to compare
     else-- "TK_NUMBER" or "TK_STRING" or "TK_LSTRING"
       -- compare 'binary' form, so dump a function
-      local i,s = u(a), u(n)
+      local i,s = u(n), u(a)
       if not i or not s or i ~= s then
-        o("seminfo ["..t.."] "..e.." "..a.." "..n)
+        o("seminfo ["..t.."] "..e.." "..n.." "..a)
         break
       end
     end
@@ -3293,9 +3304,9 @@ end
 
 function binary(n, o)
   local e     = 0
-  local q = 1
-  local k  = 3
-  local j  = 4
+  local _ = 1
+  local z  = 3
+  local E  = 4
   --------------------------------------------------------------------
   -- mark and optionally report non-equivalence
   --------------------------------------------------------------------
@@ -3307,7 +3318,7 @@ function binary(n, o)
   -- function to remove shbang line so that loadstring runs
   --------------------------------------------------------------------
   local function a(e)
-    local t = d(e, "^(#[^\r\n]*\r?\n?)")
+    local t = r(e, "^(#[^\r\n]*\r?\n?)")
     if t then                      -- cut out shbang
       e = u(e, #t + 1)
     end
@@ -3316,20 +3327,20 @@ function binary(n, o)
   --------------------------------------------------------------------
   -- attempt to compile, then dump to get binary chunk string
   --------------------------------------------------------------------
-  local t = r(a(n), "z")
+  local t = d(a(n), "z")
   if not t then
     e("failed to compile original sources for binary chunk comparison")
     return
   end
-  local a = r(a(o), "z")
+  local a = d(a(o), "z")
   if not a then
     e("failed to compile compressed result for binary chunk comparison")
   end
   -- if loadstring() works, dump assuming string.dump() is error-free
   local i = { i = 1, dat = s(t) }
   i.len = #i.dat
-  local l = { i = 1, dat = s(a) }
-  l.len = #l.dat
+  local r = { i = 1, dat = s(a) }
+  r.len = #r.dat
   --------------------------------------------------------------------
   -- support functions to handle binary chunk reading
   --------------------------------------------------------------------
@@ -3338,7 +3349,7 @@ function binary(n, o)
         y, w,
         o, m
   --------------------------------------------------------------------
-  local function s(e, t)          -- check if bytes exist
+  local function h(e, t)          -- check if bytes exist
     if e.i + t - 1 > e.len then return end
     return true
   end
@@ -3353,31 +3364,31 @@ function binary(n, o)
     if e > t.len then return end
     local a = u(t.dat, e, e)
     t.i = e + 1
-    return p(a)
+    return v(a)
   end
   --------------------------------------------------------------------
-  local function x(a)            -- return an int value (little-endian)
-    local e, t = 0, 1
-    if not s(a, d) then return end
+  local function k(a)            -- return an int value (little-endian)
+    local t, e = 0, 1
+    if not h(a, d) then return end
     for o = 1, d do
-      e = e + t * n(a)
-      t = t * 256
+      t = t + e * n(a)
+      e = e * 256
     end
-    return e
+    return t
   end
   --------------------------------------------------------------------
-  local function z(t)            -- return an int value (big-endian)
+  local function q(t)            -- return an int value (big-endian)
     local e = 0
-    if not s(t, d) then return end
+    if not h(t, d) then return end
     for a = 1, d do
       e = e * 256 + n(t)
     end
     return e
   end
   --------------------------------------------------------------------
-  local function E(a)          -- return a size_t value (little-endian)
+  local function j(a)          -- return a size_t value (little-endian)
     local t, e = 0, 1
-    if not s(a, c) then return end
+    if not h(a, c) then return end
     for o = 1, c do
       t = t + e * n(a)
       e = e * 256
@@ -3385,16 +3396,16 @@ function binary(n, o)
     return t
   end
   --------------------------------------------------------------------
-  local function _(t)          -- return a size_t value (big-endian)
+  local function x(t)          -- return a size_t value (big-endian)
     local e = 0
-    if not s(t, c) then return end
+    if not h(t, c) then return end
     for a = 1, c do
       e = e * 256 + n(t)
     end
     return e
   end
   --------------------------------------------------------------------
-  local function r(e, o)        -- return a block (as a string)
+  local function l(e, o)        -- return a block (as a string)
     local t = e.i
     local a = t + o - 1
     if a > e.len then return end
@@ -3403,15 +3414,15 @@ function binary(n, o)
     return a
   end
   --------------------------------------------------------------------
-  local function h(t)           -- return a string
+  local function s(t)           -- return a string
     local e = m(t)
     if not e then return end
     if e == 0 then return "" end
-    return r(t, e)
+    return l(t, e)
   end
   --------------------------------------------------------------------
-  local function v(t, e)       -- compare byte value
-    local e, t = n(t), n(e)
+  local function v(e, t)       -- compare byte value
+    local e, t = n(e), n(t)
     if not e or not t or e ~= t then
       return
     end
@@ -3423,8 +3434,8 @@ function binary(n, o)
     if not e then return true end
   end
   --------------------------------------------------------------------
-  local function p(t, e)        -- compare int value
-    local e, t = o(t), o(e)
+  local function p(e, t)        -- compare int value
+    local e, t = o(e), o(t)
     if not e or not t or e ~= t then
       return
     end
@@ -3433,135 +3444,135 @@ function binary(n, o)
   --------------------------------------------------------------------
   -- recursively-called function to compare function prototypes
   --------------------------------------------------------------------
-  local function b(t, a)
+  local function b(a, t)
     -- source name (ignored)
-    if not h(t) or not h(a) then
+    if not s(a) or not s(t) then
       e("bad source name"); return
     end
     -- linedefined (ignored)
-    if not o(t) or not o(a) then
+    if not o(a) or not o(t) then
       e("bad linedefined"); return
     end
     -- lastlinedefined (ignored)
-    if not o(t) or not o(a) then
+    if not o(a) or not o(t) then
       e("bad lastlinedefined"); return
     end
-    if not (s(t, 4) and s(a, 4)) then
+    if not (h(a, 4) and h(t, 4)) then
       e("prototype header broken")
     end
     -- nups (compared)
-    if u(t, a) then
+    if u(a, t) then
       e("bad nups"); return
     end
     -- numparams (compared)
-    if u(t, a) then
+    if u(a, t) then
       e("bad numparams"); return
     end
     -- is_vararg (compared)
-    if u(t, a) then
+    if u(a, t) then
       e("bad is_vararg"); return
     end
     -- maxstacksize (compared)
-    if u(t, a) then
+    if u(a, t) then
       e("bad maxstacksize"); return
     end
     -- code (compared)
-    local i = p(t, a)
+    local i = p(a, t)
     if not i then
       e("bad ncode"); return
     end
-    local n = r(t, i * y)
-    local i = r(a, i * y)
+    local n = l(a, i * y)
+    local i = l(t, i * y)
     if not n or not i or n ~= i then
       e("bad code block"); return
     end
     -- constants (compared)
-    local i = p(t, a)
+    local i = p(a, t)
     if not i then
       e("bad nconst"); return
     end
     for o = 1, i do
-      local o = v(t, a)
+      local o = v(a, t)
       if not o then
         e("bad const type"); return
       end
-      if o == q then
-        if u(t, a) then
+      if o == _ then
+        if u(a, t) then
           e("bad boolean value"); return
         end
-      elseif o == k then
-        local t = r(t, w)
-        local a = r(a, w)
-        if not t or not a or t ~= a then
+      elseif o == z then
+        local a = l(a, w)
+        local t = l(t, w)
+        if not a or not t or a ~= t then
           e("bad number value"); return
         end
-      elseif o == j then
-        local t = h(t)
-        local a = h(a)
-        if not t or not a or t ~= a then
+      elseif o == E then
+        local a = s(a)
+        local t = s(t)
+        if not a or not t or a ~= t then
           e("bad string value"); return
         end
       end
     end
     -- prototypes (compared recursively)
-    local i = p(t, a)
+    local i = p(a, t)
     if not i then
       e("bad nproto"); return
     end
     for o = 1, i do
-      if not b(t, a) then
+      if not b(a, t) then
         e("bad function prototype"); return
       end
     end
     -- debug information (ignored)
     -- lineinfo (ignored)
-    local i = o(t)
-    if not i then
-      e("bad sizelineinfo1"); return
-    end
     local n = o(a)
     if not n then
+      e("bad sizelineinfo1"); return
+    end
+    local i = o(t)
+    if not i then
       e("bad sizelineinfo2"); return
     end
-    if not r(t, i * d) then
+    if not l(a, n * d) then
       e("bad lineinfo1"); return
     end
-    if not r(a, n * d) then
+    if not l(t, i * d) then
       e("bad lineinfo2"); return
     end
     -- locvars (ignored)
-    local i = o(t)
-    if not i then
-      e("bad sizelocvars1"); return
-    end
     local n = o(a)
     if not n then
+      e("bad sizelocvars1"); return
+    end
+    local i = o(t)
+    if not i then
       e("bad sizelocvars2"); return
     end
-    for a = 1, i do
-      if not h(t) or not o(t) or not o(t) then
+    for t = 1, n do
+      if not s(a) or not o(a) or not o(a) then
         e("bad locvars1"); return
       end
     end
-    for t = 1, n do
-      if not h(a) or not o(a) or not o(a) then
+    for a = 1, i do
+      if not s(t) or not o(t) or not o(t) then
         e("bad locvars2"); return
       end
     end
     -- upvalues (ignored)
-    local i = o(t)
+    local i = o(a)
     if not i then
       e("bad sizeupvalues1"); return
     end
-    local o = o(a)
+    local o = o(t)
     if not o then
       e("bad sizeupvalues2"); return
     end
-    for a = 1, i do
-      if not h(t) then e("bad upvalues1"); return end
+    for t = 1, i do
+      if not s(a) then e("bad upvalues1"); return end
     end
-    for t = 1, o do
-      if not h(a) then e("bad upvalues2"); return end
+    for a = 1, o do
+      if not s(t) then e("bad upvalues2"); return end
     end
     return true
   end
@@ -3571,7 +3582,7 @@ function binary(n, o)
   -- * assume a valid binary chunk is generated, since it was not
   --   generated via external means
   --------------------------------------------------------------------
-  if not (s(i, 12) and s(l, 12)) then
+  if not (h(i, 12) and h(r, 12)) then
     e("header broken")
   end
   f(i, 6)                   -- skip signature(4), version, format
@@ -3581,18 +3592,18 @@ function binary(n, o)
   y   = n(i)
   w = n(i)
   f(i)                      -- skip integral flag
-  f(l, 12)                  -- skip other header (assume similar)
+  f(r, 12)                  -- skip other header (assume similar)
   if g == 1 then           -- set for endian sensitive data we need
-    o   = x
-    m = E
+    o   = k
+    m = j
   else
-    o   = z
-    m = _
+    o   = q
+    m = x
   end
-  b(i, l)               -- get prototype at root
+  b(i, r)               -- get prototype at root
   if i.i ~= i.len + 1 then
     e("inconsistent binary chunk1"); return
-  elseif l.i ~= l.len + 1 then
+  elseif r.i ~= r.len + 1 then
     e("inconsistent binary chunk2"); return
   end
   --------------------------------------------------------------------
@@ -3603,27 +3614,27 @@ end
 end
 
 -- preload function for module plugin/html
-v["plugin/html"] =
+p["plugin/html"] =
 function()
 --start of inserted module
 module "plugin/html"
 
 local t = a.require "string"
-local m = a.require "table"
-local r = a.require "io"
+local c = a.require "table"
+local u = a.require "io"
 
 ------------------------------------------------------------------------
 -- constants and configuration
 ------------------------------------------------------------------------
 
-local h = ".html"
-local l = {
+local l = ".html"
+local m = {
   ["&"] = "&amp;", ["<"] = "&lt;", [">"] = "&gt;",
   ["'"] = "&apos;", ["\""] = "&quot;",
 }
 
 -- simple headers and footers
-local f = [[
+local y = [[
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
@@ -3635,13 +3646,13 @@ local f = [[
 <body>
 <pre class="code">
 ]]
-local y = [[
+local w = [[
 </pre>
 </body>
 </html>
 ]]
 -- for more, please see wikimain.css from the Lua wiki site
-local w = [[
+local f = [[
 BODY {
     background: white;
     color: navy;
@@ -3661,12 +3672,12 @@ span.local { color: #0000ff; font-weight: bold; }
 -- option handling, plays nice with --quiet option
 ------------------------------------------------------------------------
 
-local i                    -- local reference to list of options
-local e, n             -- filenames
-local o, d, u  -- token data
+local n                    -- local reference to list of options
+local e, o             -- filenames
+local i, d, h  -- token data
 
 local function s(...)               -- handle quiet option
-  if i.QUIET then return end
+  if n.QUIET then return end
   a.print(...)
 end
 
@@ -3674,20 +3685,20 @@ end
 -- initialization
 ------------------------------------------------------------------------
 
-function init(o, s, r)
-  i = o
-  e = s
-  local o, d = t.find(e, "%.[^%.%\\%/]*$")
+function init(s, i, h)
+  n = s
+  e = i
+  local i, h = t.find(e, "%.[^%.%\\%/]*$")
   local s, r = e, ""
-  if o and o > 1 then
-    s = t.sub(e, 1, o - 1)
-    r = t.sub(e, o, d)
+  if i and i > 1 then
+    s = t.sub(e, 1, i - 1)
+    r = t.sub(e, i, h)
   end
-  n = s..h
-  if i.OUTPUT_FILE then
-    n = i.OUTPUT_FILE
+  o = s..l
+  if n.OUTPUT_FILE then
+    o = n.OUTPUT_FILE
   end
-  if e == n then
+  if e == o then
     a.error("output filename identical to input filename")
   end
 end
@@ -3700,16 +3711,16 @@ function post_load(t)
   s([[
 HTML plugin module for LuaSrcDiet
 ]])
-  s("Exporting: "..e.." -> "..n.."\n")
+  s("Exporting: "..e.." -> "..o.."\n")
 end
 
 ------------------------------------------------------------------------
 -- post-lexing processing, can work on lexer table output
 ------------------------------------------------------------------------
 
-function post_lex(e, a, t)
-  o, d, u
-    = e, a, t
+function post_lex(e, t, a)
+  i, d, h
+    = e, t, a
 end
 
 ------------------------------------------------------------------------
@@ -3720,7 +3731,7 @@ local function h(a)
   local e = 1
   while e <= #a do
     local o = t.sub(a, e, e)
-    local i = l[o]
+    local i = m[o]
     if i then
       o = i
       a = t.sub(a, 1, e - 1)..o..t.sub(a, e + 1)
@@ -3734,8 +3745,8 @@ end
 -- save source code to file
 ------------------------------------------------------------------------
 
-local function c(t, o)
-  local e = r.open(t, "wb")
+local function m(t, o)
+  local e = u.open(t, "wb")
   if not e then a.error("cannot open \""..t.."\" for writing") end
   local o = e:write(o)
   if not o then a.error("cannot write to \""..t.."\"") end
@@ -3746,7 +3757,7 @@ end
 -- post-parsing processing, gives globalinfo, localinfo
 ------------------------------------------------------------------------
 
-function post_parse(u, l)
+function post_parse(l, u)
   local r = {}
   local function s(e)         -- html helpers
     r[#r + 1] = e
@@ -3755,29 +3766,29 @@ function post_parse(u, l)
     s('<span class="'..e..'">'..t..'</span>')
   end
   ----------------------------------------------------------------------
-  for e = 1, #u do     -- mark global identifiers as TK_GLOBAL
-    local e = u[e]
-    local e = e.xref
-    for t = 1, #e do
-      local e = e[t]
-      o[e] = "TK_GLOBAL"
-    end
-  end--for
-  ----------------------------------------------------------------------
-  for e = 1, #l do      -- mark local identifiers as TK_LOCAL
+  for e = 1, #l do     -- mark global identifiers as TK_GLOBAL
     local e = l[e]
     local e = e.xref
     for t = 1, #e do
       local e = e[t]
-      o[e] = "TK_LOCAL"
+      i[e] = "TK_GLOBAL"
     end
   end--for
   ----------------------------------------------------------------------
-  s(t.format(f,     -- header and leading stuff
+  for e = 1, #u do      -- mark local identifiers as TK_LOCAL
+    local e = u[e]
+    local e = e.xref
+    for t = 1, #e do
+      local e = e[t]
+      i[e] = "TK_LOCAL"
+    end
+  end--for
+  ----------------------------------------------------------------------
+  s(t.format(y,     -- header and leading stuff
     h(e),
-    w))
-  for e = 1, #o do        -- enumerate token list
-    local e, t = o[e], d[e]
+    f))
+  for e = 1, #i do        -- enumerate token list
+    local e, t = i[e], d[e]
     if e == "TK_KEYWORD" then
       a("keyword", t)
     elseif e == "TK_STRING" or e == "TK_LSTRING" then
@@ -3798,15 +3809,15 @@ function post_parse(u, l)
       s(t)
     end
   end--for
-  s(y)
-  c(n, m.concat(r))
-  i.EXIT = true
+  s(w)
+  m(o, c.concat(r))
+  n.EXIT = true
 end
 --end of inserted module
 end
 
 -- preload function for module plugin/sloc
-v["plugin/sloc"] =
+p["plugin/sloc"] =
 function()
 --start of inserted module
 module "plugin/sloc"
@@ -3819,19 +3830,19 @@ local e = a.require "table"
 ------------------------------------------------------------------------
 
 local o                    -- local reference to list of options
-local s                     -- source file name
+local h                     -- source file name
 
 function init(t, e, a)
   o = t
   o.QUIET = true
-  s = e
+  h = e
 end
 
 ------------------------------------------------------------------------
 -- splits a block into a table of lines (minus EOLs)
 ------------------------------------------------------------------------
 
-local function h(o)
+local function s(o)
   local a = {}
   local t, i = 1, #o
   while t <= i do
@@ -3852,20 +3863,20 @@ end
 -- post-lexing processing, can work on lexer table output
 ------------------------------------------------------------------------
 
-function post_lex(t, d, r)
-  local e, n = 0, 0
-  local function i(t)        -- if a new line, count it as an SLOC
+function post_lex(t, r, d)
+  local e, i = 0, 0
+  local function n(t)        -- if a new line, count it as an SLOC
     if t > e then           -- new line # must be > old line #
-      n = n + 1; e = t
+      i = i + 1; e = t
     end
   end
   for e = 1, #t do        -- enumerate over all tokens
     local t, a, e
-      = t[e], d[e], r[e]
+      = t[e], r[e], d[e]
     --------------------------------------------------------------------
     if t == "TK_KEYWORD" or t == "TK_NAME" or       -- significant
        t == "TK_NUMBER" or t == "TK_OP" then
-      i(e)
+      n(e)
     --------------------------------------------------------------------
     -- Both TK_STRING and TK_LSTRING may be multi-line, hence, a loop
     -- is needed in order to mark off lines one-by-one. Since llex.lua
@@ -3873,17 +3884,17 @@ function post_lex(t, d, r)
     -- we must subtract in order to get the starting line number.
     --------------------------------------------------------------------
     elseif t == "TK_STRING" then      -- possible multi-line
-      local t = h(a)
+      local t = s(a)
       e = e - #t + 1
       for t = 1, #t do
-        i(e); e = e + 1
+        n(e); e = e + 1
       end
     --------------------------------------------------------------------
     elseif t == "TK_LSTRING" then     -- possible multi-line
-      local t = h(a)
+      local t = s(a)
       e = e - #t + 1
       for a = 1, #t do
-        if t[a] ~= "" then i(e) end
+        if t[a] ~= "" then n(e) end
         e = e + 1
       end
     --------------------------------------------------------------------
@@ -3891,32 +3902,32 @@ function post_lex(t, d, r)
     --------------------------------------------------------------------
     end
   end--for
-  a.print(s..": "..n) -- display result
+  a.print(h..": "..i) -- display result
   o.EXIT = true
 end
 --end of inserted module
 end
 
 -- support modules
-local o = g "llex"
-local l = g "lparser"
-local x = g "optlex"
-local T = g "optparser"
-local j = g "equiv"
+local o = j "llex"
+local u = j "lparser"
+local x = j "optlex"
+local E = j "optparser"
+local q = j "equiv"
 local a
 
 --[[--------------------------------------------------------------------
 -- messages and textual data
 ----------------------------------------------------------------------]]
 
-local v = [[
+local p = [[
 LuaSrcDiet: Puts your Lua 5.1 source code on a diet
-Version 0.12.0 (20110913)  Copyright (c) 2005-2008,2011 Kein-Hong Man
+Version 0.12.1 (20120407)  Copyright (c) 2012 Kein-Hong Man
 The COPYRIGHT file describes the conditions under which this
 software may be distributed.
 ]]
 
-local f = [[
+local m = [[
 usage: LuaSrcDiet [options] [filenames]
 
 example:
@@ -3954,7 +3965,7 @@ default settings:
 -- * these options should follow --opt-* and --noopt-* style for now
 ------------------------------------------------------------------------
 
-local b = [[
+local v = [[
 --opt-comments,'remove comments and block comments'
 --opt-whitespace,'remove whitespace excluding EOLs'
 --opt-emptylines,'remove empty lines'
@@ -3969,7 +3980,7 @@ local b = [[
 ]]
 
 -- preset configuration
-local E = [[
+local _ = [[
   --opt-comments --opt-whitespace --opt-emptylines
   --opt-numbers --opt-locals
   --opt-srcequiv --opt-binequiv
@@ -3989,15 +4000,15 @@ local O = [[
   --opt-locals --opt-entropy
   --opt-srcequiv --opt-binequiv
 ]]
-local A = [[
+local I = [[
   --noopt-comments --noopt-whitespace --noopt-emptylines
   --noopt-eols --noopt-strings --noopt-numbers
   --noopt-locals --noopt-entropy
   --opt-srcequiv --opt-binequiv
 ]]
 
-local n = "_"      -- default suffix for file renaming
-local I = "plugin/" -- relative location of plugins
+local h = "_"      -- default suffix for file renaming
+local A = "plugin/" -- relative location of plugins
 
 --[[--------------------------------------------------------------------
 -- startup and initialize option list handling
@@ -4005,11 +4016,11 @@ local I = "plugin/" -- relative location of plugins
 
 -- simple error message handler; change to error if traceback wanted
 local function i(e)
-  p("LuaSrcDiet (error): "..e); os.exit(1)
+  y("LuaSrcDiet (error): "..e); os.exit(1)
 end
 --die = error--DEBUG
 
-if not X(_VERSION, "5.1", 1, 1) then  -- sanity check
+if not B(_VERSION, "5.1", 1, 1) then  -- sanity check
   i("requires Lua 5.1 to run")
 end
 
@@ -4017,48 +4028,48 @@ end
 -- prepares text for list of optimizations, prepare lookup table
 ------------------------------------------------------------------------
 
-local t = ""
+local n = ""
 do
   local i = 24
-  local o = {}
-  for a, n in Z(b, "%s*([^,]+),'([^']+)'") do
+  local t = {}
+  for a, o in G(v, "%s*([^,]+),'([^']+)'") do
     local e = "  "..a
-    e = e..s.rep(" ", i - #e)..n.."\n"
-    t = t..e
-    o[a] = true
-    o["--no"..y(a, 3)] = true
+    e = e..s.rep(" ", i - #e)..o.."\n"
+    n = n..e
+    t[a] = true
+    t["--no"..f(a, 3)] = true
   end
-  b = o  -- replace OPTION with lookup table
+  v = t  -- replace OPTION with lookup table
 end
 
-f = s.format(f, t, E)
+m = s.format(m, n, _)
 
 if W then  -- embedded plugins
   local e = "\nembedded plugins:\n"
   for t = 1, #W do
     local t = W[t]
-    e = e.."  "..te[t].."\n"
+    e = e.."  "..Z[t].."\n"
   end
-  f = f..e
+  m = m..e
 end
 
 ------------------------------------------------------------------------
 -- global variable initialization, option set handling
 ------------------------------------------------------------------------
 
-local _ = n           -- file suffix
+local z = h           -- file suffix
 local e = {}                       -- program options
-local n, h                    -- statistics tables
+local h, n                    -- statistics tables
 
 -- function to set option lookup table based on a text list of options
 -- note: additional forced settings for --opt-eols is done in optlex.lua
 local function w(t)
-  for t in Z(t, "(%-%-%S+)") do
-    if y(t, 3, 4) == "no" and        -- handle negative options
-       b["--"..y(t, 5)] then
-      e[y(t, 5)] = false
+  for t in G(t, "(%-%-%S+)") do
+    if f(t, 3, 4) == "no" and        -- handle negative options
+       v["--"..f(t, 5)] then
+      e[f(t, 5)] = false
     else
-      e[y(t, 3)] = true
+      e[f(t, 3)] = true
     end
   end
 end
@@ -4076,9 +4087,9 @@ local d = {
   "TK_COMMENT", "TK_LCOMMENT",                  -- non-grammar
   "TK_EOL", "TK_SPACE",
 }
-local u = 7
+local c = 7
 
-local c = {                      -- EOL names for token dump
+local l = {                      -- EOL names for token dump
   ["\n"] = "LF", ["\r"] = "CR",
   ["\n\r"] = "LFCR", ["\r\n"] = "CRLF",
 }
@@ -4087,12 +4098,12 @@ local c = {                      -- EOL names for token dump
 -- read source code from file
 ------------------------------------------------------------------------
 
-local function r(t)
-  local e = io.open(t, "rb")
-  if not e then i('cannot open "'..t..'" for reading') end
-  local a = e:read("*a")
-  if not a then i('cannot read from "'..t..'"') end
-  e:close()
+local function r(e)
+  local t = io.open(e, "rb")
+  if not t then i('cannot open "'..e..'" for reading') end
+  local a = t:read("*a")
+  if not a then i('cannot read from "'..e..'"') end
+  t:close()
   return a
 end
 
@@ -4100,7 +4111,7 @@ end
 -- save source code to file
 ------------------------------------------------------------------------
 
-local function L(t, a)
+local function T(t, a)
   local e = io.open(t, "wb")
   if not e then i('cannot open "'..t..'" for writing') end
   local a = e:write(a)
@@ -4113,41 +4124,41 @@ end
 ------------------------------------------------------------------------
 
 -- initialize statistics table
-local function z()
-  n, h = {}, {}
+local function k()
+  h, n = {}, {}
   for e = 1, #d do
     local e = d[e]
-    n[e], h[e] = 0, 0
+    h[e], n[e] = 0, 0
   end
 end
 
 -- add a token to statistics table
-local function q(e, t)
-  n[e] = n[e] + 1
-  h[e] = h[e] + #t
+local function g(e, t)
+  h[e] = h[e] + 1
+  n[e] = n[e] + #t
 end
 
 -- do totals for statistics table, return average table
-local function k()
+local function b()
   local function i(e, t)                      -- safe average function
     if e == 0 then return 0 end
     return t / e
   end
   local o = {}
   local e, t = 0, 0
-  for a = 1, u do                   -- total grammar tokens
+  for a = 1, c do                   -- total grammar tokens
     local a = d[a]
-    e = e + n[a]; t = t + h[a]
+    e = e + h[a]; t = t + n[a]
   end
-  n.TOTAL_TOK, h.TOTAL_TOK = e, t
+  h.TOTAL_TOK, n.TOTAL_TOK = e, t
   o.TOTAL_TOK = i(e, t)
   e, t = 0, 0
   for a = 1, #d do                         -- total all tokens
     local a = d[a]
-    e = e + n[a]; t = t + h[a]
-    o[a] = i(n[a], h[a])
+    e = e + h[a]; t = t + n[a]
+    o[a] = i(h[a], n[a])
   end
-  n.TOTAL_ALL, h.TOTAL_ALL = e, t
+  h.TOTAL_ALL, n.TOTAL_ALL = e, t
   o.TOTAL_ALL = i(e, t)
   return o
 end
@@ -4160,7 +4171,7 @@ end
 -- a simple token dumper, minimal translation of seminfo data
 ------------------------------------------------------------------------
 
-local function S(e)
+local function H(e)
   --------------------------------------------------------------------
   -- load file and process source input into tokens
   --------------------------------------------------------------------
@@ -4176,11 +4187,11 @@ local function S(e)
     if t == "TK_OP" and s.byte(e) < 32 then
       e = "(".. s.byte(e)..")"
     elseif t == "TK_EOL" then
-      e = c[e]
+      e = l[e]
     else
       e = "'"..e.."'"
     end
-    p(t.." "..e)
+    y(t.." "..e)
   end--for
 end
 
@@ -4189,53 +4200,53 @@ end
 ----------------------------------------------------------------------
 
 local function R(e)
-  local a = p
+  local t = y
   --------------------------------------------------------------------
   -- load file and process source input into tokens
   --------------------------------------------------------------------
   local e = r(e)
   o.init(e)
   o.llex()
-  local o, t, e
+  local e, o, a
     = o.tok, o.seminfo, o.tokln
   --------------------------------------------------------------------
   -- do parser optimization here
   --------------------------------------------------------------------
-  l.init(o, t, e)
-  local e = l.parser()
-  local t, i =
+  u.init(e, o, a)
+  local e = u.parser()
+  local a, i =
     e.globalinfo, e.localinfo
   --------------------------------------------------------------------
   -- display output
   --------------------------------------------------------------------
   local o = s.rep("-", 72)
-  a("*** Local/Global Variable Tracker Tables ***")
-  a(o.."\n GLOBALS\n"..o)
+  t("*** Local/Global Variable Tracker Tables ***")
+  t(o.."\n GLOBALS\n"..o)
   -- global tables have a list of xref numbers only
-  for e = 1, #t do
-    local t = t[e]
-    local e = "("..e..") '"..t.name.."' -> "
-    local t = t.xref
-    for o = 1, #t do e = e..t[o].." " end
-    a(e)
+  for e = 1, #a do
+    local a = a[e]
+    local e = "("..e..") '"..a.name.."' -> "
+    local a = a.xref
+    for o = 1, #a do e = e..a[o].." " end
+    t(e)
   end
   -- local tables have xref numbers and a few other special
   -- numbers that are specially named: decl (declaration xref),
   -- act (activation xref), rem (removal xref)
-  a(o.."\n LOCALS (decl=declared act=activated rem=removed)\n"..o)
+  t(o.."\n LOCALS (decl=declared act=activated rem=removed)\n"..o)
   for e = 1, #i do
-    local t = i[e]
-    local e = "("..e..") '"..t.name.."' decl:"..t.decl..
-                " act:"..t.act.." rem:"..t.rem
-    if t.isself then
+    local a = i[e]
+    local e = "("..e..") '"..a.name.."' decl:"..a.decl..
+                " act:"..a.act.." rem:"..a.rem
+    if a.isself then
       e = e.." isself"
     end
     e = e.." -> "
-    local t = t.xref
-    for o = 1, #t do e = e..t[o].." " end
-    a(e)
+    local a = a.xref
+    for o = 1, #a do e = e..a[o].." " end
+    t(e)
   end
-  a(o.."\n")
+  t(o.."\n")
 end
 
 ------------------------------------------------------------------------
@@ -4243,7 +4254,7 @@ end
 ------------------------------------------------------------------------
 
 local function D(a)
-  local e = p
+  local e = y
   --------------------------------------------------------------------
   -- load file and process source input into tokens
   --------------------------------------------------------------------
@@ -4251,38 +4262,38 @@ local function D(a)
   o.init(t)
   o.llex()
   local t, o = o.tok, o.seminfo
-  e(v)
+  e(p)
   e("Statistics for: "..a.."\n")
   --------------------------------------------------------------------
   -- collect statistics
   --------------------------------------------------------------------
-  z()
+  k()
   for e = 1, #t do
-    local t, e = t[e], o[e]
-    q(t, e)
+    local e, t = t[e], o[e]
+    g(e, t)
   end--for
-  local t = k()
+  local t = b()
   --------------------------------------------------------------------
   -- display output
   --------------------------------------------------------------------
   local a = s.format
   local function r(e)
-    return n[e], h[e], t[e]
+    return h[e], n[e], t[e]
   end
-  local o, i = "%-16s%8s%8s%10s", "%-16s%8d%8d%10.2f"
+  local i, o = "%-16s%8s%8s%10s", "%-16s%8d%8d%10.2f"
   local t = s.rep("-", 42)
-  e(a(o, "Lexical",  "Input", "Input", "Input"))
-  e(a(o, "Elements", "Count", "Bytes", "Average"))
+  e(a(i, "Lexical",  "Input", "Input", "Input"))
+  e(a(i, "Elements", "Count", "Bytes", "Average"))
   e(t)
-  for o = 1, #d do
-    local o = d[o]
-    e(a(i, o, r(o)))
-    if o == "TK_EOS" then e(t) end
+  for i = 1, #d do
+    local i = d[i]
+    e(a(o, i, r(i)))
+    if i == "TK_EOS" then e(t) end
   end
   e(t)
-  e(a(i, "Total Elements", r("TOTAL_ALL")))
+  e(a(o, "Total Elements", r("TOTAL_ALL")))
   e(t)
-  e(a(i, "Total Tokens", r("TOTAL_TOK")))
+  e(a(o, "Total Tokens", r("TOTAL_TOK")))
   e(t.."\n")
 end
 
@@ -4290,7 +4301,7 @@ end
 -- process source file(s), write output and reports some statistics
 ------------------------------------------------------------------------
 
-local function H(f, w)
+local function S(f, w)
   local function t(...)             -- handle quiet option
     if e.QUIET then return end
     _G.print(...)
@@ -4300,7 +4311,7 @@ local function H(f, w)
     a.init(e, f, w)
     if e.EXIT then return end
   end
-  t(v)                      -- title message
+  t(p)                      -- title message
   --------------------------------------------------------------------
   -- load file and process source input into tokens
   --------------------------------------------------------------------
@@ -4311,33 +4322,33 @@ local function H(f, w)
   end
   o.init(c)
   o.llex()
-  local r, u, m
+  local r, l, m
     = o.tok, o.seminfo, o.tokln
   if a and a.post_lex then    -- plugin post-lex
-    a.post_lex(r, u, m)
+    a.post_lex(r, l, m)
     if e.EXIT then return end
   end
   --------------------------------------------------------------------
   -- collect 'before' statistics
   --------------------------------------------------------------------
-  z()
+  k()
   for e = 1, #r do
-    local e, t = r[e], u[e]
-    q(e, t)
+    local t, e = r[e], l[e]
+    g(t, e)
   end--for
-  local p = k()
-  local v, y = n, h
+  local v = b()
+  local p, y = h, n
   --------------------------------------------------------------------
   -- do parser optimization here
   --------------------------------------------------------------------
-  T.print = t  -- hack
-  l.init(r, u, m)
-  local l = l.parser()
+  E.print = t  -- hack
+  u.init(r, l, m)
+  local u = u.parser()
   if a and a.post_parse then          -- plugin post-parse
-    a.post_parse(l.globalinfo, l.localinfo)
+    a.post_parse(u.globalinfo, u.localinfo)
     if e.EXIT then return end
   end
-  T.optimize(e, r, u, l)
+  E.optimize(e, r, l, u)
   if a and a.post_optparse then       -- plugin post-optparse
     a.post_optparse()
     if e.EXIT then return end
@@ -4345,31 +4356,31 @@ local function H(f, w)
   --------------------------------------------------------------------
   -- do lexer optimization here, save output file
   --------------------------------------------------------------------
-  local l = x.warn  -- use this as a general warning lookup
+  local u = x.warn  -- use this as a general warning lookup
   x.print = t  -- hack
-  r, u, m
-    = x.optimize(e, r, u, m)
+  r, l, m
+    = x.optimize(e, r, l, m)
   if a and a.post_optlex then         -- plugin post-optlex
-    a.post_optlex(r, u, m)
+    a.post_optlex(r, l, m)
     if e.EXIT then return end
   end
-  local a = ee.concat(u)
+  local a = ee.concat(l)
   -- depending on options selected, embedded EOLs in long strings and
   -- long comments may not have been translated to \n, tack a warning
   if s.find(a, "\r\n", 1, 1) or
      s.find(a, "\n\r", 1, 1) then
-    l.MIXEDEOL = true
+    u.MIXEDEOL = true
   end
   --------------------------------------------------------------------
   -- test source and binary chunk equivalence
   --------------------------------------------------------------------
-  j.init(e, o, l)
-  j.source(c, a)
-  j.binary(c, a)
+  q.init(e, o, u)
+  q.source(c, a)
+  q.binary(c, a)
   local m = "before and after lexer streams are NOT equivalent!"
   local c = "before and after binary chunks are NOT equivalent!"
   -- for reporting, die if option was selected, else just warn
-  if l.SRC_EQUIV then
+  if u.SRC_EQUIV then
     if e["opt-srcequiv"] then i(m) end
   else
     t("*** SRCEQUIV: token streams are sort of equivalent")
@@ -4378,7 +4389,7 @@ local function H(f, w)
     end
     t()
   end
-  if l.BIN_EQUIV then
+  if u.BIN_EQUIV then
     if e["opt-binequiv"] then i(c) end
   else
     t("*** BINEQUIV: binary chunks are sort of equivalent")
@@ -4387,24 +4398,24 @@ local function H(f, w)
   --------------------------------------------------------------------
   -- save optimized source stream to output file
   --------------------------------------------------------------------
-  L(w, a)
+  T(w, a)
   --------------------------------------------------------------------
   -- collect 'after' statistics
   --------------------------------------------------------------------
-  z()
+  k()
   for e = 1, #r do
-    local t, e = r[e], u[e]
-    q(t, e)
+    local e, t = r[e], l[e]
+    g(e, t)
   end--for
-  local o = k()
+  local o = b()
   --------------------------------------------------------------------
   -- display output
   --------------------------------------------------------------------
   t("Statistics for: "..f.." -> "..w.."\n")
   local a = s.format
   local function r(e)
-    return v[e], y[e], p[e],
-           n[e],  h[e],  o[e]
+    return p[e], y[e], v[e],
+           h[e],  n[e],  o[e]
   end
   local o, i = "%-16s%8s%8s%10s%8s%8s%10s",
                        "%-16s%8d%8d%10.2f%8d%8d%10.2f"
@@ -4430,13 +4441,13 @@ local function H(f, w)
   --------------------------------------------------------------------
   -- report warning flags from optimizing process
   --------------------------------------------------------------------
-  if l.LSTRING then
-    t("* WARNING: "..l.LSTRING)
-  elseif l.MIXEDEOL then
+  if u.LSTRING then
+    t("* WARNING: "..u.LSTRING)
+  elseif u.MIXEDEOL then
     t("* WARNING: ".."output still contains some CRLF or LFCR line endings")
-  elseif l.SRC_EQUIV then
+  elseif u.SRC_EQUIV then
     t("* WARNING: "..m)
-  elseif l.BIN_EQUIV then
+  elseif u.BIN_EQUIV then
     t("* WARNING: "..c)
   end
   t()
@@ -4448,7 +4459,7 @@ end
 
 local r = {...}  -- program arguments
 local h = {}
-w(E)     -- set to default options at beginning
+w(_)     -- set to default options at beginning
 
 ------------------------------------------------------------------------
 -- per-file handling, ship off to tasks
@@ -4464,10 +4475,10 @@ local function l(n)
     local o, r = s.find(t, "%.[^%.%\\%/]*$")
     local h, s = t, ""
     if o and o > 1 then
-      h = y(t, 1, o - 1)
-      s = y(t, o, r)
+      h = f(t, 1, o - 1)
+      s = f(t, o, r)
     end
-    a = h.._..s
+    a = h..z..s
     if #n == 1 and e.OUTPUT_FILE then
       a = e.OUTPUT_FILE
     end
@@ -4478,13 +4489,13 @@ local function l(n)
     -- perform requested operations
     ------------------------------------------------------------------
     if e.DUMP_LEXER then
-      S(t)
+      H(t)
     elseif e.DUMP_PARSER then
       R(t)
     elseif e.READ_ONLY then
       D(t)
     else
-      H(t, a)
+      S(t, a)
     end
   end--for
 end
@@ -4503,7 +4514,7 @@ local function d()
   --------------------------------------------------------------------
   while o <= t do
     local t, n = r[o], r[o + 1]
-    local s = X(t, "^%-%-?")
+    local s = B(t, "^%-%-?")
     if s == "-" then                 -- single-dash options
       if t == "-h" then
         e.HELP = true; break
@@ -4511,7 +4522,7 @@ local function d()
         e.VERSION = true; break
       elseif t == "-s" then
         if not n then i("-s option needs suffix specification") end
-        _ = n
+        z = n
         o = o + 1
       elseif t == "-o" then
         if not n then i("-o option needs a file name") end
@@ -4535,7 +4546,7 @@ local function d()
         if not n then i("--plugin option needs a module name") end
         if e.PLUGIN then i("only one plugin can be specified") end
         e.PLUGIN = n
-        a = g(I..n)
+        a = j(A..n)
         o = o + 1
       elseif t == "--quiet" then
         e.QUIET = true
@@ -4546,14 +4557,14 @@ local function d()
       elseif t == "--maximum" then
         w(O)
       elseif t == "--none" then
-        w(A)
+        w(I)
       elseif t == "--dump-lexer" then
         e.DUMP_LEXER = true
       elseif t == "--dump-parser" then
         e.DUMP_PARSER = true
       elseif t == "--details" then
         e.DETAILS = true
-      elseif b[t] then  -- lookup optimization options
+      elseif v[t] then  -- lookup optimization options
         w(t)
       else
         i("unrecognized option "..t)
@@ -4564,9 +4575,9 @@ local function d()
     o = o + 1
   end--while
   if e.HELP then
-    p(v..f); return true
+    y(p..m); return true
   elseif e.VERSION then
-    p(v); return true
+    y(p); return true
   end
   if #h > 0 then
     if #h > 1 and e.OUTPUT_FILE then

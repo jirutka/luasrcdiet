@@ -5,7 +5,7 @@
   Compresses Lua source code by removing unnecessary characters.
   For Lua 5.1.x source code.
 
-  Copyright (c) 2008,2011 Kein-Hong Man <keinhong@gmail.com>
+  Copyright (c) 2008,2011,2012 Kein-Hong Man <keinhong@gmail.com>
   The COPYRIGHT file describes the conditions
   under which this software may be distributed.
 
@@ -1972,7 +1972,7 @@ local function do_lcomment(I)
   local info = sinfos[I]
   local delim1 = match(info, "^%-%-%[=*%[")  -- cut out delimiters
   local sep = #delim1
-  local delim2 = sub(info, -sep, -1)
+  local delim2 = sub(info, -(sep - 2), -1)
   local z = sub(info, sep + 1, -(sep - 1))  -- comment without delims
   local y = ""
   local i = 1
@@ -2603,37 +2603,6 @@ local function stats_summary(globaluniq, localuniq, afteruniq, option)
   print(hl.."\n")
 end
 ----------------------------------------------------------------------
--- delete a token and adjust all relevant tables
--- * horribly inefficient... luckily it's an off-line processor
--- * currently invalidates globalinfo and localinfo (not updated),
---   so any other optimization is done after processing locals
---   (of course, we can also lex the source data again...)
-----------------------------------------------------------------------
-local function del_token(id)
-  if id < 1 or id >= #tokpar then
-    return  -- ignore if invalid (id == #tokpar is <eof> token)
-  end
-  local i2 = xrefpar[id]        -- position in lexer lists
-  local idend, i2end =          -- final indices
-    #tokpar, #toklist
-  for i = id + 1, idend do      -- shift parser tables
-    tokpar[i - 1] = tokpar[i]
-    seminfopar[i - 1] = seminfopar[i]
-    xrefpar[i - 1] = xrefpar[i] - 1
-    statinfo[i - 1] = statinfo[i]
-  end
-  tokpar[idend] = nil
-  seminfopar[idend] = nil
-  xrefpar[idend] = nil
-  statinfo[idend] = nil
-  for i = i2 + 1, i2end do      -- shift lexer tables
-    toklist[i - 1] = toklist[i]
-    seminfolist[i - 1] = seminfolist[i]
-  end
-  toklist[i2end] = nil
-  seminfolist[i2end] = nil
-end
-----------------------------------------------------------------------
 -- experimental optimization for f("string") statements
 -- * safe to delete parentheses without adding whitespace, as both
 --   kinds of strings can abut with anything else
@@ -2649,20 +2618,63 @@ local function optimize_func1()
     end
   end
   ------------------------------------------------------------------
-  local starti = 1
-  while true do
-    local i, found = starti, false
-    while i <= #tokpar do               -- scan for function pattern
-      local id = statinfo[i]
-      if id == "call" and is_strcall(i) then  -- found, delete ()
-        del_token(i + 1)        -- '('
-        del_token(i + 2)        -- ')' (index shifted by -1)
-        found = true
-        starti = i + 2
-      end
+  local del_list = {}           -- scan for function pattern,
+  local i = 1                   -- tokens to be deleted are marked
+  while i <= #tokpar do
+    local id = statinfo[i]
+    if id == "call" and is_strcall(i) then  -- found & mark ()
+      del_list[i + 1] = true    -- '('
+      del_list[i + 3] = true    -- ')'
+      i = i + 3
+    end
+    i = i + 1
+  end
+  ------------------------------------------------------------------
+  -- delete a token and adjust all relevant tables
+  -- * currently invalidates globalinfo and localinfo (not updated),
+  --   so any other optimization is done after processing locals
+  --   (of course, we can also lex the source data again...)
+  -- * faster one-pass token deletion
+  ------------------------------------------------------------------
+  local i, dst, idend = 1, 1, #tokpar
+  local del_list2 = {}
+  while dst <= idend do         -- process parser tables
+    if del_list[i] then         -- found a token to delete?
+      del_list2[xrefpar[i]] = true
       i = i + 1
     end
-    if not found then break end
+    if i > dst then
+      if i <= idend then        -- shift table items lower
+        tokpar[dst] = tokpar[i]
+        seminfopar[dst] = seminfopar[i]
+        xrefpar[dst] = xrefpar[i] - (i - dst)
+        statinfo[dst] = statinfo[i]
+      else                      -- nil out excess entries
+        tokpar[dst] = nil
+        seminfopar[dst] = nil
+        xrefpar[dst] = nil
+        statinfo[dst] = nil
+      end
+    end
+    i = i + 1
+    dst = dst + 1
+  end
+  local i, dst, idend = 1, 1, #toklist
+  while dst <= idend do         -- process lexer tables
+    if del_list2[i] then        -- found a token to delete?
+      i = i + 1
+    end
+    if i > dst then
+      if i <= idend then        -- shift table items lower
+        toklist[dst] = toklist[i]
+        seminfolist[dst] = seminfolist[i]
+      else                      -- nil out excess entries
+        toklist[dst] = nil
+        seminfolist[dst] = nil
+      end
+    end
+    i = i + 1
+    dst = dst + 1
   end
 end
 ----------------------------------------------------------------------
@@ -2909,6 +2921,7 @@ function optimize(option, _toklist, _seminfolist, xinfo)
   ------------------------------------------------------------------
   if option["opt-experimental"] then    -- experimental
     optimize_func1()
+    -- WARNING globalinfo and localinfo now invalidated!
   end
 end
 --end of inserted module
@@ -3632,7 +3645,7 @@ local plugin
 ----------------------------------------------------------------------]]
 local MSG_TITLE = [[
 LuaSrcDiet: Puts your Lua 5.1 source code on a diet
-Version 0.12.0 (20110913)  Copyright (c) 2005-2008,2011 Kein-Hong Man
+Version 0.12.1 (20120407)  Copyright (c) 2012 Kein-Hong Man
 The COPYRIGHT file describes the conditions under which this
 software may be distributed.
 ]]

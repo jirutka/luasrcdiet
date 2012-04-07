@@ -2,14 +2,14 @@
 local s=string
 local e=math
 local ee=table
-local g=require
-local p=print
-local y=s.sub
-local Z=s.gmatch
-local X=s.match
-local v=package.preload
+local j=require
+local y=print
+local f=s.sub
+local G=s.gmatch
+local B=s.match
+local p=package.preload
 local a=_G
-local te={
+local Z={
 html="html    generates a HTML file for checking globals",
 sloc="sloc    calculates SLOC for given source file",
 }
@@ -17,15 +17,15 @@ local W={
 'html',
 'sloc',
 }
-v.llex=
+p.llex=
 function()
 module"llex"
-local r=a.require"string"
-local u=r.find
-local m=r.match
-local s=r.sub
+local h=a.require"string"
+local u=h.find
+local c=h.match
+local n=h.sub
 local f={}
-for e in r.gmatch([[
+for e in h.gmatch([[
 and break do else elseif end false for function if in
 local nil not or repeat return then true until while]],"%S+")do
 f[e]=true
@@ -33,16 +33,16 @@ end
 local e,
 l,
 o,
-n,
-h
+s,
+r
 local function i(t,a)
 local e=#tok+1
 tok[e]=t
 seminfo[e]=a
-tokln[e]=h
+tokln[e]=r
 end
-local function d(t,r)
-local n=s
+local function d(t,s)
+local n=n
 local a=n(e,t,t)
 t=t+1
 local e=n(e,t,t)
@@ -50,69 +50,69 @@ if(e=="\n"or e=="\r")and(e~=a)then
 t=t+1
 a=a..e
 end
-if r then i("TK_EOL",a)end
-h=h+1
+if s then i("TK_EOL",a)end
+r=r+1
 o=t
 return t
 end
-function init(t,a)
-e=t
-l=a
+function init(a,t)
+e=a
+l=t
 o=1
-h=1
+r=1
 tok={}
 seminfo={}
 tokln={}
-local t,n,e,a=u(e,"^(#[^\r\n]*)(\r?\n?)")
-if t then
+local a,n,e,t=u(e,"^(#[^\r\n]*)(\r?\n?)")
+if a then
 o=o+#e
 i("TK_COMMENT",e)
-if#a>0 then d(o,true)end
+if#t>0 then d(o,true)end
 end
 end
 function chunkid()
-if l and m(l,"^[=@]")then
-return s(l,2)
+if l and c(l,"^[=@]")then
+return n(l,2)
 end
 return"[string]"
 end
-function errorline(e,t)
-local a=error or a.error
-a(r.format("%s:%d: %s",chunkid(),t or h,e))
+function errorline(o,t)
+local e=error or a.error
+e(h.format("%s:%d: %s",chunkid(),t or r,o))
 end
 local r=errorline
-local function c(t)
-local i=s
+local function m(t)
+local i=n
 local n=i(e,t,t)
 t=t+1
-local a=#m(e,"=*",t)
+local a=#c(e,"=*",t)
 t=t+a
 o=t
 return(i(e,t,t)==n)and a or(-a)-1
 end
-local function w(l,h)
+local function w(h,l)
 local t=o+1
-local a=s
-local i=a(e,t,t)
-if i=="\r"or i=="\n"then
+local i=n
+local a=i(e,t,t)
+if a=="\r"or a=="\n"then
 t=d(t)
 end
 while true do
-local i,u,s=u(e,"([\r\n%]])",t)
-if not i then
-r(l and"unfinished long string"or
+local a,u,n=u(e,"([\r\n%]])",t)
+if not a then
+r(h and"unfinished long string"or
 "unfinished long comment")
 end
-t=i
-if s=="]"then
-if c(t)==h then
-n=a(e,n,o)
+t=a
+if n=="]"then
+if m(t)==l then
+s=i(e,s,o)
 o=o+1
-return n
+return s
 end
 t=o
 else
-n=n.."\n"
+s=s.."\n"
 t=d(t)
 end
 end
@@ -120,7 +120,7 @@ end
 local function y(l)
 local t=o
 local h=u
-local s=s
+local n=n
 while true do
 local i,u,a=h(e,"([\n\r\\\"\'])",t)
 if i then
@@ -130,7 +130,7 @@ end
 t=i
 if a=="\\"then
 t=t+1
-a=s(e,t,t)
+a=n(e,t,t)
 if a==""then break end
 i=h("abfnrtv\n\r",a,1,true)
 if i then
@@ -142,9 +142,9 @@ end
 elseif h(a,"%D")then
 t=t+1
 else
-local o,a,e=h(e,"^(%d%d?%d?)",t)
-t=a+1
-if e+1>256 then
+local o,e,a=h(e,"^(%d%d?%d?)",t)
+t=e+1
+if a+1>256 then
 r("escape sequence too large")
 end
 end
@@ -152,7 +152,7 @@ else
 t=t+1
 if a==l then
 o=t
-return s(e,n,t-1)
+return n(e,s,t-1)
 end
 end
 else
@@ -163,12 +163,12 @@ r("unfinished string")
 end
 function llex()
 local h=u
-local l=m
+local l=c
 while true do
 local t=o
 while true do
-local m,p,u=h(e,"^([_%a][_%w]*)",t)
-if m then
+local c,p,u=h(e,"^([_%a][_%w]*)",t)
+if c then
 o=t+#u
 if f[u]then
 i("TK_KEYWORD",u)
@@ -177,38 +177,38 @@ i("TK_NAME",u)
 end
 break
 end
-local u,f,m=h(e,"^(%.?)%d",t)
+local u,f,c=h(e,"^(%.?)%d",t)
 if u then
-if m=="."then t=t+1 end
-local c,n,d=h(e,"^%d*[%.%d]*([eE]?)",t)
-t=n+1
+if c=="."then t=t+1 end
+local c,s,d=h(e,"^%d*[%.%d]*([eE]?)",t)
+t=s+1
 if#d==1 then
 if l(e,"^[%+%-]",t)then
 t=t+1
 end
 end
-local n,t=h(e,"^[_%w]*",t)
+local s,t=h(e,"^[_%w]*",t)
 o=t+1
-local e=s(e,u,t)
+local e=n(e,u,t)
 if not a.tonumber(e)then
 r("malformed number")
 end
 i("TK_NUMBER",e)
 break
 end
-local f,u,m,a=h(e,"^((%s)[ \t\v\f]*)",t)
-if f then
+local c,f,u,a=h(e,"^((%s)[ \t\v\f]*)",t)
+if c then
 if a=="\n"or a=="\r"then
 d(t,true)
 else
-o=u+1
-i("TK_SPACE",m)
+o=f+1
+i("TK_SPACE",u)
 end
 break
 end
 local a=l(e,"^%p",t)
 if a then
-n=t
+s=t
 local d=h("-[\"\'.=<>~",a,1,true)
 if d then
 if d<=2 then
@@ -218,18 +218,18 @@ if r then
 t=t+2
 local a=-1
 if r=="["then
-a=c(t)
+a=m(t)
 end
 if a>=0 then
 i("TK_LCOMMENT",w(false,a))
 else
 o=h(e,"[\n\r]",t)or(#e+1)
-i("TK_COMMENT",s(e,n,o-1))
+i("TK_COMMENT",n(e,s,o-1))
 end
 break
 end
 else
-local e=c(t)
+local e=m(t)
 if e>=0 then
 i("TK_LSTRING",w(true,e))
 elseif e==-1 then
@@ -254,7 +254,7 @@ o=t+#a
 i("TK_OP",a)
 break
 end
-local e=s(e,t,t)
+local e=n(e,t,t)
 if e~=""then
 o=t+1
 i("TK_OP",e)
@@ -266,62 +266,62 @@ end
 end
 end
 end
-v.lparser=
+p.lparser=
 function()
 module"lparser"
-local k=a.require"string"
-local j,
-g,
-x,
+local v=a.require"string"
+local E,
+k,
+A,
 S,
 s,
-h,
-L,
-t,T,r,m,
-p,
+u,
+Y,
+t,T,d,f,
+y,
 o,
-W,
+P,
 _,
 D,
-u,
+l,
 b,
-N,
-E
-local y,c,q,O,I,z
-local e=k.gmatch
+I,
+z
+local q,r,g,N,O,x
+local e=v.gmatch
 local R={}
 for e in e("else elseif end until <eof>","%S+")do
 R[e]=true
 end
 local H={}
-local Y={}
-for e,t,a in e([[
+local V={}
+for e,a,t in e([[
 {+ 6 6}{- 6 6}{* 7 7}{/ 7 7}{% 7 7}
 {^ 10 9}{.. 5 4}
 {~= 3 3}{== 3 3}
 {< 3 3}{<= 3 3}{> 3 3}{>= 3 3}
 {and 2 2}{or 1 1}
 ]],"{(%S+)%s(%d+)%s(%d+)}")do
-H[e]=t+0
-Y[e]=a+0
+H[e]=a+0
+V[e]=t+0
 end
-local ee={["not"]=true,["-"]=true,
+local te={["not"]=true,["-"]=true,
 ["#"]=true,}
-local Z=8
+local ee=8
 local function i(e,t)
 local a=error or a.error
-a(k.format("(source):%d: %s",t or r,e))
+a(v.format("(source):%d: %s",t or d,e))
 end
 local function e()
-L=x[s]
-t,T,r,m
-=j[s],g[s],x[s],S[s]
+Y=A[s]
+t,T,d,f
+=E[s],k[s],A[s],S[s]
 s=s+1
 end
-local function X()
-return j[s]
+local function Z()
+return E[s]
 end
-local function d(a)
+local function h(a)
 local e=t
 if e~="<number>"and e~="<string>"then
 if e=="<name>"then e=T end
@@ -329,85 +329,85 @@ e="'"..e.."'"
 end
 i(a.." near "..e)
 end
-local function f(e)
-d("'"..e.."' expected")
+local function m(e)
+h("'"..e.."' expected")
 end
 local function i(a)
 if t==a then e();return true end
 end
-local function F(e)
-if t~=e then f(e)end
+local function M(e)
+if t~=e then m(e)end
 end
 local function n(t)
-F(t);e()
+M(t);e()
 end
-local function P(e,t)
-if not e then d(t)end
+local function X(e,t)
+if not e then h(t)end
 end
-local function l(e,a,t)
+local function c(e,a,t)
 if not i(e)then
-if t==r then
-f(e)
+if t==d then
+m(e)
 else
-d("'"..e.."' expected (to close '"..a.."' at line "..t..")")
+h("'"..e.."' expected (to close '"..a.."' at line "..t..")")
 end
 end
 end
-local function f()
-F("<name>")
+local function w()
+M("<name>")
 local t=T
-p=m
+y=f
 e()
 return t
 end
-local function M(e,t)
+local function F(e,t)
 e.k="VK"
 end
-local function C(e)
-M(e,f())
+local function U(e)
+F(e,w())
 end
-local function w(i,a)
-local e=o.bl
-local t
-if e then
-t=e.locallist
+local function m(i,a)
+local t=o.bl
+local e
+if t then
+e=t.locallist
 else
-t=o.locallist
+e=o.locallist
 end
-local e=#u+1
-u[e]={
+local t=#l+1
+l[t]={
 name=i,
-xref={p},
-decl=p,
+xref={y},
+decl=y,
 }
 if a then
-u[e].isself=true
+l[t].isself=true
 end
 local a=#b+1
-b[a]=e
-N[a]=t
+b[a]=t
+I[a]=e
 end
-local function A(e)
+local function j(e)
 local t=#b
 while e>0 do
 e=e-1
 local e=t-e
 local a=b[e]
-local t=u[a]
+local t=l[a]
 local o=t.name
-t.act=m
+t.act=f
 b[e]=nil
-local i=N[e]
-N[e]=nil
+local i=I[e]
+I[e]=nil
 local e=i[o]
 if e then
-t=u[e]
+t=l[e]
 t.rem=-a
 end
 i[o]=a
 end
 end
-local function U()
+local function L()
 local t=o.bl
 local e
 if t then
@@ -416,17 +416,17 @@ else
 e=o.locallist
 end
 for t,e in a.pairs(e)do
-local e=u[e]
-e.rem=m
+local e=l[e]
+e.rem=f
 end
 end
-local function m(e,t)
-if k.sub(e,1,1)=="("then
+local function f(e,t)
+if v.sub(e,1,1)=="("then
 return
 end
-w(e,t)
+m(e,t)
 end
-local function V(o,a)
+local function C(o,a)
 local t=o.bl
 local e
 if t then
@@ -440,18 +440,18 @@ end
 e=o.locallist
 return e[a]or-1
 end
-local function k(t,a,e)
+local function v(t,o,e)
 if t==nil then
 e.k="VGLOBAL"
 return"VGLOBAL"
 else
-local o=V(t,a)
-if o>=0 then
+local a=C(t,o)
+if a>=0 then
 e.k="VLOCAL"
-e.id=o
+e.id=a
 return"VLOCAL"
 else
-if k(t.prev,a,e)=="VGLOBAL"then
+if v(t.prev,o,e)=="VGLOBAL"then
 return"VGLOBAL"
 end
 e.k="VUPVAL"
@@ -459,44 +459,44 @@ return"VUPVAL"
 end
 end
 end
-local function J(a)
-local t=f()
-k(o,t,a)
+local function K(a)
+local t=w()
+v(o,t,a)
 if a.k=="VGLOBAL"then
 local e=D[t]
 if not e then
 e=#_+1
 _[e]={
 name=t,
-xref={p},
+xref={y},
 }
 D[t]=e
 else
 local e=_[e].xref
-e[#e+1]=p
+e[#e+1]=y
 end
 else
 local e=a.id
-local e=u[e].xref
-e[#e+1]=p
+local e=l[e].xref
+e[#e+1]=y
 end
 end
-local function p(t)
+local function y(t)
 local e={}
 e.isbreakable=t
 e.prev=o.bl
 e.locallist={}
 o.bl=e
 end
-local function k()
+local function v()
 local e=o.bl
-U()
+L()
 o.bl=e.prev
 end
-local function B()
+local function G()
 local e
 if not o then
-e=W
+e=P
 else
 e={}
 end
@@ -505,147 +505,147 @@ e.bl=nil
 e.locallist={}
 o=e
 end
-local function G()
-U()
+local function Q()
+L()
 o=o.prev
 end
-local function U(a)
-local t={}
+local function C(t)
+local a={}
 e()
-C(t)
-a.k="VINDEXED"
+U(a)
+t.k="VINDEXED"
 end
-local function V(t)
+local function J(t)
 e()
-c(t)
+r(t)
 n("]")
 end
-local function a(e)
+local function W(e)
 local e,a={},{}
 if t=="<name>"then
-C(e)
+U(e)
 else
-V(e)
+J(e)
 end
 n("=")
-c(a)
+r(a)
 end
-local function K(e)
+local function a(e)
 if e.v.k=="VVOID"then return end
 e.v.k="VVOID"
 end
-local function Q(e)
-c(e.v)
+local function L(e)
+r(e.v)
 end
-local function K(o)
-local s=r
+local function B(a)
+local o=d
 local e={}
 e.v={}
-e.t=o
-o.k="VRELOCABLE"
+e.t=a
+a.k="VRELOCABLE"
 e.v.k="VVOID"
 n("{")
 repeat
 if t=="}"then break end
 local t=t
 if t=="<name>"then
-if X()~="="then
-Q(e)
+if Z()~="="then
+L(e)
 else
-a(e)
+W(e)
 end
 elseif t=="["then
-a(e)
+W(e)
 else
-Q(e)
+L(e)
 end
 until not i(",")and not i(";")
-l("}","{",s)
+c("}","{",o)
 end
-local function X()
+local function Z()
 local a=0
 if t~=")"then
 repeat
 local t=t
 if t=="<name>"then
-w(f())
+m(w())
 a=a+1
 elseif t=="..."then
 e()
 o.is_vararg=true
 else
-d("<name> or '...' expected")
+h("<name> or '...' expected")
 end
 until o.is_vararg or not i(",")
 end
-A(a)
+j(a)
 end
-local function Q(n)
+local function W(n)
 local a={}
-local i=r
+local i=d
 local o=t
 if o=="("then
-if i~=L then
-d("ambiguous syntax (function call x new statement)")
+if i~=Y then
+h("ambiguous syntax (function call x new statement)")
 end
 e()
 if t==")"then
 a.k="VVOID"
 else
-y(a)
+q(a)
 end
-l(")","(",i)
+c(")","(",i)
 elseif o=="{"then
-K(a)
+B(a)
 elseif o=="<string>"then
-M(a,T)
+F(a,T)
 e()
 else
-d("function arguments expected")
+h("function arguments expected")
 return
 end
 n.k="VCALL"
 end
-local function te(a)
+local function Y(a)
 local t=t
 if t=="("then
-local t=r
+local t=d
 e()
-c(a)
-l(")","(",t)
+r(a)
+c(")","(",t)
 elseif t=="<name>"then
-J(a)
+K(a)
 else
-d("unexpected symbol")
+h("unexpected symbol")
 end
 end
 local function L(a)
-te(a)
+Y(a)
 while true do
 local t=t
 if t=="."then
-U(a)
+C(a)
 elseif t=="["then
 local e={}
-V(e)
+J(e)
 elseif t==":"then
 local t={}
 e()
-C(t)
-Q(a)
+U(t)
+W(a)
 elseif t=="("or t=="<string>"or t=="{"then
-Q(a)
+W(a)
 else
 return
 end
 end
 end
-local function C(a)
+local function U(a)
 local t=t
 if t=="<number>"then
 a.k="VKNUM"
 elseif t=="<string>"then
-M(a,T)
+F(a,T)
 elseif t=="nil"then
 a.k="VNIL"
 elseif t=="true"then
@@ -653,15 +653,15 @@ a.k="VTRUE"
 elseif t=="false"then
 a.k="VFALSE"
 elseif t=="..."then
-P(o.is_vararg==true,
+X(o.is_vararg==true,
 "cannot use '...' outside a vararg function");
 a.k="VVARARG"
 elseif t=="{"then
-K(a)
+B(a)
 return
 elseif t=="function"then
 e()
-I(a,false,r)
+O(a,false,d)
 return
 else
 L(a)
@@ -671,310 +671,310 @@ e()
 end
 local function T(o,i)
 local a=t
-local n=ee[a]
+local n=te[a]
 if n then
 e()
-T(o,Z)
+T(o,ee)
 else
-C(o)
+U(o)
 end
 a=t
 local t=H[a]
 while t and t>i do
 local o={}
 e()
-local e=T(o,Y[a])
+local e=T(o,V[a])
 a=e
 t=H[a]
 end
 return a
 end
-function c(e)
+function r(e)
 T(e,0)
 end
-local function T(e)
+local function H(e)
 local t={}
 local e=e.v.k
-P(e=="VLOCAL"or e=="VUPVAL"or e=="VGLOBAL"
+X(e=="VLOCAL"or e=="VUPVAL"or e=="VGLOBAL"
 or e=="VINDEXED","syntax error")
 if i(",")then
 local e={}
 e.v={}
 L(e.v)
-T(e)
+H(e)
 else
 n("=")
-y(t)
+q(t)
 return
 end
 t.k="VNONRELOC"
 end
 local function a(e,t)
 n("do")
-p(false)
-A(e)
-q()
-k()
+y(false)
+j(e)
+g()
+v()
 end
-local function C(e)
-local t=h
-m("(for index)")
-m("(for limit)")
-m("(for step)")
-w(e)
+local function U(e)
+local t=u
+f("(for index)")
+f("(for limit)")
+f("(for step)")
+m(e)
 n("=")
-O()
+N()
 n(",")
-O()
+N()
 if i(",")then
-O()
+N()
 else
 end
 a(1,true)
 end
-local function H(e)
+local function W(e)
 local t={}
-m("(for generator)")
-m("(for state)")
-m("(for control)")
-w(e)
+f("(for generator)")
+f("(for state)")
+f("(for control)")
+m(e)
 local e=1
 while i(",")do
-w(f())
+m(w())
 e=e+1
 end
 n("in")
-local o=h
-y(t)
+local o=u
+q(t)
 a(e,false)
 end
-local function M(e)
+local function F(e)
 local a=false
-J(e)
+K(e)
 while t=="."do
-U(e)
+C(e)
 end
 if t==":"then
 a=true
-U(e)
+C(e)
 end
 return a
 end
-function O()
+function N()
 local e={}
-c(e)
+r(e)
 end
 local function a()
 local e={}
-c(e)
+r(e)
 end
-local function O()
+local function T()
 e()
 a()
 n("then")
-q()
+g()
 end
-local function Y()
+local function N()
 local t,e={}
-w(f())
+m(w())
 t.k="VLOCAL"
-A(1)
-I(e,false,r)
+j(1)
+O(e,false,d)
 end
-local function U()
+local function C()
 local e=0
 local t={}
 repeat
-w(f())
+m(w())
 e=e+1
 until not i(",")
 if i("=")then
-y(t)
+q(t)
 else
 t.k="VVOID"
 end
-A(e)
+j(e)
 end
-function y(e)
-c(e)
+function q(e)
+r(e)
 while i(",")do
-c(e)
+r(e)
 end
 end
-function I(a,t,e)
-B()
+function O(a,t,e)
+G()
 n("(")
 if t then
-m("self",true)
-A(1)
+f("self",true)
+j(1)
 end
-X()
+Z()
 n(")")
-z()
-l("end","function",e)
-G()
+x()
+c("end","function",e)
+Q()
 end
-function q()
-p(false)
-z()
-k()
-end
-local function A()
-local o=h
-p(true)
-e()
-local a=f()
-local e=t
-if e=="="then
-C(a)
-elseif e==","or e=="in"then
-H(a)
-else
-d("'=' or 'in' expected")
-end
-l("end","for",o)
-k()
+function g()
+y(false)
+x()
+v()
 end
 local function f()
-local t=h
+local o=u
+y(true)
 e()
-a()
-p(true)
-n("do")
-q()
-l("end","while",t)
-k()
+local a=w()
+local e=t
+if e=="="then
+U(a)
+elseif e==","or e=="in"then
+W(a)
+else
+h("'=' or 'in' expected")
+end
+c("end","for",o)
+v()
 end
 local function m()
-local t=h
-p(true)
-p(false)
+local t=u
 e()
-z()
-l("until","repeat",t)
 a()
-k()
-k()
+y(true)
+n("do")
+g()
+c("end","while",t)
+v()
 end
-local function c()
-local a=h
+local function w()
+local t=u
+y(true)
+y(false)
+e()
+x()
+c("until","repeat",t)
+a()
+v()
+v()
+end
+local function j()
+local a=u
 local o={}
-O()
+T()
 while t=="elseif"do
-O()
+T()
 end
 if t=="else"then
 e()
-q()
+g()
 end
-l("end","if",a)
+c("end","if",a)
 end
-local function w()
+local function v()
 local a={}
 e()
 local e=t
 if R[e]or e==";"then
 else
-y(a)
+q(a)
 end
 end
-local function p()
+local function y()
 local t=o.bl
 e()
 while t and not t.isbreakable do
 t=t.prev
 end
 if not t then
-d("no loop to break")
+h("no loop to break")
 end
 end
-local function y()
+local function r()
 local t=s-1
 local e={}
 e.v={}
 L(e.v)
 if e.v.k=="VCALL"then
-E[t]="call"
+z[t]="call"
 else
 e.prev=nil
-T(e)
-E[t]="assign"
+H(e)
+z[t]="assign"
 end
 end
-local function d()
-local o=h
-local t,a={},{}
+local function h()
+local o=u
+local a,t={},{}
 e()
-local e=M(t)
-I(a,e,o)
+local e=F(a)
+O(t,e,o)
 end
 local function a()
-local t=h
+local t=u
 e()
-q()
-l("end","do",t)
+g()
+c("end","do",t)
 end
 local function n()
 e()
 if i("function")then
-Y()
+N()
 else
-U()
+C()
 end
 end
-local a={
-["if"]=c,
-["while"]=f,
+local n={
+["if"]=j,
+["while"]=m,
 ["do"]=a,
-["for"]=A,
-["repeat"]=m,
-["function"]=d,
+["for"]=f,
+["repeat"]=w,
+["function"]=h,
 ["local"]=n,
-["return"]=w,
-["break"]=p,
+["return"]=v,
+["break"]=y,
 }
-local function n()
-h=r
+local function a()
+u=d
 local e=t
-local t=a[e]
+local t=n[e]
 if t then
-E[s-1]=e
+z[s-1]=e
 t()
 if e=="return"or e=="break"then return true end
 else
-y()
+r()
 end
 return false
 end
-function z()
+function x()
 local e=false
 while not e and not R[t]do
-e=n()
+e=a()
 i(";")
 end
 end
 function parser()
-B()
+G()
 o.is_vararg=true
 e()
-z()
-F("<eof>")
-G()
+x()
+M("<eof>")
+Q()
 return{
 globalinfo=_,
-localinfo=u,
-statinfo=E,
-toklist=j,
-seminfolist=g,
-toklnlist=x,
+localinfo=l,
+statinfo=z,
+toklist=E,
+seminfolist=k,
+toklnlist=A,
 xreflist=S,
 }
 end
 function init(e,i,n)
 s=1
-W={}
+P={}
 local t=1
-j,g,x,S={},{},{},{}
+E,k,A,S={},{},{},{}
 for a=1,#e do
 local e=e[a]
 local o=true
@@ -982,43 +982,43 @@ if e=="TK_KEYWORD"or e=="TK_OP"then
 e=i[a]
 elseif e=="TK_NAME"then
 e="<name>"
-g[t]=i[a]
+k[t]=i[a]
 elseif e=="TK_NUMBER"then
 e="<number>"
-g[t]=0
+k[t]=0
 elseif e=="TK_STRING"or e=="TK_LSTRING"then
 e="<string>"
-g[t]=""
+k[t]=""
 elseif e=="TK_EOS"then
 e="<eof>"
 else
 o=false
 end
 if o then
-j[t]=e
-x[t]=n[a]
+E[t]=e
+A[t]=n[a]
 S[t]=a
 t=t+1
 end
 end
-_,D,u={},{},{}
-b,N={},{}
-E={}
+_,D,l={},{},{}
+b,I={},{}
+z={}
 end
 end
-v.optlex=
+p.optlex=
 function()
 module"optlex"
-local m=a.require"string"
-local i=m.match
-local e=m.sub
-local d=m.find
-local u=m.rep
-local c
+local c=a.require"string"
+local i=c.match
+local e=c.sub
+local h=c.find
+local d=c.rep
+local f
 error=a.error
 warn={}
 local n,o,l
-local p={
+local y={
 TK_KEYWORD=true,
 TK_NAME=true,
 TK_NUMBER=true,
@@ -1027,7 +1027,7 @@ TK_LSTRING=true,
 TK_OP=true,
 TK_EOS=true,
 }
-local g={
+local v={
 TK_COMMENT=true,
 TK_LCOMMENT=true,
 TK_EOL=true,
@@ -1043,31 +1043,31 @@ return b(e-1)
 end
 return false
 end
-local function k(t)
+local function g(t)
 local e=n[t+1]
 if t>=#n or e=="TK_EOL"or e=="TK_EOS"then
 return true
 elseif e==""then
-return k(t+1)
+return g(t+1)
 end
 return false
 end
-local function T(t)
-local a=#i(t,"^%-%-%[=*%[")
-local a=e(t,a+1,-(a-1))
+local function A(a)
+local t=#i(a,"^%-%-%[=*%[")
+local a=e(a,t+1,-(t-1))
 local e,t=1,0
 while true do
-local o,n,i,a=d(a,"([\r\n])([\r\n]?)",e)
-if not o then break end
-e=o+1
+local a,n,i,o=h(a,"([\r\n])([\r\n]?)",e)
+if not a then break end
+e=a+1
 t=t+1
-if#a>0 and i~=a then
+if#o>0 and i~=o then
 e=e+1
 end
 end
 return t
 end
-local function y(s,h)
+local function k(s,h)
 local a=i
 local t,e=n[s],n[h]
 if t=="TK_STRING"or t=="TK_LSTRING"or
@@ -1098,18 +1098,18 @@ return" "
 end
 end
 local function w()
-local a,s,i={},{},{}
+local h,s,a={},{},{}
 local e=1
 for t=1,#n do
-local n=n[t]
-if n~=""then
-a[e],s[e],i[e]=n,o[t],l[t]
+local i=n[t]
+if i~=""then
+h[e],s[e],a[e]=i,o[t],l[t]
 e=e+1
 end
 end
-n,o,l=a,s,i
+n,o,l=h,s,a
 end
-local function z(h)
+local function O(h)
 local t=o[h]
 local t=t
 local n
@@ -1159,10 +1159,10 @@ end
 else
 local t,o=i(t,"^([^eE]+)[eE]([%+%-]?%d+)$")
 o=a.tonumber(o)
-local h,s=i(t,"^(%d*)%.(%d*)$")
-if h then
-o=o-#s
-t=h..s
+local s,h=i(t,"^(%d*)%.(%d*)$")
+if s then
+o=o-#h
+t=s..h
 end
 if t+0==0 then
 n="0"
@@ -1178,13 +1178,13 @@ local a=a.tostring(o)
 if o==0 then
 n=t
 elseif o>0 and(o<=1+#a)then
-n=t..u("0",o)
+n=t..d("0",o)
 elseif o<0 and(o>=-#t)then
 s=#t+o
 n=e(t,1,s).."."..e(t,s+1)
 elseif o<0 and(#a>=-o-#t)then
 s=-o-#t
-n="."..u("0",s)..t
+n="."..d("0",s)..t
 else
 n=t.."e"..o
 end
@@ -1192,25 +1192,25 @@ end
 end
 if n and n~=o[h]then
 if r then
-c("<number> (line "..l[h]..") "..o[h].." -> "..n)
+f("<number> (line "..l[h]..") "..o[h].." -> "..n)
 r=r+1
 end
 o[h]=n
 end
 end
-local function _(u)
+local function E(u)
 local t=o[u]
 local s=e(t,1,1)
 local w=(s=="'")and'"'or"'"
 local t=e(t,2,-2)
 local a=1
-local f,h=0,0
+local m,d=0,0
 while a<=#t do
 local u=e(t,a,a)
 if u=="\\"then
 local o=a+1
 local r=e(t,o,o)
-local n=d("abfnrtv\\\n\r\"\'0123456789",r,1,true)
+local n=h("abfnrtv\\\n\r\"\'0123456789",r,1,true)
 if not n then
 t=e(t,1,a-1)..e(t,o)
 a=a+1
@@ -1226,10 +1226,10 @@ end
 a=a+2
 elseif n<=12 then
 if r==s then
-f=f+1
+m=m+1
 a=a+2
 else
-h=h+1
+d=d+1
 t=e(t,1,a-1)..e(t,o)
 a=a+1
 end
@@ -1237,10 +1237,10 @@ else
 local n=i(t,"^(%d%d?%d?)",o)
 o=a+1+#n
 local l=n+0
-local r=m.char(l)
-local d=d("\a\b\f\n\r\t\v",r,1,true)
-if d then
-n="\\"..e("abfnrtv",d,d)
+local r=c.char(l)
+local h=h("\a\b\f\n\r\t\v",r,1,true)
+if h then
+n="\\"..e("abfnrtv",h,h)
 elseif l<32 then
 if i(e(t,o,o),"%d")then
 n="\\"..n
@@ -1249,13 +1249,13 @@ n="\\"..l
 end
 elseif r==s then
 n="\\"..r
-f=f+1
+m=m+1
 elseif r=="\\"then
 n="\\\\"
 else
 n=r
 if r==w then
-h=h+1
+d=d+1
 end
 end
 t=e(t,1,a-1)..n..e(t,o)
@@ -1264,14 +1264,14 @@ end
 else
 a=a+1
 if u==w then
-h=h+1
+d=d+1
 end
 end
 end
-if f>h then
+if m>d then
 a=1
 while a<=#t do
-local o,n,i=d(t,"([\'\"])",a)
+local o,n,i=h(t,"([\'\"])",a)
 if not o then break end
 if i==s then
 t=e(t,1,o-2)..e(t,o)
@@ -1286,31 +1286,31 @@ end
 t=s..t..s
 if t~=o[u]then
 if r then
-c("<string> (line "..l[u]..") "..o[u].." -> "..t)
+f("<string> (line "..l[u]..") "..o[u].." -> "..t)
 r=r+1
 end
 o[u]=t
 end
 end
-local function E(s)
-local t=o[s]
+local function T(u)
+local t=o[u]
 local r=i(t,"^%[=*%[")
 local a=#r
 local c=e(t,-a,-1)
-local h=e(t,a+1,-(a+1))
+local s=e(t,a+1,-(a+1))
 local n=""
 local t=1
 while true do
-local a,o,d,r=d(h,"([\r\n])([\r\n]?)",t)
+local a,o,r,h=h(s,"([\r\n])([\r\n]?)",t)
 local o
 if not a then
-o=e(h,t)
+o=e(s,t)
 elseif a>=t then
-o=e(h,t,a-1)
+o=e(s,t,a-1)
 end
 if o~=""then
 if i(o,"%s+$")then
-warn.LSTRING="trailing whitespace in long string near line "..l[s]
+warn.LSTRING="trailing whitespace in long string near line "..l[u]
 end
 n=n..o
 end
@@ -1319,7 +1319,7 @@ break
 end
 t=a+1
 if a then
-if#r>0 and d~=r then
+if#h>0 and r~=h then
 t=t+1
 end
 if not(t==1 and t==a)then
@@ -1330,32 +1330,32 @@ end
 if a>=3 then
 local e,t=a-1
 while e>=2 do
-local a="%]"..u("=",e-2).."%]"
+local a="%]"..d("=",e-2).."%]"
 if not i(n,a)then t=e end
 e=e-1
 end
 if t then
-a=u("=",t-2)
+a=d("=",t-2)
 r,c="["..a.."[","]"..a.."]"
 end
 end
-o[s]=r..n..c
+o[u]=r..n..c
 end
-local function q(r)
-local a=o[r]
-local s=i(a,"^%-%-%[=*%[")
-local t=#s
-local l=e(a,-t,-1)
-local h=e(a,t+1,-(t-1))
+local function q(u)
+local a=o[u]
+local r=i(a,"^%-%-%[=*%[")
+local t=#r
+local l=e(a,-(t-2),-1)
+local s=e(a,t+1,-(t-1))
 local n=""
 local a=1
 while true do
-local o,t,r,s=d(h,"([\r\n])([\r\n]?)",a)
+local o,t,r,h=h(s,"([\r\n])([\r\n]?)",a)
 local t
 if not o then
-t=e(h,a)
+t=e(s,a)
 elseif o>=a then
-t=e(h,a,o-1)
+t=e(s,a,o-1)
 end
 if t~=""then
 local a=i(t,"%s*$")
@@ -1367,7 +1367,7 @@ break
 end
 a=o+1
 if o then
-if#s>0 and r~=s then
+if#h>0 and r~=h then
 a=a+1
 end
 n=n.."\n"
@@ -1377,55 +1377,55 @@ t=t-2
 if t>=3 then
 local e,a=t-1
 while e>=2 do
-local t="%]"..u("=",e-2).."%]"
+local t="%]"..d("=",e-2).."%]"
 if not i(n,t)then a=e end
 e=e-1
 end
 if a then
-t=u("=",a-2)
-s,l="--["..t.."[","]"..t.."]"
+t=d("=",a-2)
+r,l="--["..t.."[","]"..t.."]"
 end
 end
-o[r]=s..n..l
+o[u]=r..n..l
 end
-local function x(n)
-local t=o[n]
-local a=i(t,"%s*$")
-if#a>0 then
-t=e(t,1,-(a+1))
+local function j(a)
+local t=o[a]
+local i=i(t,"%s*$")
+if#i>0 then
+t=e(t,1,-(i+1))
 end
-o[n]=t
+o[a]=t
 end
-local function N(o,t)
+local function _(o,t)
 if not o then return false end
 local a=i(t,"^%-%-%[=*%[")
 local a=#a
 local i=e(t,-a,-1)
 local e=e(t,a+1,-(a-1))
-if d(e,o,1,true)then
+if h(e,o,1,true)then
 return true
 end
 end
-function optimize(t,h,s,i)
-local m=t["opt-comments"]
-local d=t["opt-whitespace"]
-local f=t["opt-emptylines"]
-local j=t["opt-eols"]
-local A=t["opt-strings"]
-local O=t["opt-numbers"]
-local v=t["opt-experimental"]
-local I=t.KEEP
+function optimize(t,s,i,h)
+local c=t["opt-comments"]
+local u=t["opt-whitespace"]
+local m=t["opt-emptylines"]
+local p=t["opt-eols"]
+local z=t["opt-strings"]
+local I=t["opt-numbers"]
+local x=t["opt-experimental"]
+local N=t.KEEP
 r=t.DETAILS and 0
-c=c or a.print
-if j then
+f=f or a.print
+if p then
+c=true
+u=true
 m=true
-d=true
-f=true
-elseif v then
-d=true
+elseif x then
+u=true
 end
 n,o,l
-=h,s,i
+=s,i,h
 local t=1
 local a,h
 local s
@@ -1434,7 +1434,7 @@ e=e or t
 n[e]=i or""
 o[e]=a or""
 end
-if v then
+if x then
 while true do
 a,h=n[t],o[t]
 if a=="TK_EOS"then
@@ -1458,65 +1458,65 @@ a=="TK_NAME"or
 a=="TK_OP"then
 s=t
 elseif a=="TK_NUMBER"then
-if O then
-z(t)
+if I then
+O(t)
 end
 s=t
 elseif a=="TK_STRING"or
 a=="TK_LSTRING"then
-if A then
+if z then
 if a=="TK_STRING"then
-_(t)
-else
 E(t)
+else
+T(t)
 end
 end
 s=t
 elseif a=="TK_COMMENT"then
-if m then
+if c then
 if t==1 and e(h,1,1)=="#"then
-x(t)
+j(t)
 else
 i()
 end
-elseif d then
-x(t)
+elseif u then
+j(t)
 end
 elseif a=="TK_LCOMMENT"then
-if N(I,h)then
-if d then
+if _(N,h)then
+if u then
 q(t)
 end
 s=t
-elseif m then
-local e=T(h)
-if g[n[t+1]]then
+elseif c then
+local e=A(h)
+if v[n[t+1]]then
 i()
 a=""
 else
 i("TK_SPACE"," ")
 end
-if not f and e>0 then
-i("TK_EOL",u("\n",e))
+if not m and e>0 then
+i("TK_EOL",d("\n",e))
 end
-if d and a~=""then
+if u and a~=""then
 t=t-1
 end
 else
-if d then
+if u then
 q(t)
 end
 s=t
 end
 elseif a=="TK_EOL"then
-if r and f then
+if r and m then
 i()
 elseif h=="\r\n"or h=="\n\r"then
 i("TK_EOL","\n")
 end
 elseif a=="TK_SPACE"then
-if d then
-if r or k(t)then
+if u then
+if r or g(t)then
 i()
 else
 local a=n[s]
@@ -1524,14 +1524,14 @@ if a=="TK_LCOMMENT"then
 i()
 else
 local e=n[t+1]
-if g[e]then
+if v[e]then
 if(e=="TK_COMMENT"or e=="TK_LCOMMENT")and
 a=="TK_OP"and o[s]=="-"then
 else
 i()
 end
 else
-local e=y(s,t+1)
+local e=k(s,t+1)
 if e==""then
 i()
 else
@@ -1547,7 +1547,7 @@ end
 t=t+1
 end
 w()
-if j then
+if p then
 t=1
 if n[1]=="TK_COMMENT"then
 t=3
@@ -1558,8 +1558,8 @@ if a=="TK_EOS"then
 break
 elseif a=="TK_EOL"then
 local a,e=n[t-1],n[t+1]
-if p[a]and p[e]then
-local t=y(t-1,t+1)
+if y[a]and y[e]then
+local t=k(t-1,t+1)
 if t==""or e=="TK_EOS"then
 i()
 end
@@ -1569,63 +1569,63 @@ t=t+1
 end
 w()
 end
-if r and r>0 then c()end
+if r and r>0 then f()end
 return n,o,l
 end
 end
-v.optparser=
+p.optparser=
 function()
 module"optparser"
-local s=a.require"string"
+local n=a.require"string"
 local g=a.require"table"
 local i="etaoinshrdlucmfwypvbgkqjxz_ETAOINSHRDLUCMFWYPVBGKQJXZ"
-local r="etaoinshrdlucmfwypvbgkqjxz_0123456789ETAOINSHRDLUCMFWYPVBGKQJXZ"
-local T={}
-for e in s.gmatch([[
+local d="etaoinshrdlucmfwypvbgkqjxz_0123456789ETAOINSHRDLUCMFWYPVBGKQJXZ"
+local A={}
+for e in n.gmatch([[
 and break do else elseif end false for function if in
 local nil not or repeat return then true until while
 self]],"%S+")do
-T[e]=true
+A[e]=true
 end
 local h,c,
-n,k,y,
-x,o,
+s,k,v,
+_,o,
 w,
-q,E,
-b,
-l
+b,O,
+q,
+r
 local function z(e)
-local o={}
+local i={}
 for n=1,#e do
-local e=e[n]
-local i=e.name
-if not o[i]then
-o[i]={
+local t=e[n]
+local o=t.name
+if not i[o]then
+i[o]={
 decl=0,token=0,size=0,
 }
 end
-local t=o[i]
-t.decl=t.decl+1
-local o=e.xref
-local a=#o
-t.token=t.token+a
-t.size=t.size+a*#i
-if e.decl then
-e.id=n
-e.xcount=a
+local e=i[o]
+e.decl=e.decl+1
+local i=t.xref
+local a=#i
+e.token=e.token+a
+e.size=e.size+a*#o
+if t.decl then
+t.id=n
+t.xcount=a
 if a>1 then
-e.first=o[2]
-e.last=o[a]
+t.first=i[2]
+t.last=i[a]
 end
 else
-t.id=n
+e.id=n
 end
 end
-return o
+return i
 end
-local function O(e)
-local d=s.byte
-local s=s.char
+local function I(e)
+local s=n.byte
+local n=n.char
 local t={
 TK_KEYWORD=true,TK_NAME=true,TK_NUMBER=true,
 TK_STRING=true,TK_LSTRING=true,
@@ -1652,15 +1652,15 @@ for o=1,#h do
 local o,a=h[o],a[o]
 if t[o]then
 for t=1,#a do
-local t=d(a,t)
+local t=s(a,t)
 e[t]=e[t]+1
 end
 end
 end
-local function n(o)
+local function a(o)
 local t={}
 for a=1,#o do
-local o=d(o,a)
+local o=s(o,a)
 t[a]={c=o,freq=e[o],}
 end
 g.sort(t,
@@ -1670,115 +1670,115 @@ end
 )
 local e={}
 for a=1,#t do
-e[a]=s(t[a].c)
+e[a]=n(t[a].c)
 end
 return g.concat(e)
 end
-i=n(i)
-r=n(r)
+i=a(i)
+d=a(d)
 end
-local function I()
+local function S()
 local t
-local n,h=#i,#r
-local e=b
-if e<n then
+local s,h=#i,#d
+local e=q
+if e<s then
 e=e+1
-t=s.sub(i,e,e)
+t=n.sub(i,e,e)
 else
-local o,a=n,1
+local o,a=s,1
 repeat
 e=e-o
 o=o*h
 a=a+1
 until o>e
-local o=e%n
-e=(e-o)/n
+local o=e%s
+e=(e-o)/s
 o=o+1
-t=s.sub(i,o,o)
+t=n.sub(i,o,o)
 while a>1 do
 local o=e%h
 e=(e-o)/h
 o=o+1
-t=t..s.sub(r,o,o)
+t=t..n.sub(d,o,o)
 a=a-1
 end
 end
-b=b+1
-return t,q[t]~=nil
+q=q+1
+return t,b[t]~=nil
 end
-local function N(E,O,A,i)
-local e=p or a.print
-local t=s.format
-local I=i.DETAILS
+local function N(T,I,O,i)
+local e=y or a.print
+local t=n.format
+local f=i.DETAILS
 if i.QUIET then return end
-local m,w,y,T,z,
-q,p,f,_,x,
-h,c,u,k,j,
-n,d,r,v,b
+local w,y,p,A,_,
+j,v,m,E,z,
+s,c,l,q,x,
+h,u,d,b,k
 =0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0
 local function i(e,t)
 if e==0 then return 0 end
 return t/e
 end
-for t,e in a.pairs(E)do
-m=m+1
-h=h+e.token
-n=n+e.size
+for t,e in a.pairs(T)do
+w=w+1
+s=s+e.token
+h=h+e.size
+end
+for t,e in a.pairs(I)do
+y=y+1
+v=v+e.decl
+c=c+e.token
+u=u+e.size
 end
 for t,e in a.pairs(O)do
-w=w+1
-p=p+e.decl
-c=c+e.token
+p=p+1
+m=m+e.decl
+l=l+e.token
 d=d+e.size
 end
-for t,e in a.pairs(A)do
-y=y+1
-f=f+e.decl
-u=u+e.token
-r=r+e.size
-end
-T=m+w
-_=q+p
-k=h+c
-v=n+d
-z=m+y
-x=q+f
-j=h+u
-b=n+r
-if I then
-local m={}
-for t,e in a.pairs(E)do
+A=w+y
+E=j+v
+q=s+c
+b=h+u
+_=w+p
+z=j+m
+x=s+l
+k=h+d
+if f then
+local f={}
+for t,e in a.pairs(T)do
 e.name=t
-m[#m+1]=e
+f[#f+1]=e
 end
-g.sort(m,
-function(e,t)
-return e.size>t.size
+g.sort(f,
+function(t,e)
+return t.size>e.size
 end
 )
 local a,y="%8s%8s%10s  %s","%8d%8d%10.2f  %s"
-local w=s.rep("-",44)
+local w=n.rep("-",44)
 e("*** global variable list (sorted by size) ***\n"..w)
 e(t(a,"Token","Input","Input","Global"))
 e(t(a,"Count","Bytes","Average","Name"))
 e(w)
-for a=1,#m do
-local a=m[a]
+for a=1,#f do
+local a=f[a]
 e(t(y,a.token,a.size,i(a.token,a.size),a.name))
 end
 e(w)
-e(t(y,h,n,i(h,n),"TOTAL"))
+e(t(y,s,h,i(s,h),"TOTAL"))
 e(w.."\n")
-local a,m="%8s%8s%8s%10s%8s%10s  %s","%8d%8d%8d%10.2f%8d%10.2f  %s"
-local s=s.rep("-",70)
-e("*** local variable list (sorted by allocation order) ***\n"..s)
+local a,f="%8s%8s%8s%10s%8s%10s  %s","%8d%8d%8d%10.2f%8d%10.2f  %s"
+local n=n.rep("-",70)
+e("*** local variable list (sorted by allocation order) ***\n"..n)
 e(t(a,"Decl.","Token","Input","Input","Output","Output","Global"))
 e(t(a,"Count","Count","Bytes","Average","Bytes","Average","Name"))
-e(s)
-for a=1,#l do
-local s=l[a]
-local a=A[s]
+e(n)
+for a=1,#r do
+local s=r[a]
+local a=O[s]
 local h,n=0,0
 for t=1,#o do
 local e=o[t]
@@ -1787,85 +1787,97 @@ h=h+e.xcount
 n=n+e.xcount*#e.oldname
 end
 end
-e(t(m,a.decl,a.token,n,i(h,n),
+e(t(f,a.decl,a.token,n,i(h,n),
 a.size,i(a.token,a.size),s))
 end
-e(s)
-e(t(m,f,u,d,i(c,d),
-r,i(u,r),"TOTAL"))
-e(s.."\n")
+e(n)
+e(t(f,m,l,u,i(c,u),
+d,i(l,d),"TOTAL"))
+e(n.."\n")
 end
-local l,o="%-16s%8s%8s%8s%8s%10s","%-16s%8d%8d%8d%8d%10.2f"
-local a=s.rep("-",58)
+local r,o="%-16s%8s%8s%8s%8s%10s","%-16s%8d%8d%8d%8d%10.2f"
+local a=n.rep("-",58)
 e("*** local variable optimization summary ***\n"..a)
-e(t(l,"Variable","Unique","Decl.","Token","Size","Average"))
-e(t(l,"Types","Names","Count","Count","Bytes","Bytes"))
+e(t(r,"Variable","Unique","Decl.","Token","Size","Average"))
+e(t(r,"Types","Names","Count","Count","Bytes","Bytes"))
 e(a)
-e(t(o,"Global",m,q,h,n,i(h,n)))
+e(t(o,"Global",w,j,s,h,i(s,h)))
 e(a)
-e(t(o,"Local (in)",w,p,c,d,i(c,d)))
-e(t(o,"TOTAL (in)",T,_,k,v,i(k,v)))
+e(t(o,"Local (in)",y,v,c,u,i(c,u)))
+e(t(o,"TOTAL (in)",A,E,q,b,i(q,b)))
 e(a)
-e(t(o,"Local (out)",y,f,u,r,i(u,r)))
-e(t(o,"TOTAL (out)",z,x,j,b,i(j,b)))
+e(t(o,"Local (out)",p,m,l,d,i(l,d)))
+e(t(o,"TOTAL (out)",_,z,x,k,i(x,k)))
 e(a.."\n")
 end
-local function i(e)
-if e<1 or e>=#n then
-return
-end
-local o=y[e]
-local t,a=
-#n,#h
-for e=e+1,t do
-n[e-1]=n[e]
-k[e-1]=k[e]
-y[e-1]=y[e]-1
-w[e-1]=w[e]
-end
-n[t]=nil
-k[t]=nil
-y[t]=nil
-w[t]=nil
-for e=o+1,a do
-h[e-1]=h[e]
-c[e-1]=c[e]
-end
-h[a]=nil
-c[a]=nil
-end
-local function d()
+local function l()
 local function o(e)
-local t=n[e+1]or""
-local a=n[e+2]or""
-local e=n[e+3]or""
+local t=s[e+1]or""
+local a=s[e+2]or""
+local e=s[e+3]or""
 if t=="("and a=="<string>"and e==")"then
 return true
 end
 end
-local t=1
-while true do
-local e,a=t,false
-while e<=#n do
-local n=w[e]
-if n=="call"and o(e)then
-i(e+1)
-i(e+2)
-a=true
-t=e+2
+local a={}
+local e=1
+while e<=#s do
+local t=w[e]
+if t=="call"and o(e)then
+a[e+1]=true
+a[e+3]=true
+e=e+3
 end
 e=e+1
 end
-if not a then break end
+local t,e,o=1,1,#s
+local i={}
+while e<=o do
+if a[t]then
+i[v[t]]=true
+t=t+1
+end
+if t>e then
+if t<=o then
+s[e]=s[t]
+k[e]=k[t]
+v[e]=v[t]-(t-e)
+w[e]=w[t]
+else
+s[e]=nil
+k[e]=nil
+v[e]=nil
+w[e]=nil
+end
+end
+t=t+1
+e=e+1
+end
+local e,t,a=1,1,#h
+while t<=a do
+if i[e]then
+e=e+1
+end
+if e>t then
+if e<=a then
+h[t]=h[e]
+c[t]=c[e]
+else
+h[t]=nil
+c[t]=nil
+end
+end
+e=e+1
+t=t+1
 end
 end
 local function u(h)
-b=0
-l={}
-q=z(x)
-E=z(o)
+q=0
+r={}
+b=z(_)
+O=z(o)
 if h["opt-entropy"]then
-O(h)
+I(h)
 end
 local e={}
 for t=1,#o do
@@ -1876,31 +1888,31 @@ function(t,e)
 return t.xcount>e.xcount
 end
 )
-local a,t,r={},1,false
+local a,t,d={},1,false
 for o=1,#e do
 local e=e[o]
 if not e.isself then
 a[t]=e
 t=t+1
 else
-r=true
+d=true
 end
 end
 e=a
 local s=#e
 while s>0 do
-local n,t
+local n,a
 repeat
-n,t=I()
-until not T[n]
-l[#l+1]=n
-local a=s
-if t then
-local i=x[q[n].id].xref
+n,a=S()
+until not A[n]
+r[#r+1]=n
+local t=s
+if a then
+local i=_[b[n].id].xref
 local n=#i
-for t=1,s do
-local t=e[t]
-local s,e=t.act,t.rem
+for a=1,s do
+local a=e[a]
+local s,e=a.act,a.rem
 while e<0 do
 e=o[-e].rem
 end
@@ -1910,55 +1922,55 @@ local t=i[t]
 if t>=s and t<=e then o=true end
 end
 if o then
-t.skip=true
-a=a-1
+a.skip=true
+t=t-1
 end
 end
 end
-while a>0 do
-local t=1
-while e[t].skip do
-t=t+1
+while t>0 do
+local a=1
+while e[a].skip do
+a=a+1
 end
-a=a-1
-local i=e[t]
-t=t+1
+t=t-1
+local i=e[a]
+a=a+1
 i.newname=n
 i.skip=true
 i.done=true
-local s,r=i.first,i.last
-local h=i.xref
-if s and a>0 then
-local n=a
+local s,h=i.first,i.last
+local r=i.xref
+if s and t>0 then
+local n=t
 while n>0 do
-while e[t].skip do
-t=t+1
+while e[a].skip do
+a=a+1
 end
 n=n-1
-local e=e[t]
-t=t+1
-local n,t=e.act,e.rem
-while t<0 do
-t=o[-t].rem
+local e=e[a]
+a=a+1
+local n,a=e.act,e.rem
+while a<0 do
+a=o[-a].rem
 end
-if not(r<n or s>t)then
+if not(h<n or s>a)then
 if n>=i.act then
 for o=1,i.xcount do
-local o=h[o]
-if o>=n and o<=t then
-a=a-1
+local o=r[o]
+if o>=n and o<=a then
+t=t-1
 e.skip=true
 break
 end
 end
 else
 if e.last and e.last>=i.act then
-a=a-1
+t=t-1
 e.skip=true
 end
 end
 end
-if a==0 then break end
+if t==0 then break end
 end
 end
 end
@@ -1976,10 +1988,10 @@ s=#e
 end
 for e=1,#o do
 local e=o[e]
-local a=e.xref
+local t=e.xref
 if e.newname then
-for t=1,e.xcount do
-local t=a[t]
+for a=1,e.xcount do
+local t=t[a]
 c[t]=e.newname
 end
 e.name,e.oldname
@@ -1988,36 +2000,36 @@ else
 e.oldname=e.name
 end
 end
-if r then
-l[#l+1]="self"
+if d then
+r[#r+1]="self"
 end
 local e=z(o)
-N(q,E,e,h)
+N(b,O,e,h)
 end
 function optimize(t,i,a,e)
 h,c
 =i,a
-n,k,y
+s,k,v
 =e.toklist,e.seminfolist,e.xreflist
-x,o,w
+_,o,w
 =e.globalinfo,e.localinfo,e.statinfo
 if t["opt-locals"]then
 u(t)
 end
 if t["opt-experimental"]then
-d()
+l()
 end
 end
 end
-v.equiv=
+p.equiv=
 function()
 module"equiv"
 local e=a.require"string"
-local r=a.loadstring
+local d=a.loadstring
 local u=e.sub
-local d=e.match
+local r=e.match
 local s=e.dump
-local p=e.byte
+local v=e.byte
 local l={
 TK_KEYWORD=true,
 TK_NAME=true,
@@ -2028,10 +2040,10 @@ TK_OP=true,
 TK_EOS=true,
 }
 local i,e,h
-function init(o,t,a)
+function init(o,a,t)
 i=o
-e=t
-h=a
+e=a
+h=t
 end
 local function n(t)
 e.init(t)
@@ -2051,7 +2063,7 @@ return e,t
 end
 function source(t,l)
 local function u(e)
-local e=r("return "..e,"z")
+local e=d("return "..e,"z")
 if e then
 return s(e)
 end
@@ -2060,12 +2072,12 @@ local function o(e)
 if i.DETAILS then a.print("SRCEQUIV: "..e)end
 h.SRC_EQUIV=true
 end
-local e,r=n(t)
+local e,d=n(t)
 local a,h=n(l)
-local n=d(t,"^(#[^\r\n]*)")
-local t=d(l,"^(#[^\r\n]*)")
-if n or t then
-if not n or not t or n~=t then
+local t=r(t,"^(#[^\r\n]*)")
+local n=r(l,"^(#[^\r\n]*)")
+if t or n then
+if not t or not n or t~=n then
 o("shbang lines different")
 end
 end
@@ -2075,22 +2087,22 @@ return
 end
 for t=1,#e do
 local e,s=e[t],a[t]
-local a,n=r[t],h[t]
+local n,a=d[t],h[t]
 if e~=s then
 o("type ["..t.."] "..e.." "..s)
 break
 end
 if e=="TK_KEYWORD"or e=="TK_NAME"or e=="TK_OP"then
 if e=="TK_NAME"and i["opt-locals"]then
-elseif a~=n then
-o("seminfo ["..t.."] "..e.." "..a.." "..n)
+elseif n~=a then
+o("seminfo ["..t.."] "..e.." "..n.." "..a)
 break
 end
 elseif e=="TK_EOS"then
 else
-local i,s=u(a),u(n)
+local i,s=u(n),u(a)
 if not i or not s or i~=s then
-o("seminfo ["..t.."] "..e.." "..a.." "..n)
+o("seminfo ["..t.."] "..e.." "..n.." "..a)
 break
 end
 end
@@ -2098,38 +2110,38 @@ end
 end
 function binary(n,o)
 local e=0
-local q=1
-local k=3
-local j=4
+local _=1
+local z=3
+local E=4
 local function e(e)
 if i.DETAILS then a.print("BINEQUIV: "..e)end
 h.BIN_EQUIV=true
 end
 local function a(e)
-local t=d(e,"^(#[^\r\n]*\r?\n?)")
+local t=r(e,"^(#[^\r\n]*\r?\n?)")
 if t then
 e=u(e,#t+1)
 end
 return e
 end
-local t=r(a(n),"z")
+local t=d(a(n),"z")
 if not t then
 e("failed to compile original sources for binary chunk comparison")
 return
 end
-local a=r(a(o),"z")
+local a=d(a(o),"z")
 if not a then
 e("failed to compile compressed result for binary chunk comparison")
 end
 local i={i=1,dat=s(t)}
 i.len=#i.dat
-local l={i=1,dat=s(a)}
-l.len=#l.dat
+local r={i=1,dat=s(a)}
+r.len=#r.dat
 local g,
 d,c,
 y,w,
 o,m
-local function s(e,t)
+local function h(e,t)
 if e.i+t-1>e.len then return end
 return true
 end
@@ -2142,43 +2154,43 @@ local e=t.i
 if e>t.len then return end
 local a=u(t.dat,e,e)
 t.i=e+1
-return p(a)
+return v(a)
 end
-local function x(a)
-local e,t=0,1
-if not s(a,d)then return end
+local function k(a)
+local t,e=0,1
+if not h(a,d)then return end
 for o=1,d do
-e=e+t*n(a)
-t=t*256
+t=t+e*n(a)
+e=e*256
 end
-return e
+return t
 end
-local function z(t)
+local function q(t)
 local e=0
-if not s(t,d)then return end
+if not h(t,d)then return end
 for a=1,d do
 e=e*256+n(t)
 end
 return e
 end
-local function E(a)
+local function j(a)
 local t,e=0,1
-if not s(a,c)then return end
+if not h(a,c)then return end
 for o=1,c do
 t=t+e*n(a)
 e=e*256
 end
 return t
 end
-local function _(t)
+local function x(t)
 local e=0
-if not s(t,c)then return end
+if not h(t,c)then return end
 for a=1,c do
 e=e*256+n(t)
 end
 return e
 end
-local function r(e,o)
+local function l(e,o)
 local t=e.i
 local a=t+o-1
 if a>e.len then return end
@@ -2186,14 +2198,14 @@ local a=u(e.dat,t,a)
 e.i=t+o
 return a
 end
-local function h(t)
+local function s(t)
 local e=m(t)
 if not e then return end
 if e==0 then return""end
-return r(t,e)
+return l(t,e)
 end
-local function v(t,e)
-local e,t=n(t),n(e)
+local function v(e,t)
+local e,t=n(e),n(t)
 if not e or not t or e~=t then
 return
 end
@@ -2203,132 +2215,132 @@ local function u(e,t)
 local e=v(e,t)
 if not e then return true end
 end
-local function p(t,e)
-local e,t=o(t),o(e)
+local function p(e,t)
+local e,t=o(e),o(t)
 if not e or not t or e~=t then
 return
 end
 return e
 end
-local function b(t,a)
-if not h(t)or not h(a)then
+local function b(a,t)
+if not s(a)or not s(t)then
 e("bad source name");return
 end
-if not o(t)or not o(a)then
+if not o(a)or not o(t)then
 e("bad linedefined");return
 end
-if not o(t)or not o(a)then
+if not o(a)or not o(t)then
 e("bad lastlinedefined");return
 end
-if not(s(t,4)and s(a,4))then
+if not(h(a,4)and h(t,4))then
 e("prototype header broken")
 end
-if u(t,a)then
+if u(a,t)then
 e("bad nups");return
 end
-if u(t,a)then
+if u(a,t)then
 e("bad numparams");return
 end
-if u(t,a)then
+if u(a,t)then
 e("bad is_vararg");return
 end
-if u(t,a)then
+if u(a,t)then
 e("bad maxstacksize");return
 end
-local i=p(t,a)
+local i=p(a,t)
 if not i then
 e("bad ncode");return
 end
-local n=r(t,i*y)
-local i=r(a,i*y)
+local n=l(a,i*y)
+local i=l(t,i*y)
 if not n or not i or n~=i then
 e("bad code block");return
 end
-local i=p(t,a)
+local i=p(a,t)
 if not i then
 e("bad nconst");return
 end
 for o=1,i do
-local o=v(t,a)
+local o=v(a,t)
 if not o then
 e("bad const type");return
 end
-if o==q then
-if u(t,a)then
+if o==_ then
+if u(a,t)then
 e("bad boolean value");return
 end
-elseif o==k then
-local t=r(t,w)
-local a=r(a,w)
-if not t or not a or t~=a then
+elseif o==z then
+local a=l(a,w)
+local t=l(t,w)
+if not a or not t or a~=t then
 e("bad number value");return
 end
-elseif o==j then
-local t=h(t)
-local a=h(a)
-if not t or not a or t~=a then
+elseif o==E then
+local a=s(a)
+local t=s(t)
+if not a or not t or a~=t then
 e("bad string value");return
 end
 end
 end
-local i=p(t,a)
+local i=p(a,t)
 if not i then
 e("bad nproto");return
 end
 for o=1,i do
-if not b(t,a)then
+if not b(a,t)then
 e("bad function prototype");return
 end
 end
-local i=o(t)
-if not i then
+local n=o(a)
+if not n then
 e("bad sizelineinfo1");return
 end
-local n=o(a)
-if not n then
+local i=o(t)
+if not i then
 e("bad sizelineinfo2");return
 end
-if not r(t,i*d)then
+if not l(a,n*d)then
 e("bad lineinfo1");return
 end
-if not r(a,n*d)then
+if not l(t,i*d)then
 e("bad lineinfo2");return
+end
+local n=o(a)
+if not n then
+e("bad sizelocvars1");return
 end
 local i=o(t)
 if not i then
-e("bad sizelocvars1");return
-end
-local n=o(a)
-if not n then
 e("bad sizelocvars2");return
 end
-for a=1,i do
-if not h(t)or not o(t)or not o(t)then
+for t=1,n do
+if not s(a)or not o(a)or not o(a)then
 e("bad locvars1");return
 end
 end
-for t=1,n do
-if not h(a)or not o(a)or not o(a)then
+for a=1,i do
+if not s(t)or not o(t)or not o(t)then
 e("bad locvars2");return
 end
 end
-local i=o(t)
+local i=o(a)
 if not i then
 e("bad sizeupvalues1");return
 end
-local o=o(a)
+local o=o(t)
 if not o then
 e("bad sizeupvalues2");return
 end
-for a=1,i do
-if not h(t)then e("bad upvalues1");return end
+for t=1,i do
+if not s(a)then e("bad upvalues1");return end
 end
-for t=1,o do
-if not h(a)then e("bad upvalues2");return end
+for a=1,o do
+if not s(t)then e("bad upvalues2");return end
 end
 return true
 end
-if not(s(i,12)and s(l,12))then
+if not(h(i,12)and h(r,12))then
 e("header broken")
 end
 f(i,6)
@@ -2338,34 +2350,34 @@ c=n(i)
 y=n(i)
 w=n(i)
 f(i)
-f(l,12)
+f(r,12)
 if g==1 then
-o=x
-m=E
+o=k
+m=j
 else
-o=z
-m=_
+o=q
+m=x
 end
-b(i,l)
+b(i,r)
 if i.i~=i.len+1 then
 e("inconsistent binary chunk1");return
-elseif l.i~=l.len+1 then
+elseif r.i~=r.len+1 then
 e("inconsistent binary chunk2");return
 end
 end
 end
-v["plugin/html"]=
+p["plugin/html"]=
 function()
 module"plugin/html"
 local t=a.require"string"
-local m=a.require"table"
-local r=a.require"io"
-local h=".html"
-local l={
+local c=a.require"table"
+local u=a.require"io"
+local l=".html"
+local m={
 ["&"]="&amp;",["<"]="&lt;",[">"]="&gt;",
 ["'"]="&apos;",["\""]="&quot;",
 }
-local f=[[
+local y=[[
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
@@ -2377,12 +2389,12 @@ local f=[[
 <body>
 <pre class="code">
 ]]
-local y=[[
+local w=[[
 </pre>
 </body>
 </html>
 ]]
-local w=[[
+local f=[[
 BODY {
     background: white;
     color: navy;
@@ -2397,27 +2409,27 @@ span.name { }
 span.global { color: #ff0000; font-weight: bold; }
 span.local { color: #0000ff; font-weight: bold; }
 ]]
-local i
-local e,n
-local o,d,u
+local n
+local e,o
+local i,d,h
 local function s(...)
-if i.QUIET then return end
+if n.QUIET then return end
 a.print(...)
 end
-function init(o,s,r)
-i=o
-e=s
-local o,d=t.find(e,"%.[^%.%\\%/]*$")
+function init(s,i,h)
+n=s
+e=i
+local i,h=t.find(e,"%.[^%.%\\%/]*$")
 local s,r=e,""
-if o and o>1 then
-s=t.sub(e,1,o-1)
-r=t.sub(e,o,d)
+if i and i>1 then
+s=t.sub(e,1,i-1)
+r=t.sub(e,i,h)
 end
-n=s..h
-if i.OUTPUT_FILE then
-n=i.OUTPUT_FILE
+o=s..l
+if n.OUTPUT_FILE then
+o=n.OUTPUT_FILE
 end
-if e==n then
+if e==o then
 a.error("output filename identical to input filename")
 end
 end
@@ -2425,17 +2437,17 @@ function post_load(t)
 s([[
 HTML plugin module for LuaSrcDiet
 ]])
-s("Exporting: "..e.." -> "..n.."\n")
+s("Exporting: "..e.." -> "..o.."\n")
 end
-function post_lex(e,a,t)
-o,d,u
-=e,a,t
+function post_lex(e,t,a)
+i,d,h
+=e,t,a
 end
 local function h(a)
 local e=1
 while e<=#a do
 local o=t.sub(a,e,e)
-local i=l[o]
+local i=m[o]
 if i then
 o=i
 a=t.sub(a,1,e-1)..o..t.sub(a,e+1)
@@ -2444,14 +2456,14 @@ e=e+#o
 end
 return a
 end
-local function c(t,o)
-local e=r.open(t,"wb")
+local function m(t,o)
+local e=u.open(t,"wb")
 if not e then a.error("cannot open \""..t.."\" for writing")end
 local o=e:write(o)
 if not o then a.error("cannot write to \""..t.."\"")end
 e:close()
 end
-function post_parse(u,l)
+function post_parse(l,u)
 local r={}
 local function s(e)
 r[#r+1]=e
@@ -2459,27 +2471,27 @@ end
 local function a(e,t)
 s('<span class="'..e..'">'..t..'</span>')
 end
-for e=1,#u do
-local e=u[e]
-local e=e.xref
-for t=1,#e do
-local e=e[t]
-o[e]="TK_GLOBAL"
-end
-end
 for e=1,#l do
 local e=l[e]
 local e=e.xref
 for t=1,#e do
 local e=e[t]
-o[e]="TK_LOCAL"
+i[e]="TK_GLOBAL"
 end
 end
-s(t.format(f,
+for e=1,#u do
+local e=u[e]
+local e=e.xref
+for t=1,#e do
+local e=e[t]
+i[e]="TK_LOCAL"
+end
+end
+s(t.format(y,
 h(e),
-w))
-for e=1,#o do
-local e,t=o[e],d[e]
+f))
+for e=1,#i do
+local e,t=i[e],d[e]
 if e=="TK_KEYWORD"then
 a("keyword",t)
 elseif e=="TK_STRING"or e=="TK_LSTRING"then
@@ -2500,24 +2512,24 @@ elseif e~="TK_EOS"then
 s(t)
 end
 end
-s(y)
-c(n,m.concat(r))
-i.EXIT=true
+s(w)
+m(o,c.concat(r))
+n.EXIT=true
 end
 end
-v["plugin/sloc"]=
+p["plugin/sloc"]=
 function()
 module"plugin/sloc"
 local n=a.require"string"
 local e=a.require"table"
 local o
-local s
+local h
 function init(t,e,a)
 o=t
 o.QUIET=true
-s=e
+h=e
 end
-local function h(o)
+local function s(o)
 local a={}
 local t,i=1,#o
 while t<=i do
@@ -2533,51 +2545,51 @@ end
 end
 return a
 end
-function post_lex(t,d,r)
-local e,n=0,0
-local function i(t)
+function post_lex(t,r,d)
+local e,i=0,0
+local function n(t)
 if t>e then
-n=n+1;e=t
+i=i+1;e=t
 end
 end
 for e=1,#t do
 local t,a,e
-=t[e],d[e],r[e]
+=t[e],r[e],d[e]
 if t=="TK_KEYWORD"or t=="TK_NAME"or
 t=="TK_NUMBER"or t=="TK_OP"then
-i(e)
+n(e)
 elseif t=="TK_STRING"then
-local t=h(a)
+local t=s(a)
 e=e-#t+1
 for t=1,#t do
-i(e);e=e+1
+n(e);e=e+1
 end
 elseif t=="TK_LSTRING"then
-local t=h(a)
+local t=s(a)
 e=e-#t+1
 for a=1,#t do
-if t[a]~=""then i(e)end
+if t[a]~=""then n(e)end
 e=e+1
 end
 end
 end
-a.print(s..": "..n)
+a.print(h..": "..i)
 o.EXIT=true
 end
 end
-local o=g"llex"
-local l=g"lparser"
-local x=g"optlex"
-local T=g"optparser"
-local j=g"equiv"
+local o=j"llex"
+local u=j"lparser"
+local x=j"optlex"
+local E=j"optparser"
+local q=j"equiv"
 local a
-local v=[[
+local p=[[
 LuaSrcDiet: Puts your Lua 5.1 source code on a diet
-Version 0.12.0 (20110913)  Copyright (c) 2005-2008,2011 Kein-Hong Man
+Version 0.12.1 (20120407)  Copyright (c) 2012 Kein-Hong Man
 The COPYRIGHT file describes the conditions under which this
 software may be distributed.
 ]]
-local f=[[
+local m=[[
 usage: LuaSrcDiet [options] [filenames]
 
 example:
@@ -2608,7 +2620,7 @@ features (to disable, insert 'no' prefix like --noopt-comments):
 %s
 default settings:
 %s]]
-local b=[[
+local v=[[
 --opt-comments,'remove comments and block comments'
 --opt-whitespace,'remove whitespace excluding EOLs'
 --opt-emptylines,'remove empty lines'
@@ -2621,7 +2633,7 @@ local b=[[
 --opt-binequiv,'insist on binary chunk equivalence'
 --opt-experimental,'apply experimental optimizations'
 ]]
-local E=[[
+local _=[[
   --opt-comments --opt-whitespace --opt-emptylines
   --opt-numbers --opt-locals
   --opt-srcequiv --opt-binequiv
@@ -2638,52 +2650,52 @@ local O=[[
   --opt-locals --opt-entropy
   --opt-srcequiv --opt-binequiv
 ]]
-local A=[[
+local I=[[
   --noopt-comments --noopt-whitespace --noopt-emptylines
   --noopt-eols --noopt-strings --noopt-numbers
   --noopt-locals --noopt-entropy
   --opt-srcequiv --opt-binequiv
 ]]
-local n="_"
-local I="plugin/"
+local h="_"
+local A="plugin/"
 local function i(e)
-p("LuaSrcDiet (error): "..e);os.exit(1)
+y("LuaSrcDiet (error): "..e);os.exit(1)
 end
-if not X(_VERSION,"5.1",1,1)then
+if not B(_VERSION,"5.1",1,1)then
 i("requires Lua 5.1 to run")
 end
-local t=""
+local n=""
 do
 local i=24
-local o={}
-for a,n in Z(b,"%s*([^,]+),'([^']+)'")do
+local t={}
+for a,o in G(v,"%s*([^,]+),'([^']+)'")do
 local e="  "..a
-e=e..s.rep(" ",i-#e)..n.."\n"
-t=t..e
-o[a]=true
-o["--no"..y(a,3)]=true
+e=e..s.rep(" ",i-#e)..o.."\n"
+n=n..e
+t[a]=true
+t["--no"..f(a,3)]=true
 end
-b=o
+v=t
 end
-f=s.format(f,t,E)
+m=s.format(m,n,_)
 if W then
 local e="\nembedded plugins:\n"
 for t=1,#W do
 local t=W[t]
-e=e.."  "..te[t].."\n"
+e=e.."  "..Z[t].."\n"
 end
-f=f..e
+m=m..e
 end
-local _=n
+local z=h
 local e={}
-local n,h
+local h,n
 local function w(t)
-for t in Z(t,"(%-%-%S+)")do
-if y(t,3,4)=="no"and
-b["--"..y(t,5)]then
-e[y(t,5)]=false
+for t in G(t,"(%-%-%S+)")do
+if f(t,3,4)=="no"and
+v["--"..f(t,5)]then
+e[f(t,5)]=false
 else
-e[y(t,3)]=true
+e[f(t,3)]=true
 end
 end
 end
@@ -2694,61 +2706,61 @@ local d={
 "TK_COMMENT","TK_LCOMMENT",
 "TK_EOL","TK_SPACE",
 }
-local u=7
-local c={
+local c=7
+local l={
 ["\n"]="LF",["\r"]="CR",
 ["\n\r"]="LFCR",["\r\n"]="CRLF",
 }
-local function r(t)
-local e=io.open(t,"rb")
-if not e then i('cannot open "'..t..'" for reading')end
-local a=e:read("*a")
-if not a then i('cannot read from "'..t..'"')end
-e:close()
+local function r(e)
+local t=io.open(e,"rb")
+if not t then i('cannot open "'..e..'" for reading')end
+local a=t:read("*a")
+if not a then i('cannot read from "'..e..'"')end
+t:close()
 return a
 end
-local function L(t,a)
+local function T(t,a)
 local e=io.open(t,"wb")
 if not e then i('cannot open "'..t..'" for writing')end
 local a=e:write(a)
 if not a then i('cannot write to "'..t..'"')end
 e:close()
 end
-local function z()
-n,h={},{}
+local function k()
+h,n={},{}
 for e=1,#d do
 local e=d[e]
-n[e],h[e]=0,0
+h[e],n[e]=0,0
 end
 end
-local function q(e,t)
-n[e]=n[e]+1
-h[e]=h[e]+#t
+local function g(e,t)
+h[e]=h[e]+1
+n[e]=n[e]+#t
 end
-local function k()
+local function b()
 local function i(e,t)
 if e==0 then return 0 end
 return t/e
 end
 local o={}
 local e,t=0,0
-for a=1,u do
+for a=1,c do
 local a=d[a]
-e=e+n[a];t=t+h[a]
+e=e+h[a];t=t+n[a]
 end
-n.TOTAL_TOK,h.TOTAL_TOK=e,t
+h.TOTAL_TOK,n.TOTAL_TOK=e,t
 o.TOTAL_TOK=i(e,t)
 e,t=0,0
 for a=1,#d do
 local a=d[a]
-e=e+n[a];t=t+h[a]
-o[a]=i(n[a],h[a])
+e=e+h[a];t=t+n[a]
+o[a]=i(h[a],n[a])
 end
-n.TOTAL_ALL,h.TOTAL_ALL=e,t
+h.TOTAL_ALL,n.TOTAL_ALL=e,t
 o.TOTAL_ALL=i(e,t)
 return o
 end
-local function S(e)
+local function H(e)
 local e=r(e)
 o.init(e)
 o.llex()
@@ -2758,84 +2770,84 @@ local t,e=e[t],a[t]
 if t=="TK_OP"and s.byte(e)<32 then
 e="("..s.byte(e)..")"
 elseif t=="TK_EOL"then
-e=c[e]
+e=l[e]
 else
 e="'"..e.."'"
 end
-p(t.." "..e)
+y(t.." "..e)
 end
 end
 local function R(e)
-local a=p
+local t=y
 local e=r(e)
 o.init(e)
 o.llex()
-local o,t,e
+local e,o,a
 =o.tok,o.seminfo,o.tokln
-l.init(o,t,e)
-local e=l.parser()
-local t,i=
+u.init(e,o,a)
+local e=u.parser()
+local a,i=
 e.globalinfo,e.localinfo
 local o=s.rep("-",72)
-a("*** Local/Global Variable Tracker Tables ***")
-a(o.."\n GLOBALS\n"..o)
-for e=1,#t do
-local t=t[e]
-local e="("..e..") '"..t.name.."' -> "
-local t=t.xref
-for o=1,#t do e=e..t[o].." "end
-a(e)
+t("*** Local/Global Variable Tracker Tables ***")
+t(o.."\n GLOBALS\n"..o)
+for e=1,#a do
+local a=a[e]
+local e="("..e..") '"..a.name.."' -> "
+local a=a.xref
+for o=1,#a do e=e..a[o].." "end
+t(e)
 end
-a(o.."\n LOCALS (decl=declared act=activated rem=removed)\n"..o)
+t(o.."\n LOCALS (decl=declared act=activated rem=removed)\n"..o)
 for e=1,#i do
-local t=i[e]
-local e="("..e..") '"..t.name.."' decl:"..t.decl..
-" act:"..t.act.." rem:"..t.rem
-if t.isself then
+local a=i[e]
+local e="("..e..") '"..a.name.."' decl:"..a.decl..
+" act:"..a.act.." rem:"..a.rem
+if a.isself then
 e=e.." isself"
 end
 e=e.." -> "
-local t=t.xref
-for o=1,#t do e=e..t[o].." "end
-a(e)
+local a=a.xref
+for o=1,#a do e=e..a[o].." "end
+t(e)
 end
-a(o.."\n")
+t(o.."\n")
 end
 local function D(a)
-local e=p
+local e=y
 local t=r(a)
 o.init(t)
 o.llex()
 local t,o=o.tok,o.seminfo
-e(v)
+e(p)
 e("Statistics for: "..a.."\n")
-z()
+k()
 for e=1,#t do
-local t,e=t[e],o[e]
-q(t,e)
+local e,t=t[e],o[e]
+g(e,t)
 end
-local t=k()
+local t=b()
 local a=s.format
 local function r(e)
-return n[e],h[e],t[e]
+return h[e],n[e],t[e]
 end
-local o,i="%-16s%8s%8s%10s","%-16s%8d%8d%10.2f"
+local i,o="%-16s%8s%8s%10s","%-16s%8d%8d%10.2f"
 local t=s.rep("-",42)
-e(a(o,"Lexical","Input","Input","Input"))
-e(a(o,"Elements","Count","Bytes","Average"))
+e(a(i,"Lexical","Input","Input","Input"))
+e(a(i,"Elements","Count","Bytes","Average"))
 e(t)
-for o=1,#d do
-local o=d[o]
-e(a(i,o,r(o)))
-if o=="TK_EOS"then e(t)end
+for i=1,#d do
+local i=d[i]
+e(a(o,i,r(i)))
+if i=="TK_EOS"then e(t)end
 end
 e(t)
-e(a(i,"Total Elements",r("TOTAL_ALL")))
+e(a(o,"Total Elements",r("TOTAL_ALL")))
 e(t)
-e(a(i,"Total Tokens",r("TOTAL_TOK")))
+e(a(o,"Total Tokens",r("TOTAL_TOK")))
 e(t.."\n")
 end
-local function H(f,w)
+local function S(f,w)
 local function t(...)
 if e.QUIET then return end
 _G.print(...)
@@ -2845,7 +2857,7 @@ e.EXIT=false
 a.init(e,f,w)
 if e.EXIT then return end
 end
-t(v)
+t(p)
 local c=r(f)
 if a and a.post_load then
 c=a.post_load(c)or c
@@ -2853,50 +2865,50 @@ if e.EXIT then return end
 end
 o.init(c)
 o.llex()
-local r,u,m
+local r,l,m
 =o.tok,o.seminfo,o.tokln
 if a and a.post_lex then
-a.post_lex(r,u,m)
+a.post_lex(r,l,m)
 if e.EXIT then return end
 end
-z()
+k()
 for e=1,#r do
-local e,t=r[e],u[e]
-q(e,t)
+local t,e=r[e],l[e]
+g(t,e)
 end
-local p=k()
-local v,y=n,h
-T.print=t
-l.init(r,u,m)
-local l=l.parser()
+local v=b()
+local p,y=h,n
+E.print=t
+u.init(r,l,m)
+local u=u.parser()
 if a and a.post_parse then
-a.post_parse(l.globalinfo,l.localinfo)
+a.post_parse(u.globalinfo,u.localinfo)
 if e.EXIT then return end
 end
-T.optimize(e,r,u,l)
+E.optimize(e,r,l,u)
 if a and a.post_optparse then
 a.post_optparse()
 if e.EXIT then return end
 end
-local l=x.warn
+local u=x.warn
 x.print=t
-r,u,m
-=x.optimize(e,r,u,m)
+r,l,m
+=x.optimize(e,r,l,m)
 if a and a.post_optlex then
-a.post_optlex(r,u,m)
+a.post_optlex(r,l,m)
 if e.EXIT then return end
 end
-local a=ee.concat(u)
+local a=ee.concat(l)
 if s.find(a,"\r\n",1,1)or
 s.find(a,"\n\r",1,1)then
-l.MIXEDEOL=true
+u.MIXEDEOL=true
 end
-j.init(e,o,l)
-j.source(c,a)
-j.binary(c,a)
+q.init(e,o,u)
+q.source(c,a)
+q.binary(c,a)
 local m="before and after lexer streams are NOT equivalent!"
 local c="before and after binary chunks are NOT equivalent!"
-if l.SRC_EQUIV then
+if u.SRC_EQUIV then
 if e["opt-srcequiv"]then i(m)end
 else
 t("*** SRCEQUIV: token streams are sort of equivalent")
@@ -2905,24 +2917,24 @@ t("(but no identifier comparisons since --opt-locals enabled)")
 end
 t()
 end
-if l.BIN_EQUIV then
+if u.BIN_EQUIV then
 if e["opt-binequiv"]then i(c)end
 else
 t("*** BINEQUIV: binary chunks are sort of equivalent")
 t()
 end
-L(w,a)
-z()
+T(w,a)
+k()
 for e=1,#r do
-local t,e=r[e],u[e]
-q(t,e)
+local e,t=r[e],l[e]
+g(e,t)
 end
-local o=k()
+local o=b()
 t("Statistics for: "..f.." -> "..w.."\n")
 local a=s.format
 local function r(e)
-return v[e],y[e],p[e],
-n[e],h[e],o[e]
+return p[e],y[e],v[e],
+h[e],n[e],o[e]
 end
 local o,i="%-16s%8s%8s%10s%8s%8s%10s",
 "%-16s%8d%8d%10.2f%8d%8d%10.2f"
@@ -2945,20 +2957,20 @@ t(a(i,"Total Elements",r("TOTAL_ALL")))
 t(e)
 t(a(i,"Total Tokens",r("TOTAL_TOK")))
 t(e)
-if l.LSTRING then
-t("* WARNING: "..l.LSTRING)
-elseif l.MIXEDEOL then
+if u.LSTRING then
+t("* WARNING: "..u.LSTRING)
+elseif u.MIXEDEOL then
 t("* WARNING: ".."output still contains some CRLF or LFCR line endings")
-elseif l.SRC_EQUIV then
+elseif u.SRC_EQUIV then
 t("* WARNING: "..m)
-elseif l.BIN_EQUIV then
+elseif u.BIN_EQUIV then
 t("* WARNING: "..c)
 end
 t()
 end
 local r={...}
 local h={}
-w(E)
+w(_)
 local function l(n)
 for t=1,#n do
 local t=n[t]
@@ -2966,10 +2978,10 @@ local a
 local o,r=s.find(t,"%.[^%.%\\%/]*$")
 local h,s=t,""
 if o and o>1 then
-h=y(t,1,o-1)
-s=y(t,o,r)
+h=f(t,1,o-1)
+s=f(t,o,r)
 end
-a=h.._..s
+a=h..z..s
 if#n==1 and e.OUTPUT_FILE then
 a=e.OUTPUT_FILE
 end
@@ -2977,13 +2989,13 @@ if t==a then
 i("output filename identical to input filename")
 end
 if e.DUMP_LEXER then
-S(t)
+H(t)
 elseif e.DUMP_PARSER then
 R(t)
 elseif e.READ_ONLY then
 D(t)
 else
-H(t,a)
+S(t,a)
 end
 end
 end
@@ -2994,7 +3006,7 @@ e.HELP=true
 end
 while o<=t do
 local t,n=r[o],r[o+1]
-local s=X(t,"^%-%-?")
+local s=B(t,"^%-%-?")
 if s=="-"then
 if t=="-h"then
 e.HELP=true;break
@@ -3002,7 +3014,7 @@ elseif t=="-v"then
 e.VERSION=true;break
 elseif t=="-s"then
 if not n then i("-s option needs suffix specification")end
-_=n
+z=n
 o=o+1
 elseif t=="-o"then
 if not n then i("-o option needs a file name")end
@@ -3026,7 +3038,7 @@ elseif t=="--plugin"then
 if not n then i("--plugin option needs a module name")end
 if e.PLUGIN then i("only one plugin can be specified")end
 e.PLUGIN=n
-a=g(I..n)
+a=j(A..n)
 o=o+1
 elseif t=="--quiet"then
 e.QUIET=true
@@ -3037,14 +3049,14 @@ w(N)
 elseif t=="--maximum"then
 w(O)
 elseif t=="--none"then
-w(A)
+w(I)
 elseif t=="--dump-lexer"then
 e.DUMP_LEXER=true
 elseif t=="--dump-parser"then
 e.DUMP_PARSER=true
 elseif t=="--details"then
 e.DETAILS=true
-elseif b[t]then
+elseif v[t]then
 w(t)
 else
 i("unrecognized option "..t)
@@ -3055,9 +3067,9 @@ end
 o=o+1
 end
 if e.HELP then
-p(v..f);return true
+y(p..m);return true
 elseif e.VERSION then
-p(v);return true
+y(p);return true
 end
 if#h>0 then
 if#h>1 and e.OUTPUT_FILE then
