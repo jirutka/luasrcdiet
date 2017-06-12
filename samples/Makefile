@@ -8,14 +8,14 @@
 LUA = lua
 LUAC = luac
 
-FILES = ../src/llex.lua \
-	../src/lparser.lua \
-        ../src/optlex.lua \
-	../src/optparser.lua \
-	../src/equiv.lua \
-	../src/LuaSrcDiet.lua \
-	../src/plugin/html.lua \
-	../src/plugin/sloc.lua
+FILES = ../luasrcdiet/llex.lua \
+	../luasrcdiet/lparser.lua \
+        ../luasrcdiet/optlex.lua \
+	../luasrcdiet/optparser.lua \
+	../luasrcdiet/equiv.lua \
+	../luasrcdiet/LuaSrcDiet.lua \
+	../luasrcdiet/plugin/html.lua \
+	../luasrcdiet/plugin/sloc.lua
 
 ONEAPP = LuaSrcDiet.lua
 
@@ -83,13 +83,13 @@ numbers_on_diet.lua: numbers_original.lua $(ONEAPP)
 strings_on_diet.lua: strings_original.lua $(ONEAPP)
 	$(LUA) $(ONEAPP) $< -o $@ --none --opt-strings --quiet
 
-dump-llex-lexer.dat: ../src/llex.lua $(ONEAPP)
+dump-llex-lexer.dat: ../luasrcdiet/llex.lua $(ONEAPP)
 	$(LUA) $(ONEAPP) $< --dump-lexer > $@
 
-dump-llex-parser.dat: ../src/llex.lua $(ONEAPP)
+dump-llex-parser.dat: ../luasrcdiet/llex.lua $(ONEAPP)
 	$(LUA) $(ONEAPP) $< --dump-parser > $@
 
-llex-plugin-output.html: ../src/llex.lua $(ONEAPP)
+llex-plugin-output.html: ../luasrcdiet/llex.lua $(ONEAPP)
 	$(LUA) $(ONEAPP) $< -o $@ --plugin html --quiet
 
 experimental1_output.lua: experimental1.lua $(ONEAPP)

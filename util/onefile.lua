@@ -27,7 +27,7 @@ local type = type
 -- configuration
 ----------------------------------------------------------------------]]
 
-local SOURCE_DIR = "../src/"
+local SOURCE_DIR = "../luasrcdiet/"
 
 local MAIN_SOURCE = SOURCE_DIR.."LuaSrcDiet.lua"
 local MAIN_TARGET = "../samples/LuaSrcDiet.lua"
