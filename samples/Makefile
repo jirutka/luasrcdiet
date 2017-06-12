@@ -45,55 +45,55 @@ all: $(ONEAPP) $(APPSAMPLES) $(GENSAMPLES)
 # all-in-one application script
 
 $(ONEAPP): ../util/onefile.lua $(FILES)
-	cd ../util && lua $(<F)
+	cd ../util && $(LUA) $(<F)
 
 # samples for major processing options
 
 app_default.lua: $(ONEAPP)
-	lua $(<F) $(<F) -o $(@F) --details > $(@F).txt
+	$(LUA) $(<F) $(<F) -o $(@F) --details > $(@F).txt
 
 app_basic.lua: $(ONEAPP)
-	lua $(<F) $(<F) -o $(@F) --basic --details > $(@F).txt
+	$(LUA) $(<F) $(<F) -o $(@F) --basic --details > $(@F).txt
 
 app_maximum.lua: $(ONEAPP)
-	lua $(<F) $(<F) -o $(@F) --maximum --details > $(@F).txt
+	$(LUA) $(<F) $(<F) -o $(@F) --maximum --details > $(@F).txt
 
 app_experimental.lua: $(ONEAPP)
-	lua $(<F) $(<F) -o $(@F) --maximum --opt-experimental --noopt-srcequiv --details > $(@F).txt
+	$(LUA) $(<F) $(<F) -o $(@F) --maximum --opt-experimental --noopt-srcequiv --details > $(@F).txt
 
 # samples for individual options
 
 opt_comments.lua: $(ONEAPP)
-	lua $(<F) $(<F) -o $(@F) --none --quiet --opt-comments
+	$(LUA) $(<F) $(<F) -o $(@F) --none --quiet --opt-comments
 
 opt_whitespace.lua: $(ONEAPP)
-	lua $(<F) $(<F) -o $(@F) --none --quiet --opt-whitespace
+	$(LUA) $(<F) $(<F) -o $(@F) --none --quiet --opt-whitespace
 
 opt_emptylines.lua: $(ONEAPP)
-	lua $(<F) $(<F) -o $(@F) --none --quiet --opt-emptylines
+	$(LUA) $(<F) $(<F) -o $(@F) --none --quiet --opt-emptylines
 
 opt_locals.lua: $(ONEAPP)
-	lua $(<F) $(<F) -o $(@F) --none --quiet --opt-locals
+	$(LUA) $(<F) $(<F) -o $(@F) --none --quiet --opt-locals
 
 # other samples
 
 numbers_on_diet.lua: numbers_original.lua $(ONEAPP)
-	lua $(ONEAPP) $< -o $@ --none --opt-numbers --quiet
+	$(LUA) $(ONEAPP) $< -o $@ --none --opt-numbers --quiet
 
 strings_on_diet.lua: strings_original.lua $(ONEAPP)
-	lua $(ONEAPP) $< -o $@ --none --opt-strings --quiet
+	$(LUA) $(ONEAPP) $< -o $@ --none --opt-strings --quiet
 
 dump-llex-lexer.dat: ../src/llex.lua $(ONEAPP)
-	lua $(ONEAPP) $< --dump-lexer > $@
+	$(LUA) $(ONEAPP) $< --dump-lexer > $@
 
 dump-llex-parser.dat: ../src/llex.lua $(ONEAPP)
-	lua $(ONEAPP) $< --dump-parser > $@
+	$(LUA) $(ONEAPP) $< --dump-parser > $@
 
 llex-plugin-output.html: ../src/llex.lua $(ONEAPP)
-	lua $(ONEAPP) $< -o $@ --plugin html --quiet
+	$(LUA) $(ONEAPP) $< -o $@ --plugin html --quiet
 
 experimental1_output.lua: experimental1.lua $(ONEAPP)
-	lua $(ONEAPP) $< -o $@ --none --opt-experimental --noopt-srcequiv --quiet
+	$(LUA) $(ONEAPP) $< -o $@ --none --opt-experimental --noopt-srcequiv --quiet
 
 # housekeeping
 
