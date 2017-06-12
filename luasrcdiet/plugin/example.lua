@@ -30,7 +30,7 @@
 -- changed in order to correctly embed the plugin
 local base = _G
 
-module "plugin/example"
+module "luasrcdiet.plugin.example"
 
 local string = base.require "string"
 local table = base.require "table"

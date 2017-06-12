@@ -31,11 +31,11 @@ local gmatch = string.gmatch
 local match = string.match
 
 -- support modules
-local llex = require "llex"
-local lparser = require "lparser"
-local optlex = require "optlex"
-local optparser = require "optparser"
-local equiv = require "equiv"
+local llex = require "luasrcdiet.llex"
+local lparser = require "luasrcdiet.lparser"
+local optlex = require "luasrcdiet.optlex"
+local optparser = require "luasrcdiet.optparser"
+local equiv = require "luasrcdiet.equiv"
 local plugin
 
 --[[--------------------------------------------------------------------
@@ -130,7 +130,7 @@ local NONE_CONFIG = [[
 ]]
 
 local DEFAULT_SUFFIX = "_"      -- default suffix for file renaming
-local PLUGIN_SUFFIX = "plugin/" -- relative location of plugins
+local PLUGIN_SUFFIX = "luasrcdiet.plugin." -- relative location of plugins
 
 --[[--------------------------------------------------------------------
 -- startup and initialize option list handling

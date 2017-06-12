@@ -24,7 +24,7 @@
 
 local base = _G
 
-module "llex"
+module "luasrcdiet.llex"
 
 local string = base.require "string"
 local find = string.find

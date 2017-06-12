@@ -21,7 +21,7 @@
 
 local base = _G
 
-module "plugin/html"
+module "luasrcdiet.plugin.html"
 
 local string = base.require "string"
 local table = base.require "table"

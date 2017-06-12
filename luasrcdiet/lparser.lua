@@ -24,7 +24,7 @@
 
 local base = _G
 
-module "lparser"
+module "luasrcdiet.lparser"
 
 local string = base.require "string"
 

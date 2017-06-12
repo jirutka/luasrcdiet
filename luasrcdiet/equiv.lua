@@ -28,7 +28,7 @@
 
 local base = _G
 
-module "equiv"
+module "luasrcdiet.equiv"
 
 local string = base.require "string"
 local loadstring = base.loadstring

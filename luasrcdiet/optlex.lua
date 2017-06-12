@@ -17,7 +17,7 @@
 
 local base = _G
 
-module "optlex"
+module "luasrcdiet.optlex"
 
 local string = base.require "string"
 local match = string.match

@@ -25,7 +25,7 @@
 
 local base = _G
 
-module "optparser"
+module "luasrcdiet.optparser"
 
 local string = base.require "string"
 local table = base.require "table"

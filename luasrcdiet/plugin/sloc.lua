@@ -22,7 +22,7 @@
 
 local base = _G
 
-module "plugin/sloc"
+module "luasrcdiet.plugin.sloc"
 
 local string = base.require "string"
 local table = base.require "table"
