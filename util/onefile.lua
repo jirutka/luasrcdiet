@@ -30,7 +30,7 @@ local type = type
 local SOURCE_DIR = "../src/"
 
 local MAIN_SOURCE = SOURCE_DIR.."LuaSrcDiet.lua"
-local MAIN_TARGET = "../bin/LuaSrcDiet.lua"
+local MAIN_TARGET = "../samples/LuaSrcDiet.lua"
 
 local moduls = {
   "llex", "lparser", "optlex", "optparser", "equiv",
