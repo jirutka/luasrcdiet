@@ -1,0 +1,11 @@
+= LuaSrcDiet
+
+Compresses Lua source code by removing unnecessary characters.
+
+This is revival of LuaSrcDiet originally written by mailto:keinhong@gmail.com[Kein-Hong Man].
+
+
+== License
+
+This project is licensed under http://opensource.org/licenses/MIT/[MIT License].
+For the full text of the license, see the link:COPYRIGHT[COPYRIGHT] file.
