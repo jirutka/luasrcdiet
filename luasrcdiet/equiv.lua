@@ -1,31 +1,22 @@
---[[--------------------------------------------------------------------
-
-  equiv.lua: Source and binary equivalency comparisons
-  This file is part of LuaSrcDiet.
-
-  Copyright (c) 2011 Kein-Hong Man <keinhong@gmail.com>
-  The COPYRIGHT file describes the conditions
-  under which this software may be distributed.
-
-----------------------------------------------------------------------]]
-
---[[--------------------------------------------------------------------
--- NOTES:
--- * intended as an extra safety check for mission-critical code,
---   should give affirmative results if everything works
--- * heavy on loadstring() and string.dump(), which may be slowish,
---   and may cause problems for cross-compiled applications
--- * optional detailed information dump is mainly for debugging,
+---------
+-- Source and binary equivalency comparisons
+--
+-- **Notes:**
+--
+-- * Intended as an extra safety check for mission-critical code,
+--   should give affirmative results if everything works.
+-- * Heavy on loadstring() and string.dump(), which may be slowish,
+--   and may cause problems for cross-compiled applications.
+-- * Optional detailed information dump is mainly for debugging,
 --   reason being, if the two are not equivalent when they should be,
---   then some form of optimization has failed
--- * source: IMPORTANT: TK_NAME not compared if opt-locals enabled
--- * binary: IMPORTANT: some shortcuts are taken with int and size_t
+--   then some form of optimization has failed.
+-- * source: IMPORTANT: TK_NAME not compared if opt-locals enabled.
+-- * binary: IMPORTANT: Some shortcuts are taken with int and size_t
 --   value reading -- if the functions break, then the binary chunk
---   is very large indeed
--- * binary: there is a lack of diagnostic information when a compare
---   fails; you can use ChunkSpy and compare using visual diff
-----------------------------------------------------------------------]]
-
+--   is very large indeed.
+-- * binary: There is a lack of diagnostic information when a compare
+--   fails; you can use ChunkSpy and compare using visual diff.
+----
 local string = require "string"
 
 local loadstring = loadstring
@@ -35,10 +26,6 @@ local dump = string.dump
 local byte = string.byte
 
 local M = {}
-
---[[--------------------------------------------------------------------
--- variable and data initialization
-----------------------------------------------------------------------]]
 
 local is_realtoken = {          -- significant (grammar) tokens
   TK_KEYWORD = true,
@@ -52,24 +39,23 @@ local is_realtoken = {          -- significant (grammar) tokens
 
 local option, llex, warn
 
---[[--------------------------------------------------------------------
--- functions
-----------------------------------------------------------------------]]
 
-------------------------------------------------------------------------
--- initialization function
-------------------------------------------------------------------------
-
+--- The initialization function.
+--
+-- @tparam {[string]=bool,...} _option
+-- @tparam luasrcdiet.llex _llex
+-- @tparam table _warn
 function M.init(_option, _llex, _warn)
   option = _option
   llex = _llex
   warn = _warn
 end
 
-------------------------------------------------------------------------
--- function to build lists containing a 'normal' lexer stream
-------------------------------------------------------------------------
-
+--- Builds lists containing a 'normal' lexer stream.
+--
+-- @tparam string s The source code.
+-- @treturn table
+-- @treturn table
 local function build_stream(s)
   llex.init(s)
   llex.llex()
@@ -87,35 +73,31 @@ local function build_stream(s)
   return tok, seminfo
 end
 
-------------------------------------------------------------------------
--- test source (lexer stream) equivalence
-------------------------------------------------------------------------
-
+-- Tests source (lexer stream) equivalence.
+--
+-- @tparam string z
+-- @tparam string dat
 function M.source(z, dat)
-  --------------------------------------------------------------------
-  -- function to return a dumped string for seminfo compares
-  --------------------------------------------------------------------
+
+  -- Returns a dumped string for seminfo compares.
   local function dumpsem(s)
     local sf = loadstring("return "..s, "z")
     if sf then
       return dump(sf)
     end
   end
-  --------------------------------------------------------------------
-  -- mark and optionally report non-equivalence
-  --------------------------------------------------------------------
+
+  -- Marks and optionally reports non-equivalence.
   local function bork(msg)
     if option.DETAILS then print("SRCEQUIV: "..msg) end
     warn.SRC_EQUIV = true
   end
-  --------------------------------------------------------------------
-  -- get lexer streams for both source strings, compare
-  --------------------------------------------------------------------
+
+  -- Get lexer streams for both source strings, compare.
   local tok1, seminfo1 = build_stream(z)        -- original
   local tok2, seminfo2 = build_stream(dat)      -- compressed
-  --------------------------------------------------------------------
-  -- compare shbang lines ignoring EOL
-  --------------------------------------------------------------------
+
+  -- Compare shbang lines ignoring EOL.
   local sh1 = match(z, "^(#[^\r\n]*)")
   local sh2 = match(dat, "^(#[^\r\n]*)")
   if sh1 or sh2 then
@@ -123,16 +105,14 @@ function M.source(z, dat)
       bork("shbang lines different")
     end
   end
-  --------------------------------------------------------------------
-  -- compare by simple count
-  --------------------------------------------------------------------
+
+  -- Compare by simple count.
   if #tok1 ~= #tok2 then
     bork("count "..#tok1.." "..#tok2)
     return
   end
-  --------------------------------------------------------------------
-  -- compare each element the best we can
-  --------------------------------------------------------------------
+
+  -- Compare each element the best we can.
   for i = 1, #tok1 do
     local t1, t2 = tok1[i], tok2[i]
     local s1, s2 = seminfo1[i], seminfo2[i]
@@ -158,30 +138,27 @@ function M.source(z, dat)
       end
     end
   end--for
-  --------------------------------------------------------------------
-  -- successful comparison if end is reached with no borks
-  --------------------------------------------------------------------
+
+  -- Successful comparison if end is reached with no borks.
 end
 
-------------------------------------------------------------------------
--- test binary chunk equivalence
-------------------------------------------------------------------------
-
+--- Tests binary chunk equivalence.
+--
+-- @tparam string z
+-- @tparam string dat
 function M.binary(z, dat)
   local TNIL     = 0  --luacheck: ignore
   local TBOOLEAN = 1
   local TNUMBER  = 3
   local TSTRING  = 4
-  --------------------------------------------------------------------
-  -- mark and optionally report non-equivalence
-  --------------------------------------------------------------------
+
+  -- Marks and optionally reports non-equivalence.
   local function bork(msg)
     if option.DETAILS then print("BINEQUIV: "..msg) end
     warn.BIN_EQUIV = true
   end
-  --------------------------------------------------------------------
-  -- function to remove shbang line so that loadstring runs
-  --------------------------------------------------------------------
+
+  -- Removes shbang line so that loadstring runs.
   local function zap_shbang(s)
     local shbang = match(s, "^(#[^\r\n]*\r?\n?)")
     if shbang then                      -- cut out shbang
@@ -189,9 +166,8 @@ function M.binary(z, dat)
     end
     return s
   end
-  --------------------------------------------------------------------
-  -- attempt to compile, then dump to get binary chunk string
-  --------------------------------------------------------------------
+
+  -- Attempt to compile, then dump to get binary chunk string.
   local cz = loadstring(zap_shbang(z), "z")
   if not cz then
     bork("failed to compile original sources for binary chunk comparison")
@@ -206,33 +182,37 @@ function M.binary(z, dat)
   c1.len = #c1.dat
   local c2 = { i = 1, dat = dump(cdat) }
   c2.len = #c2.dat
-  --------------------------------------------------------------------
-  -- support functions to handle binary chunk reading
-  --------------------------------------------------------------------
+
+  ---- Support functions to handle binary chunk reading ----
+
   local endian,
         sz_int, sz_sizet,               -- sizes of data types
         sz_inst, sz_number,
         getint, getsizet
-  --------------------------------------------------------------------
-  local function ensure(c, sz)          -- check if bytes exist
+
+  -- Checks if bytes exist.
+  local function ensure(c, sz)
     if c.i + sz - 1 > c.len then return end
     return true
   end
-  --------------------------------------------------------------------
-  local function skip(c, sz)            -- skip some bytes
+
+  -- Skips some bytes.
+  local function skip(c, sz)
     if not sz then sz = 1 end
     c.i = c.i + sz
   end
-  --------------------------------------------------------------------
-  local function getbyte(c)             -- return a byte value
+
+  -- Returns a byte value.
+  local function getbyte(c)
     local i = c.i
     if i > c.len then return end
     local d = sub(c.dat, i, i)
     c.i = i + 1
     return byte(d)
   end
-  --------------------------------------------------------------------
-  local function getint_l(c)            -- return an int value (little-endian)
+
+  -- Return an int value (little-endian).
+  local function getint_l(c)
     local n, scale = 0, 1
     if not ensure(c, sz_int) then return end
     for _ = 1, sz_int do
@@ -241,8 +221,9 @@ function M.binary(z, dat)
     end
     return n
   end
-  --------------------------------------------------------------------
-  local function getint_b(c)            -- return an int value (big-endian)
+
+  -- Returns an int value (big-endian).
+  local function getint_b(c)
     local n = 0
     if not ensure(c, sz_int) then return end
     for _ = 1, sz_int do
@@ -250,8 +231,9 @@ function M.binary(z, dat)
     end
     return n
   end
-  --------------------------------------------------------------------
-  local function getsizet_l(c)          -- return a size_t value (little-endian)
+
+  -- Returns a size_t value (little-endian).
+  local function getsizet_l(c)
     local n, scale = 0, 1
     if not ensure(c, sz_sizet) then return end
     for _ = 1, sz_sizet do
@@ -260,8 +242,9 @@ function M.binary(z, dat)
     end
     return n
   end
-  --------------------------------------------------------------------
-  local function getsizet_b(c)          -- return a size_t value (big-endian)
+
+  -- Returns a size_t value (big-endian).
+  local function getsizet_b(c)
     local n = 0
     if not ensure(c, sz_sizet) then return end
     for _ = 1, sz_sizet do
@@ -269,8 +252,9 @@ function M.binary(z, dat)
     end
     return n
   end
-  --------------------------------------------------------------------
-  local function getblock(c, sz)        -- return a block (as a string)
+
+  -- Returns a block (as a string).
+  local function getblock(c, sz)
     local i = c.i
     local j = i + sz - 1
     if j > c.len then return end
@@ -278,37 +262,40 @@ function M.binary(z, dat)
     c.i = i + sz
     return d
   end
-  --------------------------------------------------------------------
-  local function getstring(c)           -- return a string
+
+  -- Returns a string.
+  local function getstring(c)
     local n = getsizet(c)
     if not n then return end
     if n == 0 then return "" end
     return getblock(c, n)
   end
-  --------------------------------------------------------------------
-  local function goodbyte(c1, c2)       -- compare byte value
+
+  -- Compares byte value.
+  local function goodbyte(c1, c2)
     local b1, b2 = getbyte(c1), getbyte(c2)
     if not b1 or not b2 or b1 ~= b2 then
       return
     end
     return b1
   end
-  --------------------------------------------------------------------
-  local function badbyte(c1, c2)        -- compare byte value
+
+  -- Compares byte value.
+  local function badbyte(c1, c2)
     local b = goodbyte(c1, c2)
     if not b then return true end
   end
-  --------------------------------------------------------------------
-  local function goodint(c1, c2)        -- compare int value
+
+  -- Compares int value.
+  local function goodint(c1, c2)
     local i1, i2 = getint(c1), getint(c2)
     if not i1 or not i2 or i1 ~= i2 then
       return
     end
     return i1
   end
-  --------------------------------------------------------------------
-  -- recursively-called function to compare function prototypes
-  --------------------------------------------------------------------
+
+  -- Recursively-called function to compare function prototypes.
   local function getfunc(c1, c2)
     -- source name (ignored)
     if not getstring(c1) or not getstring(c2) then
@@ -441,12 +428,11 @@ function M.binary(z, dat)
     end
     return true
   end
-  --------------------------------------------------------------------
-  -- parse binary chunks to verify equivalence
-  -- * for headers, handle sizes to allow a degree of flexibility
-  -- * assume a valid binary chunk is generated, since it was not
-  --   generated via external means
-  --------------------------------------------------------------------
+
+  -- Parse binary chunks to verify equivalence.
+  -- * For headers, handle sizes to allow a degree of flexibility.
+  -- * Assume a valid binary chunk is generated, since it was not
+  --   generated via external means.
   if not (ensure(c1, 12) and ensure(c2, 12)) then
     bork("header broken")
   end
@@ -471,9 +457,8 @@ function M.binary(z, dat)
   elseif c2.i ~= c2.len + 1 then
     bork("inconsistent binary chunk2"); return
   end
-  --------------------------------------------------------------------
-  -- successful comparison if end is reached with no borks
-  --------------------------------------------------------------------
+
+  -- Successful comparison if end is reached with no borks.
 end
 
 return M

@@ -1,26 +1,19 @@
 #!/usr/bin/env lua
---[[--------------------------------------------------------------------
+---------
+-- LuaSrcDiet
+--
+-- Compresses Lua source code by removing unnecessary characters.
+-- For Lua 5.1.x source code.
+--
+-- **Notes:**
+--
+-- * Remember to update version and date information below (MSG_TITLE).
+-- * TODO: passing data tables around is a horrific mess.
+-- * TODO: to implement pcall() to properly handle lexer etc. errors.
+-- * TODO: need some automatic testing for a semblance of sanity.
+-- * TODO: the plugin module is highly experimental and unstable.
+----
 
-  LuaSrcDiet
-  Compresses Lua source code by removing unnecessary characters.
-  For Lua 5.1.x source code.
-
-  Copyright (c) 2008,2011,2012 Kein-Hong Man <keinhong@gmail.com>
-  The COPYRIGHT file describes the conditions
-  under which this software may be distributed.
-
-----------------------------------------------------------------------]]
-
---[[--------------------------------------------------------------------
--- NOTES:
--- * Remember to update version and date information below (MSG_TITLE)
--- * TODO: passing data tables around is a horrific mess
--- * TODO: to implement pcall() to properly handle lexer etc. errors
--- * TODO: need some automatic testing for a semblance of sanity
--- * TODO: the plugin module is highly experimental and unstable
-----------------------------------------------------------------------]]
-
--- standard libraries, functions
 local string = string
 local table = table
 local require = require
@@ -29,7 +22,6 @@ local sub = string.sub
 local gmatch = string.gmatch
 local match = string.match
 
--- support modules
 local llex = require "luasrcdiet.llex"
 local lparser = require "luasrcdiet.lparser"
 local optlex = require "luasrcdiet.optlex"
@@ -37,9 +29,7 @@ local optparser = require "luasrcdiet.optparser"
 local equiv = require "luasrcdiet.equiv"
 local plugin
 
---[[--------------------------------------------------------------------
--- messages and textual data
-----------------------------------------------------------------------]]
+---------------------- Messages and textual data ----------------------
 
 local MSG_TITLE = [[
 LuaSrcDiet: Puts your Lua 5.1 source code on a diet
@@ -80,12 +70,10 @@ features (to disable, insert 'no' prefix like --noopt-comments):
 default settings:
 %s]]
 
-------------------------------------------------------------------------
--- optimization options, for ease of switching on and off
--- * positive to enable optimization, negative (no) to disable
--- * these options should follow --opt-* and --noopt-* style for now
-------------------------------------------------------------------------
-
+-- Optimization options, for ease of switching on and off.
+--
+-- * Positive to enable optimization, negative (no) to disable.
+-- * These options should follow --opt-* and --noopt-* style for now.
 local OPTION = [[
 --opt-comments,'remove comments and block comments'
 --opt-whitespace,'remove whitespace excluding EOLs'
@@ -100,15 +88,13 @@ local OPTION = [[
 --opt-experimental,'apply experimental optimizations'
 ]]
 
--- preset configuration
+-- Preset configuration.
 local DEFAULT_CONFIG = [[
   --opt-comments --opt-whitespace --opt-emptylines
   --opt-numbers --opt-locals
   --opt-srcequiv --opt-binequiv
 ]]
--- override configurations
--- * MUST explicitly enable/disable everything for
---   total option replacement
+-- Override configurations: MUST explicitly enable/disable everything.
 local BASIC_CONFIG = [[
   --opt-comments --opt-whitespace --opt-emptylines
   --noopt-eols --noopt-strings --noopt-numbers
@@ -131,11 +117,12 @@ local NONE_CONFIG = [[
 local DEFAULT_SUFFIX = "_"      -- default suffix for file renaming
 local PLUGIN_SUFFIX = "luasrcdiet.plugin." -- relative location of plugins
 
---[[--------------------------------------------------------------------
--- startup and initialize option list handling
-----------------------------------------------------------------------]]
 
--- simple error message handler; change to error if traceback wanted
+------------- Startup and initialize option list handling -------------
+
+--- Simple error message handler; change to error if traceback wanted.
+--
+-- @tparam string msg The message to print.
 local function die(msg)
   print("LuaSrcDiet (error): "..msg); os.exit(1)
 end
@@ -145,10 +132,7 @@ if not match(_VERSION, "5.1", 1, 1) then  -- sanity check
   die("requires Lua 5.1 to run")
 end
 
-------------------------------------------------------------------------
--- prepares text for list of optimizations, prepare lookup table
-------------------------------------------------------------------------
-
+-- Prepare text for list of optimizations, prepare lookup table.
 local MSG_OPTIONS = ""
 do
   local WIDTH = 24
@@ -165,16 +149,18 @@ end
 
 MSG_USAGE = string.format(MSG_USAGE, MSG_OPTIONS, DEFAULT_CONFIG)
 
-------------------------------------------------------------------------
--- global variable initialization, option set handling
-------------------------------------------------------------------------
+
+--------- Global variable initialization, option set handling ---------
 
 local suffix = DEFAULT_SUFFIX           -- file suffix
 local option = {}                       -- program options
 local stat_c, stat_l                    -- statistics tables
 
--- function to set option lookup table based on a text list of options
--- note: additional forced settings for --opt-eols is done in optlex.lua
+--- Sets option lookup table based on a text list of options.
+--
+-- Note: additional forced settings for --opt-eols is done in optlex.lua.
+--
+-- @tparam string CONFIG
 local function set_options(CONFIG)
   for op in gmatch(CONFIG, "(%-%-%S+)") do
     if sub(op, 3, 4) == "no" and        -- handle negative options
@@ -186,12 +172,11 @@ local function set_options(CONFIG)
   end
 end
 
---[[--------------------------------------------------------------------
--- support functions
-----------------------------------------------------------------------]]
 
--- list of token types, parser-significant types are up to TTYPE_GRAMMAR
--- while the rest are not used by parsers; arranged for stats display
+-------------------------- Support functions --------------------------
+
+-- List of token types, parser-significant types are up to TTYPE_GRAMMAR
+-- while the rest are not used by parsers; arranged for stats display.
 local TTYPES = {
   "TK_KEYWORD", "TK_NAME", "TK_NUMBER",         -- grammar
   "TK_STRING", "TK_LSTRING", "TK_OP",
@@ -206,10 +191,10 @@ local EOLTYPES = {                      -- EOL names for token dump
   ["\n\r"] = "LFCR", ["\r\n"] = "CRLF",
 }
 
-------------------------------------------------------------------------
--- read source code from file
-------------------------------------------------------------------------
-
+--- Reads source code from the file.
+--
+-- @tparam string fname Path of the file to read.
+-- @treturn string Content of the file.
 local function load_file(fname)
   local INF = io.open(fname, "rb")
   if not INF then die('cannot open "'..fname..'" for reading') end
@@ -219,10 +204,10 @@ local function load_file(fname)
   return dat
 end
 
-------------------------------------------------------------------------
--- save source code to file
-------------------------------------------------------------------------
-
+--- Saves source code to the file.
+--
+-- @tparam string fname Path of the destination file.
+-- @tparam string dat The data to write into the file.
 local function save_file(fname, dat)
   local OUTF = io.open(fname, "wb")
   if not OUTF then die('cannot open "'..fname..'" for writing') end
@@ -231,11 +216,10 @@ local function save_file(fname, dat)
   OUTF:close()
 end
 
-------------------------------------------------------------------------
--- functions to deal with statistics
-------------------------------------------------------------------------
 
--- initialize statistics table
+------------------ Functions to deal with statistics ------------------
+
+--- Initializes the statistics table.
 local function stat_init()
   stat_c, stat_l = {}, {}
   for i = 1, #TTYPES do
@@ -244,13 +228,18 @@ local function stat_init()
   end
 end
 
--- add a token to statistics table
+--- Adds a token to the statistics table.
+--
+-- @tparam string tok The token.
+-- @param seminfo
 local function stat_add(tok, seminfo)
   stat_c[tok] = stat_c[tok] + 1
   stat_l[tok] = stat_l[tok] + #seminfo
 end
 
--- do totals for statistics table, return average table
+--- Computes totals for the statistics table, returns average table.
+--
+-- @treturn table
 local function stat_calc()
   local function avg(c, l)                      -- safe average function
     if c == 0 then return 0 end
@@ -275,25 +264,20 @@ local function stat_calc()
   return stat_a
 end
 
---[[--------------------------------------------------------------------
--- main tasks
-----------------------------------------------------------------------]]
 
-------------------------------------------------------------------------
--- a simple token dumper, minimal translation of seminfo data
-------------------------------------------------------------------------
+----------------------------- Main tasks -----------------------------
 
+--- A simple token dumper, minimal translation of seminfo data.
+--
+-- @tparam string srcfl Path of the source file.
 local function dump_tokens(srcfl)
-  --------------------------------------------------------------------
-  -- load file and process source input into tokens
-  --------------------------------------------------------------------
+  -- Load file and process source input into tokens.
   local z = load_file(srcfl)
   llex.init(z)
   llex.llex()
   local toklist, seminfolist = llex.tok, llex.seminfo
-  --------------------------------------------------------------------
-  -- display output
-  --------------------------------------------------------------------
+
+  -- Display output.
   for i = 1, #toklist do
     local tok, seminfo = toklist[i], seminfolist[i]
     if tok == "TK_OP" and string.byte(seminfo) < 32 then
@@ -307,29 +291,24 @@ local function dump_tokens(srcfl)
   end--for
 end
 
-----------------------------------------------------------------------
--- parser dump; dump globalinfo and localinfo tables
-----------------------------------------------------------------------
-
+--- Dumps globalinfo and localinfo tables.
+--
+-- @tparam string srcfl Path of the source file.
 local function dump_parser(srcfl)
-  --------------------------------------------------------------------
-  -- load file and process source input into tokens
-  --------------------------------------------------------------------
+  -- Load file and process source input into tokens,
   local z = load_file(srcfl)
   llex.init(z)
   llex.llex()
   local toklist, seminfolist, toklnlist
     = llex.tok, llex.seminfo, llex.tokln
-  --------------------------------------------------------------------
-  -- do parser optimization here
-  --------------------------------------------------------------------
+
+  -- Do parser optimization here.
   lparser.init(toklist, seminfolist, toklnlist)
   local xinfo = lparser.parser()
   local globalinfo, localinfo =
     xinfo.globalinfo, xinfo.localinfo
-  --------------------------------------------------------------------
-  -- display output
-  --------------------------------------------------------------------
+
+  -- Display output.
   local hl = string.rep("-", 72)
   print("*** Local/Global Variable Tracker Tables ***")
   print(hl.."\n GLOBALS\n"..hl)
@@ -341,9 +320,9 @@ local function dump_parser(srcfl)
     for j = 1, #xref do msg = msg..xref[j].." " end
     print(msg)
   end
-  -- local tables have xref numbers and a few other special
+  -- Local tables have xref numbers and a few other special
   -- numbers that are specially named: decl (declaration xref),
-  -- act (activation xref), rem (removal xref)
+  -- act (activation xref), rem (removal xref).
   print(hl.."\n LOCALS (decl=declared act=activated rem=removed)\n"..hl)
   for i = 1, #localinfo do
     local obj = localinfo[i]
@@ -360,32 +339,27 @@ local function dump_parser(srcfl)
   print(hl.."\n")
 end
 
-------------------------------------------------------------------------
--- reads source file(s) and reports some statistics
-------------------------------------------------------------------------
-
+--- Reads source file(s) and reports some statistics.
+--
+-- @tparam string srcfl Path of the source file.
 local function read_only(srcfl)
-  --------------------------------------------------------------------
-  -- load file and process source input into tokens
-  --------------------------------------------------------------------
+  -- Load file and process source input into tokens.
   local z = load_file(srcfl)
   llex.init(z)
   llex.llex()
   local toklist, seminfolist = llex.tok, llex.seminfo
   print(MSG_TITLE)
   print("Statistics for: "..srcfl.."\n")
-  --------------------------------------------------------------------
-  -- collect statistics
-  --------------------------------------------------------------------
+
+  -- Collect statistics.
   stat_init()
   for i = 1, #toklist do
     local tok, seminfo = toklist[i], seminfolist[i]
     stat_add(tok, seminfo)
   end--for
   local stat_a = stat_calc()
-  --------------------------------------------------------------------
-  -- display output
-  --------------------------------------------------------------------
+
+  -- Display output.
   local fmt = string.format
   local function figures(tt)
     return stat_c[tt], stat_l[tt], stat_a[tt]
@@ -407,10 +381,10 @@ local function read_only(srcfl)
   print(hl.."\n")
 end
 
-------------------------------------------------------------------------
--- process source file(s), write output and reports some statistics
-------------------------------------------------------------------------
-
+--- Processes source file(s), writes output and reports some statistics.
+--
+-- @tparam string srcfl Path of the source file.
+-- @tparam string destfl Path of the destination file where to write optimized source.
 local function process_file(srcfl, destfl)
   local function print(...)             -- handle quiet option
     if option.QUIET then return end
@@ -422,9 +396,8 @@ local function process_file(srcfl, destfl)
     if option.EXIT then return end
   end
   print(MSG_TITLE)                      -- title message
-  --------------------------------------------------------------------
-  -- load file and process source input into tokens
-  --------------------------------------------------------------------
+
+  -- Load file and process source input into tokens.
   local z = load_file(srcfl)
   if plugin and plugin.post_load then   -- plugin post-load
     z = plugin.post_load(z) or z
@@ -438,9 +411,8 @@ local function process_file(srcfl, destfl)
     plugin.post_lex(toklist, seminfolist, toklnlist)
     if option.EXIT then return end
   end
-  --------------------------------------------------------------------
-  -- collect 'before' statistics
-  --------------------------------------------------------------------
+
+  -- Collect 'before' statistics.
   stat_init()
   for i = 1, #toklist do
     local tok, seminfo = toklist[i], seminfolist[i]
@@ -448,9 +420,8 @@ local function process_file(srcfl, destfl)
   end--for
   local stat1_a = stat_calc()
   local stat1_c, stat1_l = stat_c, stat_l
-  --------------------------------------------------------------------
-  -- do parser optimization here
-  --------------------------------------------------------------------
+
+  -- Do parser optimization here.
   optparser.print = print  -- hack
   lparser.init(toklist, seminfolist, toklnlist)
   local xinfo = lparser.parser()
@@ -463,9 +434,8 @@ local function process_file(srcfl, destfl)
     plugin.post_optparse()
     if option.EXIT then return end
   end
-  --------------------------------------------------------------------
-  -- do lexer optimization here, save output file
-  --------------------------------------------------------------------
+
+  -- Do lexer optimization here, save output file.
   local warn = optlex.warn  -- use this as a general warning lookup
   optlex.print = print  -- hack
   toklist, seminfolist, toklnlist
@@ -475,15 +445,14 @@ local function process_file(srcfl, destfl)
     if option.EXIT then return end
   end
   local dat = table.concat(seminfolist)
-  -- depending on options selected, embedded EOLs in long strings and
-  -- long comments may not have been translated to \n, tack a warning
+  -- Depending on options selected, embedded EOLs in long strings and
+  -- long comments may not have been translated to \n, tack a warning.
   if string.find(dat, "\r\n", 1, 1) or
      string.find(dat, "\n\r", 1, 1) then
     warn.MIXEDEOL = true
   end
-  --------------------------------------------------------------------
-  -- test source and binary chunk equivalence
-  --------------------------------------------------------------------
+
+  -- Test source and binary chunk equivalence.
   equiv.init(option, llex, warn)
   equiv.source(z, dat)
   equiv.binary(z, dat)
@@ -505,22 +474,19 @@ local function process_file(srcfl, destfl)
     print("*** BINEQUIV: binary chunks are sort of equivalent")
     print()
   end
-  --------------------------------------------------------------------
-  -- save optimized source stream to output file
-  --------------------------------------------------------------------
+
+  -- Save optimized source stream to output file.
   save_file(destfl, dat)
-  --------------------------------------------------------------------
-  -- collect 'after' statistics
-  --------------------------------------------------------------------
+
+  -- Collect 'after' statistics.
   stat_init()
   for i = 1, #toklist do
     local tok, seminfo = toklist[i], seminfolist[i]
     stat_add(tok, seminfo)
   end--for
   local stat_a = stat_calc()
-  --------------------------------------------------------------------
-  -- display output
-  --------------------------------------------------------------------
+
+  -- Display output.
   print("Statistics for: "..srcfl.." -> "..destfl.."\n")
   local fmt = string.format
   local function figures(tt)
@@ -548,9 +514,8 @@ local function process_file(srcfl, destfl)
   print(hl)
   print(fmt(tabf2, "Total Tokens", figures("TOTAL_TOK")))
   print(hl)
-  --------------------------------------------------------------------
-  -- report warning flags from optimizing process
-  --------------------------------------------------------------------
+
+  -- Report warning flags from optimizing process.
   if warn.LSTRING then
     print("* WARNING: "..warn.LSTRING)
   elseif warn.MIXEDEOL then
@@ -563,25 +528,22 @@ local function process_file(srcfl, destfl)
   print()
 end
 
---[[--------------------------------------------------------------------
--- main functions
-----------------------------------------------------------------------]]
+
+---------------------------- Main functions ---------------------------
 
 local arg = {...}  -- program arguments
 local fspec = {}
 set_options(DEFAULT_CONFIG)     -- set to default options at beginning
 
-------------------------------------------------------------------------
--- per-file handling, ship off to tasks
-------------------------------------------------------------------------
-
+--- Does per-file handling, ship off to tasks.
+--
+-- @tparam {string,...} fspec List of source files.
 local function do_files(fspec)
   for i = 1, #fspec do
     local srcfl = fspec[i]
     local destfl
-    ------------------------------------------------------------------
-    -- find and replace extension for filenames
-    ------------------------------------------------------------------
+
+    -- Find and replace extension for filenames.
     local extb, exte = string.find(srcfl, "%.[^%.%\\%/]*$")
     local basename, extension = srcfl, ""
     if extb and extb > 1 then
@@ -595,9 +557,8 @@ local function do_files(fspec)
     if srcfl == destfl then
       die("output filename identical to input filename")
     end
-    ------------------------------------------------------------------
-    -- perform requested operations
-    ------------------------------------------------------------------
+
+    -- Perform requested operations.
     if option.DUMP_LEXER then
       dump_tokens(srcfl)
     elseif option.DUMP_PARSER then
@@ -610,18 +571,14 @@ local function do_files(fspec)
   end--for
 end
 
-------------------------------------------------------------------------
--- main function (entry point is after this definition)
-------------------------------------------------------------------------
-
+--- The main function.
 local function main()
   local argn, i = #arg, 1
   if argn == 0 then
     option.HELP = true
   end
-  --------------------------------------------------------------------
-  -- handle arguments
-  --------------------------------------------------------------------
+
+  -- Handle arguments.
   while i <= argn do
     local o, p = arg[i], arg[i + 1]
     local dash = match(o, "^%-%-?")
@@ -704,5 +661,3 @@ end
 if not main() then
   die("Please run with option -h or --help for usage information")
 end
-
--- end of script

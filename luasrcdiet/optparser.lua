@@ -1,28 +1,19 @@
---[[--------------------------------------------------------------------
-
-  optparser.lua: does parser-based optimizations
-  This file is part of LuaSrcDiet.
-
-  Copyright (c) 2008,2011,2012 Kein-Hong Man <keinhong@gmail.com>
-  The COPYRIGHT file describes the conditions
-  under which this software may be distributed.
-
-----------------------------------------------------------------------]]
-
---[[--------------------------------------------------------------------
--- NOTES:
+---------
+-- This module does parser-based optimizations.
+--
+-- **Notes:**
+--
 -- * The processing load is quite significant, but since this is an
 --   off-line text processor, I believe we can wait a few seconds.
--- * TODO: might process "local a,a,a" wrongly... need tests!
--- * TODO: remove position handling if overlapped locals (rem < 0)
---   needs more study, to check behaviour
--- * TODO: there are probably better ways to do allocation, e.g. by
+-- * TODO: Might process "local a,a,a" wrongly... need tests!
+-- * TODO: Remove position handling if overlapped locals (rem < 0)
+--   needs more study, to check behaviour.
+-- * TODO: There are probably better ways to do allocation, e.g. by
 --   choosing better methods to sort and pick locals...
--- * TODO: we don't need 53*63 two-letter identifiers; we can make
+-- * TODO: We don't need 53*63 two-letter identifiers; we can make
 --   do with significantly less depending on how many that are really
---   needed and improve entropy; e.g. 13 needed -> choose 4*4 instead
-----------------------------------------------------------------------]]
-
+--   needed and improve entropy; e.g. 13 needed -> choose 4*4 instead.
+----
 local string = require "string"
 local table = require "table"
 
@@ -30,7 +21,6 @@ local pairs = pairs
 
 local M = {}
 
-----------------------------------------------------------------------
 -- Letter frequencies for reducing symbol entropy (fixed version)
 -- * Might help a wee bit when the output file is compressed
 -- * See Wikipedia: http://en.wikipedia.org/wiki/Letter_frequencies
@@ -39,13 +29,11 @@ local M = {}
 -- * The arrangement below (LC, underscore, %d, UC) is arbitrary.
 -- * This is certainly not optimal, but is quick-and-dirty and the
 --   process has no significant overhead
-----------------------------------------------------------------------
-
 local LETTERS = "etaoinshrdlucmfwypvbgkqjxz_ETAOINSHRDLUCMFWYPVBGKQJXZ"
 local ALPHANUM = "etaoinshrdlucmfwypvbgkqjxz_0123456789ETAOINSHRDLUCMFWYPVBGKQJXZ"
 
--- names or identifiers that must be skipped
--- * the first two lines are for keywords
+-- Names or identifiers that must be skipped.
+-- (The first two lines are for keywords.)
 local SKIP_NAME = {}
 for v in string.gmatch([[
 and break do else elseif end false for function if in
@@ -54,9 +42,6 @@ self]], "%S+") do
   SKIP_NAME[v] = true
 end
 
-------------------------------------------------------------------------
--- variables and data structures
-------------------------------------------------------------------------
 
 local toklist, seminfolist,             -- token lists (lexer output)
       tokpar, seminfopar, xrefpar,      -- token lists (parser output)
@@ -66,29 +51,29 @@ local toklist, seminfolist,             -- token lists (lexer output)
       var_new,                          -- index of new variable names
       varlist                           -- list of output variables
 
-----------------------------------------------------------------------
--- preprocess information table to get lists of unique names
-----------------------------------------------------------------------
-
+--- Preprocesses information table to get lists of unique names.
+--
+-- @tparam {table,...} infotable
+-- @treturn table
 local function preprocess(infotable)
   local uniqtable = {}
   for i = 1, #infotable do              -- enumerate info table
     local obj = infotable[i]
     local name = obj.name
-    --------------------------------------------------------------------
+
     if not uniqtable[name] then         -- not found, start an entry
       uniqtable[name] = {
         decl = 0, token = 0, size = 0,
       }
     end
-    --------------------------------------------------------------------
+
     local uniq = uniqtable[name]        -- count declarations, tokens, size
     uniq.decl = uniq.decl + 1
     local xref = obj.xref
     local xcount = #xref
     uniq.token = uniq.token + xcount
     uniq.size = uniq.size + xcount * #name
-    --------------------------------------------------------------------
+
     if obj.decl then            -- if local table, create first,last pairs
       obj.id = i
       obj.xcount = xcount
@@ -96,23 +81,23 @@ local function preprocess(infotable)
         obj.first = xref[2]
         obj.last = xref[xcount]
       end
-    --------------------------------------------------------------------
+
     else                        -- if global table, add a back ref
       uniq.id = i
     end
-    --------------------------------------------------------------------
+
   end--for
   return uniqtable
 end
 
-----------------------------------------------------------------------
--- calculate actual symbol frequencies, in order to reduce entropy
--- * this may help further reduce the size of compressed sources
--- * note that since parsing optimizations is put before lexing
+--- Calculates actual symbol frequencies, in order to reduce entropy.
+--
+-- * This may help further reduce the size of compressed sources.
+-- * Note that since parsing optimizations is put before lexing
 --   optimizations, the frequency table is not exact!
--- * yes, this will miss --keep block comments too...
-----------------------------------------------------------------------
-
+-- * Yes, this will miss --keep block comments too...
+--
+-- @tparam table option
 local function recalc_for_entropy(option)
   local byte = string.byte
   local char = string.char
@@ -125,9 +110,8 @@ local function recalc_for_entropy(option)
     ACCEPT.TK_COMMENT = true
     ACCEPT.TK_LCOMMENT = true
   end
-  --------------------------------------------------------------------
-  -- create a new table and remove any original locals by filtering
-  --------------------------------------------------------------------
+
+  -- Create a new table and remove any original locals by filtering.
   local filtered = {}
   for i = 1, #toklist do
     filtered[i] = seminfolist[i]
@@ -140,7 +124,7 @@ local function recalc_for_entropy(option)
       filtered[p] = ""                  -- remove locals
     end
   end
-  --------------------------------------------------------------------
+
   local freq = {}                       -- reset symbol frequency table
   for i = 0, 255 do freq[i] = 0 end
   for i = 1, #toklist do                -- gather symbol frequency
@@ -152,9 +136,11 @@ local function recalc_for_entropy(option)
       end
     end--if
   end--for
-  --------------------------------------------------------------------
-  -- function to re-sort symbols according to actual frequencies
-  --------------------------------------------------------------------
+
+  -- Re-sorts symbols according to actual frequencies.
+  --
+  -- @tparam string symbols
+  -- @treturn string
   local function resort(symbols)
     local symlist = {}
     for i = 1, #symbols do              -- prepare table to sort
@@ -172,17 +158,18 @@ local function recalc_for_entropy(option)
     end
     return table.concat(charlist)
   end
-  --------------------------------------------------------------------
+
   LETTERS = resort(LETTERS)             -- change letter arrangement
   ALPHANUM = resort(ALPHANUM)
 end
 
-----------------------------------------------------------------------
--- returns a string containing a new local variable name to use, and
--- a flag indicating whether it collides with a global variable
--- * trapping keywords and other names like 'self' is done elsewhere
-----------------------------------------------------------------------
-
+--- Returns a string containing a new local variable name to use, and
+-- a flag indicating whether it collides with a global variable.
+--
+-- Trapping keywords and other names like 'self' is done elsewhere.
+--
+-- @treturn string A new local variable name.
+-- @treturn bool Whether the name collides with a global variable.
 local function new_var_name()
   local var
   local cletters, calphanum = #LETTERS, #ALPHANUM
@@ -213,11 +200,14 @@ local function new_var_name()
   return var, globaluniq[var] ~= nil
 end
 
-----------------------------------------------------------------------
--- calculate and print some statistics
--- * probably better in main source, put here for now
-----------------------------------------------------------------------
-
+--- Calculates and prints some statistics.
+--
+-- Note: probably better in main source, put here for now.
+--
+-- @tparam table globaluniq
+-- @tparam table localuniq
+-- @tparam table afteruniq
+-- @tparam table option
 local function stats_summary(globaluniq, localuniq, afteruniq, option)
   local print = M.print or print
   local fmt = string.format
@@ -233,9 +223,8 @@ local function stats_summary(globaluniq, localuniq, afteruniq, option)
     if c == 0 then return 0 end
     return l / c
   end
-  --------------------------------------------------------------------
-  -- collect statistics (note: globals do not have declarations!)
-  --------------------------------------------------------------------
+
+  -- Collect statistics (Note: globals do not have declarations!)
   for _, uniq in pairs(globaluniq) do
     uniq_g = uniq_g + 1
     token_g = token_g + uniq.token
@@ -261,9 +250,8 @@ local function stats_summary(globaluniq, localuniq, afteruniq, option)
   decl_to = decl_g + decl_lo
   token_to = token_g + token_lo
   size_to = size_g + size_lo
-  --------------------------------------------------------------------
-  -- detailed stats: global list
-  --------------------------------------------------------------------
+
+  -- Detailed stats: global list
   if opt_details then
     local sorted = {} -- sort table of unique global names by size
     for name, uniq in pairs(globaluniq) do
@@ -288,9 +276,8 @@ local function stats_summary(globaluniq, localuniq, afteruniq, option)
     print(hl)
     print(fmt(tabf2, token_g, size_g, avg(token_g, size_g), "TOTAL"))
     print(hl.."\n")
-  --------------------------------------------------------------------
-  -- detailed stats: local list
-  --------------------------------------------------------------------
+
+  -- Detailed stats: local list
     local tabf1, tabf2 = "%8s%8s%8s%10s%8s%10s  %s", "%8d%8d%8d%10.2f%8d%10.2f  %s"
     local hl = string.rep("-", 70)
     print("*** local variable list (sorted by allocation order) ***\n"..hl)
@@ -316,9 +303,8 @@ local function stats_summary(globaluniq, localuniq, afteruniq, option)
               size_lo, avg(token_lo, size_lo), "TOTAL"))
     print(hl.."\n")
   end--if opt_details
-  --------------------------------------------------------------------
-  -- display output
-  --------------------------------------------------------------------
+
+  -- Display output
   local tabf1, tabf2 = "%-16s%8s%8s%8s%8s%10s", "%-16s%8d%8d%8d%8d%10.2f"
   local hl = string.rep("-", 58)
   print("*** local variable optimization summary ***\n"..hl)
@@ -335,14 +321,12 @@ local function stats_summary(globaluniq, localuniq, afteruniq, option)
   print(hl.."\n")
 end
 
-----------------------------------------------------------------------
--- experimental optimization for f("string") statements
--- * safe to delete parentheses without adding whitespace, as both
---   kinds of strings can abut with anything else
-----------------------------------------------------------------------
-
+--- Does experimental optimization for f("string") statements.
+--
+-- It's safe to delete parentheses without adding whitespace, as both
+-- kinds of strings can abut with anything else.
 local function optimize_func1()
-  ------------------------------------------------------------------
+
   local function is_strcall(j)          -- find f("string") pattern
     local t1 = tokpar[j + 1] or ""
     local t2 = tokpar[j + 2] or ""
@@ -351,7 +335,7 @@ local function optimize_func1()
       return true
     end
   end
-  ------------------------------------------------------------------
+
   local del_list = {}           -- scan for function pattern,
   local i = 1                   -- tokens to be deleted are marked
   while i <= #tokpar do
@@ -363,13 +347,12 @@ local function optimize_func1()
     end
     i = i + 1
   end
-  ------------------------------------------------------------------
-  -- delete a token and adjust all relevant tables
-  -- * currently invalidates globalinfo and localinfo (not updated),
+
+  -- Delete a token and adjust all relevant tables.
+  -- * Currently invalidates globalinfo and localinfo (not updated),
   --   so any other optimization is done after processing locals
-  --   (of course, we can also lex the source data again...)
-  -- * faster one-pass token deletion
-  ------------------------------------------------------------------
+  --   (of course, we can also lex the source data again...).
+  -- * Faster one-pass token deletion.
   local i, dst, idend = 1, 1, #tokpar
   local del_list2 = {}
   while dst <= idend do         -- process parser tables
@@ -412,28 +395,25 @@ local function optimize_func1()
   end
 end
 
-----------------------------------------------------------------------
--- local variable optimization
-----------------------------------------------------------------------
-
+--- Does local variable optimization.
+--
+-- @tparam {[string]=bool,...} option
 local function optimize_locals(option)
   var_new = 0                           -- reset variable name allocator
   varlist = {}
-  ------------------------------------------------------------------
-  -- preprocess global/local tables, handle entropy reduction
-  ------------------------------------------------------------------
+
+  -- Preprocess global/local tables, handle entropy reduction.
   globaluniq = preprocess(globalinfo)
   localuniq = preprocess(localinfo)
   if option["opt-entropy"] then         -- for entropy improvement
     recalc_for_entropy(option)
   end
-  ------------------------------------------------------------------
-  -- build initial declared object table, then sort according to
+
+  -- Build initial declared object table, then sort according to
   -- token count, this might help assign more tokens to more common
-  -- variable names such as 'e' thus possibly reducing entropy
-  -- * an object knows its localinfo index via its 'id' field
-  -- * special handling for "self" special local (parameter) here
-  ------------------------------------------------------------------
+  -- variable names such as 'e' thus possibly reducing entropy.
+  -- * An object knows its localinfo index via its 'id' field.
+  -- * Special handling for "self" special local (parameter) here.
   local object = {}
   for i = 1, #localinfo do
     object[i] = localinfo[i]
@@ -443,11 +423,10 @@ local function optimize_locals(option)
       return v1.xcount > v2.xcount
     end
   )
-  ------------------------------------------------------------------
-  -- the special "self" function parameters must be preserved
-  -- * the allocator below will never use "self", so it is safe to
-  --   keep those implicit declarations as-is
-  ------------------------------------------------------------------
+
+  -- The special "self" function parameters must be preserved.
+  -- * The allocator below will never use "self", so it is safe to
+  --   keep those implicit declarations as-is.
   local temp, j, gotself = {}, 1, false
   for i = 1, #object do
     local obj = object[i]
@@ -459,14 +438,13 @@ local function optimize_locals(option)
     end
   end
   object = temp
-  ------------------------------------------------------------------
-  -- a simple first-come first-served heuristic name allocator,
+
+  -- A simple first-come first-served heuristic name allocator,
   -- note that this is in no way optimal...
-  -- * each object is a local variable declaration plus existence
-  -- * the aim is to assign short names to as many tokens as possible,
-  --   so the following tries to maximize name reuse
-  -- * note that we preserve sort order
-  ------------------------------------------------------------------
+  -- * Each object is a local variable declaration plus existence.
+  -- * The aim is to assign short names to as many tokens as possible,
+  --   so the following tries to maximize name reuse.
+  -- * Note that we preserve sort order.
   local nobject = #object
   while nobject > 0 do
     local varname, gcollide
@@ -475,12 +453,11 @@ local function optimize_locals(option)
     until not SKIP_NAME[varname]          -- skip all special names
     varlist[#varlist + 1] = varname       -- keep a list
     local oleft = nobject
-    ------------------------------------------------------------------
-    -- if variable name collides with an existing global, the name
+
+    -- If variable name collides with an existing global, the name
     -- cannot be used by a local when the name is accessed as a global
     -- during which the local is alive (between 'act' to 'rem'), so
-    -- we drop objects that collides with the corresponding global
-    ------------------------------------------------------------------
+    -- we drop objects that collides with the corresponding global.
     if gcollide then
       -- find the xref table of the global
       local gref = globalinfo[globaluniq[varname].id].xref
@@ -505,27 +482,26 @@ local function optimize_locals(option)
         end
       end--for
     end--if gcollide
-    ------------------------------------------------------------------
-    -- now the first unassigned local (since it's sorted) will be the
+
+    -- Now the first unassigned local (since it's sorted) will be the
     -- one with the most tokens to rename, so we set this one and then
     -- eliminate all others that collides, then any locals that left
     -- can then reuse the same variable name; this is repeated until
-    -- all local declaration that can use this name is assigned
-    -- * the criteria for local-local reuse/collision is:
+    -- all local declaration that can use this name is assigned.
+    --
+    -- The criteria for local-local reuse/collision is:
     --   A is the local with a name already assigned
     --   B is the unassigned local under consideration
     --   => anytime A is accessed, it cannot be when B is 'live'
     --   => to speed up things, we have first/last accesses noted
-    ------------------------------------------------------------------
     while oleft > 0 do
       local i = 1
       while object[i].skip do  -- scan for first object
         i = i + 1
       end
-      ------------------------------------------------------------------
-      -- first object is free for assignment of the variable name
-      -- [first,last] gives the access range for collision checking
-      ------------------------------------------------------------------
+
+      -- First object is free for assignment of the variable name
+      -- [first,last] gives the access range for collision checking.
       oleft = oleft - 1
       local obja = object[i]
       i = i + 1
@@ -534,14 +510,13 @@ local function optimize_locals(option)
       obja.done = true
       local first, last = obja.first, obja.last
       local xref = obja.xref
-      ------------------------------------------------------------------
-      -- then, scan all the rest and drop those colliding
-      -- if A was never accessed then it'll never collide with anything
+
+      -- Then, scan all the rest and drop those colliding.
+      -- If A was never accessed then it'll never collide with anything
       -- otherwise trivial skip if:
-      -- * B was activated after A's last access (last < act)
-      -- * B was removed before A's first access (first > rem)
+      -- * B was activated after A's last access (last < act),
+      -- * B was removed before A's first access (first > rem),
       -- if not, see detailed skip below...
-      ------------------------------------------------------------------
       if first and oleft > 0 then  -- must have at least 1 access
         local scanleft = oleft
         while scanleft > 0 do
@@ -556,13 +531,12 @@ local function optimize_locals(option)
           while rem < 0 do
             rem = localinfo[-rem].rem
           end
-          --------------------------------------------------------
+
           if not(last < act or first > rem) then  -- possible collision
-            --------------------------------------------------------
+
             -- B is activated later than A or at the same statement,
             -- this means for no collision, A cannot be accessed when B
-            -- is alive, since B overrides A (or is a peer)
-            --------------------------------------------------------
+            -- is alive, since B overrides A (or is a peer).
             if act >= obja.act then
               for j = 1, obja.xcount do  -- ... then check every access
                 local p = xref[j]
@@ -572,11 +546,10 @@ local function optimize_locals(option)
                   break
                 end
               end--for
-            --------------------------------------------------------
+
             -- A is activated later than B, this means for no collision,
             -- A's access is okay since it overrides B, but B's last
-            -- access need to be earlier than A's activation time
-            --------------------------------------------------------
+            -- access need to be earlier than A's activation time.
             else
               if objb.last and objb.last >= obja.act then
                 oleft = oleft - 1
@@ -584,17 +557,16 @@ local function optimize_locals(option)
               end
             end
           end
-          --------------------------------------------------------
+
           if oleft == 0 then break end
         end
       end--if first
-      ------------------------------------------------------------------
+
     end--while
-    ------------------------------------------------------------------
-    -- after assigning all possible locals to one variable name, the
+
+    -- After assigning all possible locals to one variable name, the
     -- unassigned locals/objects have the skip field reset and the table
-    -- is compacted, to hopefully reduce iteration time
-    ------------------------------------------------------------------
+    -- is compacted, to hopefully reduce iteration time.
     local temp, j = {}, 1
     for i = 1, nobject do
       local obj = object[i]
@@ -606,12 +578,11 @@ local function optimize_locals(option)
     end
     object = temp  -- new compacted object table
     nobject = #object  -- objects left to process
-    ------------------------------------------------------------------
+
   end--while
-  ------------------------------------------------------------------
-  -- after assigning all locals with new variable names, we can
-  -- patch in the new names, and reprocess to get 'after' stats
-  ------------------------------------------------------------------
+
+  -- After assigning all locals with new variable names, we can
+  -- patch in the new names, and reprocess to get 'after' stats.
   for i = 1, #localinfo do  -- enumerate all locals
     local obj = localinfo[i]
     local xref = obj.xref
@@ -626,9 +597,8 @@ local function optimize_locals(option)
       obj.oldname = obj.name            -- for cases like 'self'
     end
   end
-  ------------------------------------------------------------------
-  -- deal with statistics output
-  ------------------------------------------------------------------
+
+  -- Deal with statistics output.
   if gotself then  -- add 'self' to end of list
     varlist[#varlist + 1] = "self"
   end
@@ -636,11 +606,12 @@ local function optimize_locals(option)
   stats_summary(globaluniq, localuniq, afteruniq, option)
 end
 
-
-----------------------------------------------------------------------
--- main entry point
-----------------------------------------------------------------------
-
+--- The main entry point.
+--
+-- @tparam table option
+-- @tparam {string,...} _toklist
+-- @tparam {string,...} _seminfolist
+-- @tparam table xinfo
 function M.optimize(option, _toklist, _seminfolist, xinfo)
   -- set tables
   toklist, seminfolist                  -- from lexer
@@ -649,15 +620,13 @@ function M.optimize(option, _toklist, _seminfolist, xinfo)
     = xinfo.toklist, xinfo.seminfolist, xinfo.xreflist
   globalinfo, localinfo, statinfo       -- from parser
     = xinfo.globalinfo, xinfo.localinfo, xinfo.statinfo
-  ------------------------------------------------------------------
-  -- optimize locals
-  ------------------------------------------------------------------
+
+  -- Optimize locals.
   if option["opt-locals"] then
     optimize_locals(option)
   end
-  ------------------------------------------------------------------
-  -- other optimizations
-  ------------------------------------------------------------------
+
+  -- Other optimizations.
   if option["opt-experimental"] then    -- experimental
     optimize_func1()
     -- WARNING globalinfo and localinfo now invalidated!

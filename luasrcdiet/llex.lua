@@ -1,27 +1,20 @@
---[[--------------------------------------------------------------------
-
-  llex.lua: Lua 5.1 lexical analyzer in Lua
-  This file is part of LuaSrcDiet, based on Yueliang material.
-
-  Copyright (c) 2008,2011 Kein-Hong Man <keinhong@gmail.com>
-  The COPYRIGHT file describes the conditions
-  under which this software may be distributed.
-
-----------------------------------------------------------------------]]
-
---[[--------------------------------------------------------------------
--- NOTES:
+---------
+-- Lua 5.1 lexical analyzer written in Lua.
+--
+-- This file is part of LuaSrcDiet, based on Yueliang material.
+--
+-- **Notes:**
+--
 -- * This is a version of the native 5.1.x lexer from Yueliang 0.4.0,
 --   with significant modifications to handle LuaSrcDiet's needs:
---   (1) llex.error is an optional error function handler
+--   (1) llex.error is an optional error function handler,
 --   (2) seminfo for strings include their delimiters and no
---       translation operations are performed on them
--- * ADDED shbang handling has been added to support executable scripts
--- * NO localized decimal point replacement magic
--- * NO limit to number of lines
--- * NO support for compatible long strings (LUA_COMPAT_LSTR)
-----------------------------------------------------------------------]]
-
+--       translation operations are performed on them.
+-- * ADDED shbang handling has been added to support executable scripts.
+-- * NO localized decimal point replacement magic.
+-- * NO limit to number of lines.
+-- * NO support for compatible long strings (LUA\_COMPAT_LSTR).
+----
 local string = require "string"
 
 local find = string.find
@@ -30,10 +23,6 @@ local sub = string.sub
 local tonumber = tonumber
 
 local M = {}
-
-----------------------------------------------------------------------
--- initialize keyword list, variables
-----------------------------------------------------------------------
 
 local kw = {}
 for v in string.gmatch([[
@@ -51,10 +40,11 @@ local z,                -- source stream
       buff,             -- buffer for strings
       ln                -- line number
 
-----------------------------------------------------------------------
--- add information to token listing
-----------------------------------------------------------------------
 
+--- Adds information to token listing.
+--
+-- @tparam string token
+-- @tparam string info
 local function addtoken(token, info)
   local i = #M.tok + 1
   M.tok[i] = token
@@ -62,10 +52,11 @@ local function addtoken(token, info)
   M.tokln[i] = ln
 end
 
-----------------------------------------------------------------------
--- handles line number incrementation and end-of-line characters
-----------------------------------------------------------------------
-
+--- Handles line number incrementation and end-of-line characters.
+--
+-- @tparam int i Position of lexer in the source stream.
+-- @tparam bool is_tok
+-- @treturn int
 local function inclinenumber(i, is_tok)
   local old = sub(z, i, i)
   i = i + 1  -- skip '\n' or '\r'
@@ -80,10 +71,10 @@ local function inclinenumber(i, is_tok)
   return i
 end
 
-----------------------------------------------------------------------
--- initialize lexer for given source _z and source name _sourceid
-----------------------------------------------------------------------
-
+--- Initializes lexer for given source _z and source name _sourceid.
+--
+-- @tparam string _z The source code.
+-- @tparam string _sourceid Name of the source.
 function M.init(_z, _sourceid)
   z = _z                        -- source
   sourceid = _sourceid          -- name of source
@@ -93,9 +84,8 @@ function M.init(_z, _sourceid)
   M.seminfo = {}                -- lexed semantic information list*
   M.tokln = {}                  -- line numbers for messages*
                                 -- (*) externally visible thru' module
-  --------------------------------------------------------------------
-  -- initial processing (shbang handling)
-  --------------------------------------------------------------------
+
+  -- Initial processing (shbang handling).
   local p, _, q, r = find(z, "^(#[^\r\n]*)(\r?\n?)")
   if p then                             -- skip first line
     I = I + #q
@@ -104,10 +94,9 @@ function M.init(_z, _sourceid)
   end
 end
 
-----------------------------------------------------------------------
--- returns a chunk name or id, no truncation for long names
-----------------------------------------------------------------------
-
+--- Returns a chunk name or id, no truncation for long names.
+--
+-- @treturn string
 function M.chunkid()
   if sourceid and match(sourceid, "^[=@]") then
     return sub(sourceid, 2)  -- remove first char
@@ -116,21 +105,23 @@ function M.chunkid()
 end
 local chunkid = M.chunkid
 
-----------------------------------------------------------------------
--- formats error message and throws error
--- * a simplified version, does not report what token was responsible
-----------------------------------------------------------------------
-
+--- Formats error message and throws error.
+--
+-- A simplified version, does not report what token was responsible.
+--
+-- @tparam string s
+-- @tparam int line The line number.
+-- @raise
 function M.errorline(s, line)
   local e = M.error or error
   e(string.format("%s:%d: %s", chunkid(), line or ln, s))
 end
 local errorline = M.errorline
 
-------------------------------------------------------------------------
--- count separators ("=") in a long string delimiter
-------------------------------------------------------------------------
-
+--- Counts separators (`="` in a long string delimiter.
+--
+-- @tparam int i Position of lexer in the source stream.
+-- @treturn int
 local function skip_sep(i)
   local s = sub(z, i, i)
   i = i + 1
@@ -140,10 +131,12 @@ local function skip_sep(i)
   return (sub(z, i, i) == s) and count or (-count) - 1
 end
 
-----------------------------------------------------------------------
--- reads a long string or long comment
-----------------------------------------------------------------------
-
+--- Reads a long string or long comment.
+--
+-- @tparam bool is_str
+-- @tparam string sep
+-- @treturn string
+-- @raise if unfinished long string or comment.
 local function read_long_string(is_str, sep)
   local i = I + 1  -- skip 2nd '['
   local c = sub(z, i, i)
@@ -171,10 +164,11 @@ local function read_long_string(is_str, sep)
   end--while
 end
 
-----------------------------------------------------------------------
--- reads a string
-----------------------------------------------------------------------
-
+--- Reads a string.
+--
+-- @tparam string del The delimiter.
+-- @treturn string
+-- @raise if unfinished string or too large escape sequence.
 local function read_string(del)
   local i = I
   while true do
@@ -189,24 +183,24 @@ local function read_string(del)
         r = sub(z, i, i)
         if r == "" then break end -- (EOZ error)
         p = find("abfnrtv\n\r", r, 1, true)
-        ------------------------------------------------------
+
         if p then                               -- special escapes
           if p > 7 then
             i = inclinenumber(i)
           else
             i = i + 1
           end
-        ------------------------------------------------------
+
         elseif find(r, "%D") then               -- other non-digits
           i = i + 1
-        ------------------------------------------------------
+
         else                                    -- \xxx sequence
           local _, q, s = find(z, "^(%d%d?%d?)", i)
           i = q + 1
           if s + 1 > 256 then -- UCHAR_MAX
             errorline("escape sequence too large")
           end
-        ------------------------------------------------------
+
         end--if p
       else
         i = i + 1
@@ -222,16 +216,13 @@ local function read_string(del)
   errorline("unfinished string")
 end
 
-------------------------------------------------------------------------
--- main lexer function
-------------------------------------------------------------------------
-
+--- The main lexer function.
 function M.llex()
   while true do--outer
     local i = I
     -- inner loop allows break to be used to nicely section tests
     while true do--inner
-      ----------------------------------------------------------------
+
       local p, _, r = find(z, "^([_%a][_%w]*)", i)
       if p then
         I = i + #r
@@ -242,7 +233,7 @@ function M.llex()
         end
         break -- (continue)
       end
-      ----------------------------------------------------------------
+
       local p, _, r = find(z, "^(%.?)%d", i)
       if p then                                 -- numeral
         if r == "." then i = i + 1 end
@@ -262,7 +253,7 @@ function M.llex()
         addtoken("TK_NUMBER", v)
         break -- (continue)
       end
-      ----------------------------------------------------------------
+
       local p, q, r, t = find(z, "^((%s)[ \t\v\f]*)", i)
       if p then
         if t == "\n" or t == "\r" then          -- newline
@@ -273,14 +264,14 @@ function M.llex()
         end
         break -- (continue)
       end
-      ----------------------------------------------------------------
+
       local r = match(z, "^%p", i)
       if r then
         buff = i
         local p = find("-[\"\'.=<>~", r, 1, true)
         if p then
+
           -- two-level if block for punctuation/symbols
-          --------------------------------------------------------
           if p <= 2 then
             if p == 1 then                      -- minus
               local c = match(z, "^%-%-(%[?)", i)
@@ -310,7 +301,7 @@ function M.llex()
               end
               break -- (continue)
             end
-          --------------------------------------------------------
+
           elseif p <= 5 then
             if p < 5 then                       -- strings
               I = i + 1
@@ -319,7 +310,7 @@ function M.llex()
             end
             r = match(z, "^%.%.?%.?", i)        -- .|..|... dots
             -- (fall through)
-          --------------------------------------------------------
+
           else                                  -- relational
             r = match(z, "^%p=?", i)
             -- (fall through)
@@ -329,7 +320,7 @@ function M.llex()
         addtoken("TK_OP", r)  -- for other symbols, fall through
         break -- (continue)
       end
-      ----------------------------------------------------------------
+
       local r = sub(z, i, i)
       if r ~= "" then
         I = i + 1
@@ -338,7 +329,7 @@ function M.llex()
       end
       addtoken("TK_EOS", "")                    -- end of stream,
       return                                    -- exit here
-      ----------------------------------------------------------------
+
     end--while inner
   end--while outer
 end

@@ -1,15 +1,10 @@
---[[--------------------------------------------------------------------
-
-  example.lua: Example of a plugin for LuaSrcDiet
-  This file is part of LuaSrcDiet.
-
-  Kein-Hong Man <keinhong@gmail.com> 2008,2011 PUBLIC DOMAIN
-
-----------------------------------------------------------------------]]
-
---[[--------------------------------------------------------------------
--- NOTES:
+---------
+-- Example of a plugin for LuaSrcDiet.
+--
 -- WARNING: highly experimental! interface liable to change
+--
+-- **Notes:**
+--
 -- * Any function can be omitted and LuaSrcDiet won't call it.
 -- * The functions are:
 --   (1) init(_option, _srcfl, _destfl)
@@ -23,16 +18,9 @@
 --   processing more than one file.
 -- * Arrangement of the functions is not final!
 -- * TODO: can't process additional options from command line yet
-----------------------------------------------------------------------]]
-
--- if anything else is added before 'module', then onefile.lua must be
--- changed in order to correctly embed the plugin
+----
 
 local M = {}
-
-------------------------------------------------------------------------
--- option handling, plays nice with --quiet option
-------------------------------------------------------------------------
 
 local option                    -- local reference to list of options
 local srcfl, destfl             -- filenames
@@ -43,20 +31,18 @@ local function print(...)               -- handle quiet option
   _G.print(...)
 end
 
-------------------------------------------------------------------------
--- initialization
-------------------------------------------------------------------------
-
+--- Initialization.
+--
+-- @tparam {[string]=bool,...} _option
+-- @tparam string _srcfl Path of the source file.
+-- @tparam string _destfl Path of the destination file.
 function M.init(_option, _srcfl, _destfl)
   option = _option
   srcfl, destfl = _srcfl, _destfl
   -- plugin can impose its own option starting from here
 end
 
-------------------------------------------------------------------------
--- message display, post-load processing, can return z
-------------------------------------------------------------------------
-
+--- Message display, post-load processing, can return z.
 function M.post_load(z)
   -- this message will print after the LuaSrcDiet title message
   print([[
@@ -70,18 +56,12 @@ Example plugin module for LuaSrcDiet
   return z
 end
 
-------------------------------------------------------------------------
--- post-lexing processing, can work on lexer table output
-------------------------------------------------------------------------
-
+--- Post-lexing processing, can work on lexer table output.
 function M.post_lex(toklist, seminfolist, toklnlist)  --luacheck: ignore
   print("Example: the number of lexed elements is "..#toklist)
 end
 
-------------------------------------------------------------------------
--- post-parsing processing, gives globalinfo, localinfo
-------------------------------------------------------------------------
-
+--- Post-parsing processing, gives globalinfo, localinfo.
 function M.post_parse(globalinfo, localinfo)
   print("Example: size of globalinfo is "..#globalinfo)
   print("Example: size of localinfo is "..#localinfo)
@@ -89,19 +69,13 @@ function M.post_parse(globalinfo, localinfo)
   option.QUIET = true
 end
 
-------------------------------------------------------------------------
--- post-parser optimization processing, can get tables from elsewhere
-------------------------------------------------------------------------
-
+--- Post-parser optimization processing, can get tables from elsewhere.
 function M.post_optparse()
   option.QUIET = old_quiet
   print("Example: pretend to do post-optparse")
 end
 
-------------------------------------------------------------------------
--- post-lexer optimization processing, can get tables from elsewhere
-------------------------------------------------------------------------
-
+--- Post-lexer optimization processing, can get tables from elsewhere.
 function M.post_optlex(toklist, seminfolist, toklnlist)  --luacheck: ignore
   print("Example: pretend to do post-optlex")
   -- restore old settings, other file might need original settings

@@ -1,27 +1,20 @@
---[[--------------------------------------------------------------------
-
-  lparser.lua: Lua 5.1 parser in Lua
-  This file is part of LuaSrcDiet, based on Yueliang material.
-
-  Copyright (c) 2008,2011 Kein-Hong Man <keinhong@gmail.com>
-  The COPYRIGHT file describes the conditions
-  under which this software may be distributed.
-
-----------------------------------------------------------------------]]
-
---[[--------------------------------------------------------------------
--- NOTES:
+---------
+-- Lua 5.1 parser written in Lua.
+--
+-- This file is part of LuaSrcDiet, based on Yueliang material.
+--
+-- **Notes:**
+--
 -- * This is a version of the native 5.1.x parser from Yueliang 0.4.0,
 --   with significant modifications to handle LuaSrcDiet's needs:
---   (1) needs pre-built token tables instead of a module.method
---   (2) lparser.error is an optional error handler (from llex)
---   (3) not full parsing, currently fakes raw/unlexed constants
---   (4) parser() returns globalinfo, localinfo tables
--- * NO support for 'arg' vararg functions (LUA_COMPAT_VARARG)
+--   (1) needs pre-built token tables instead of a module.method,
+--   (2) lparser.error is an optional error handler (from llex),
+--   (3) not full parsing, currently fakes raw/unlexed constants,
+--   (4) parser() returns globalinfo, localinfo tables.
+-- * NO support for 'arg' vararg functions (LUA_COMPAT_VARARG).
 -- * A lot of the parser is unused, but might later be useful for
 --   full-on parsing and analysis.
-----------------------------------------------------------------------]]
-
+----
 local string = require "string"
 
 local pairs = pairs
