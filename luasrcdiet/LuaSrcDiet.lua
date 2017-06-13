@@ -128,10 +128,6 @@ local function die(msg)
 end
 --die = error--DEBUG
 
-if not match(_VERSION, "5.1", 1, 1) then  -- sanity check
-  die("requires Lua 5.1 to run")
-end
-
 -- Prepare text for list of optimizations, prepare lookup table.
 local MSG_OPTIONS = ""
 do
