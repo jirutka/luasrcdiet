@@ -118,7 +118,6 @@ end
 ------------------------------------------------------------------------
 
 local function checkpair(i, j)
-  local match = match
   local t1, t2 = stoks[i], stoks[j]
   --------------------------------------------------------------------
   if t1 == "TK_STRING" or t1 == "TK_LSTRING" or

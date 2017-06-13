@@ -67,7 +67,6 @@ end
 ----------------------------------------------------------------------
 
 local function inclinenumber(i, is_tok)
-  local sub = sub
   local old = sub(z, i, i)
   i = i + 1  -- skip '\n' or '\r'
   local c = sub(z, i, i)
@@ -133,7 +132,6 @@ local errorline = M.errorline
 ------------------------------------------------------------------------
 
 local function skip_sep(i)
-  local sub = sub
   local s = sub(z, i, i)
   i = i + 1
   local count = #match(z, "=*", i)
@@ -148,7 +146,6 @@ end
 
 local function read_long_string(is_str, sep)
   local i = I + 1  -- skip 2nd '['
-  local sub = sub
   local c = sub(z, i, i)
   if c == "\r" or c == "\n" then  -- string starts with a newline?
     i = inclinenumber(i)  -- skip it
@@ -180,8 +177,6 @@ end
 
 local function read_string(del)
   local i = I
-  local find = find
-  local sub = sub
   while true do
     local p, _, r = find(z, "([\n\r\\\"\'])", i) -- (long range match)
     if p then
@@ -232,8 +227,6 @@ end
 ------------------------------------------------------------------------
 
 function M.llex()
-  local find = find
-  local match = match
   while true do--outer
     local i = I
     -- inner loop allows break to be used to nicely section tests
