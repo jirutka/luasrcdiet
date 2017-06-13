@@ -24,7 +24,8 @@
 
 local base = _G
 
-module "luasrcdiet.lparser"
+local _ENV = {}
+setfenv(1, _ENV)
 
 local string = base.require "string"
 
@@ -1309,3 +1310,5 @@ function init(tokorig, seminfoorig, toklnorig)
   ilocalinfo, ilocalrefs = {}, {}
   statinfo = {}  -- experimental
 end
+
+return _ENV

@@ -25,7 +25,8 @@
 
 local base = _G
 
-module "luasrcdiet.optparser"
+local _ENV = {}
+setfenv(1, _ENV)
 
 local string = base.require "string"
 local table = base.require "table"
@@ -663,3 +664,5 @@ function optimize(option, _toklist, _seminfolist, xinfo)
     -- WARNING globalinfo and localinfo now invalidated!
   end
 end
+
+return _ENV

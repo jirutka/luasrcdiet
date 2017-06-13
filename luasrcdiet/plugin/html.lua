@@ -21,7 +21,8 @@
 
 local base = _G
 
-module "luasrcdiet.plugin.html"
+local _ENV = {}
+setfenv(1, _ENV)
 
 local string = base.require "string"
 local table = base.require "table"
@@ -217,3 +218,5 @@ function post_parse(globalinfo, localinfo)
   save_file(destfl, table.concat(html))
   option.EXIT = true
 end
+
+return _ENV

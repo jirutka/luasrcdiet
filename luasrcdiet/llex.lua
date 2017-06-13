@@ -24,7 +24,8 @@
 
 local base = _G
 
-module "luasrcdiet.llex"
+local _ENV = {}
+setfenv(1, _ENV)
 
 local string = base.require "string"
 local find = string.find
@@ -348,3 +349,5 @@ function llex()
     end--while inner
   end--while outer
 end
+
+return _ENV

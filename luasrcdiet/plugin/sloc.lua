@@ -22,7 +22,8 @@
 
 local base = _G
 
-module "luasrcdiet.plugin.sloc"
+local _ENV = {}
+setfenv(1, _ENV)
 
 local string = base.require "string"
 local table = base.require "table"
@@ -107,3 +108,5 @@ function post_lex(toklist, seminfolist, toklnlist)
   base.print(srcfl..": "..sloc) -- display result
   option.EXIT = true
 end
+
+return _ENV

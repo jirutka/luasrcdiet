@@ -28,7 +28,8 @@
 
 local base = _G
 
-module "luasrcdiet.equiv"
+local _ENV = {}
+setfenv(1, _ENV)
 
 local string = base.require "string"
 local loadstring = base.loadstring
@@ -476,3 +477,5 @@ function binary(z, dat)
   -- successful comparison if end is reached with no borks
   --------------------------------------------------------------------
 end
+
+return _ENV

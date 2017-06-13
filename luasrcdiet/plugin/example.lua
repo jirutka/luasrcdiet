@@ -22,7 +22,6 @@
 -- * If you modify 'option', remember that LuaSrcDiet might be
 --   processing more than one file.
 -- * Arrangement of the functions is not final!
--- * TODO: not sure about return base.getfenv() if module name different
 -- * TODO: can't process additional options from command line yet
 ----------------------------------------------------------------------]]
 
@@ -30,7 +29,8 @@
 -- changed in order to correctly embed the plugin
 local base = _G
 
-module "luasrcdiet.plugin.example"
+local _ENV = {}
+setfenv(1, _ENV)
 
 local string = base.require "string"
 local table = base.require "table"
@@ -117,3 +117,5 @@ function post_optlex(toklist, seminfolist, toklnlist)
   -- not be written to the destination file
   option.EXIT = true
 end
+
+return _ENV

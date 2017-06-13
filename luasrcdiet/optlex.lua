@@ -17,7 +17,8 @@
 
 local base = _G
 
-module "luasrcdiet.optlex"
+local _ENV = {}
+setfenv(1, _ENV)
 
 local string = base.require "string"
 local match = string.match
@@ -856,3 +857,5 @@ function optimize(option, toklist, semlist, toklnlist)
   if opt_details and opt_details > 0 then print() end -- spacing
   return stoks, sinfos, stoklns
 end
+
+return _ENV
