@@ -1,5 +1,5 @@
 ---------
--- Lua 5.1 lexical analyzer written in Lua.
+-- Lua 5.1+ lexical analyzer written in Lua.
 --
 -- This file is part of LuaSrcDiet, based on Yueliang material.
 --
@@ -14,6 +14,7 @@
 -- * NO localized decimal point replacement magic.
 -- * NO limit to number of lines.
 -- * NO support for compatible long strings (LUA\_COMPAT_LSTR).
+-- * Added goto keyword and double-colon operator (Lua 5.2+).
 ----
 local string = require "string"
 
@@ -26,7 +27,7 @@ local M = {}
 
 local kw = {}
 for v in string.gmatch([[
-and break do else elseif end false for function if in
+and break do else elseif end false for function goto if in
 local nil not or repeat return then true until while]], "%S+") do
   kw[v] = true
 end
@@ -262,6 +263,13 @@ function M.llex()
           I = q + 1                             -- whitespace
           addtoken("TK_SPACE", r)
         end
+        break -- (continue)
+      end
+
+      local _, q = find(z, "^::", i)
+      if q then
+        I = q + 1
+        addtoken("TK_OP", "::")
         break -- (continue)
       end
 

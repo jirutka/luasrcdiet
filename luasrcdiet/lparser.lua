@@ -16,6 +16,8 @@
 --   full-on parsing and analysis.
 -- * Relaxed parsing of statement to not require "break" to be the
 --   last statement of block (Lua 5.2+).
+-- * Added basic support for goto and label statements, i.e. parser
+--   does not crash on them (Lua 5.2+).
 ----
 local string = require "string"
 
@@ -1109,6 +1111,33 @@ local function break_stat()
 end
 
 ----------------------------------------------------------------------
+-- parse a label statement
+-- * this function has been added later, it just parses label statement
+--   without any validation!
+-- * used in stat()
+----------------------------------------------------------------------
+
+local function label_stat()
+  -- stat -> label_stat -> '::' NAME '::'
+  nextt()  -- skip '::'
+  str_checkname()
+  checknext("::")
+end
+
+----------------------------------------------------------------------
+-- parse a goto statement
+-- * this function has been added later, it just parses goto statement
+--   without any validation!
+-- * used in stat()
+----------------------------------------------------------------------
+
+local function goto_stat()
+  -- stat -> goto_stat -> GOTO NAME
+  nextt()  -- skip GOTO
+  str_checkname()
+end
+
+----------------------------------------------------------------------
 -- parse a function call with no returns or an assignment statement
 -- * the struct with .prev is used for name searching in lparse.c,
 --   so it is retained for now; present in assignment() also
@@ -1195,6 +1224,8 @@ local stat_call = {             -- lookup for calls in stat()
   ["local"] = local_stat,
   ["return"] = return_stat,
   ["break"] = break_stat,
+  ["goto"] = goto_stat,
+  ["::"] = label_stat,
 }
 
 local function stat()
