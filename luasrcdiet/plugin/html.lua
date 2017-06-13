@@ -19,14 +19,11 @@
 -- * The HTML style tries to follow that of the Lua wiki.
 ----------------------------------------------------------------------]]
 
-local base = _G
+local string = require "string"
+local table = require "table"
+local io = require "io"
 
-local _ENV = {}
-setfenv(1, _ENV)
-
-local string = base.require "string"
-local table = base.require "table"
-local io = base.require "io"
+local M = {}
 
 ------------------------------------------------------------------------
 -- constants and configuration
@@ -83,14 +80,14 @@ local toklist, seminfolist, toklnlist  -- token data
 
 local function print(...)               -- handle quiet option
   if option.QUIET then return end
-  base.print(...)
+  _G.print(...)
 end
 
 ------------------------------------------------------------------------
 -- initialization
 ------------------------------------------------------------------------
 
-function init(_option, _srcfl, _destfl)
+function M.init(_option, _srcfl, _destfl)
   option = _option
   srcfl = _srcfl
   local extb, exte = string.find(srcfl, "%.[^%.%\\%/]*$")
@@ -104,7 +101,7 @@ function init(_option, _srcfl, _destfl)
     destfl = option.OUTPUT_FILE
   end
   if srcfl == destfl then
-    base.error("output filename identical to input filename")
+    error("output filename identical to input filename")
   end
 end
 
@@ -112,7 +109,7 @@ end
 -- message display, post-load processing
 ------------------------------------------------------------------------
 
-function post_load(z)
+function M.post_load(z)
   print([[
 HTML plugin module for LuaSrcDiet
 ]])
@@ -123,7 +120,7 @@ end
 -- post-lexing processing, can work on lexer table output
 ------------------------------------------------------------------------
 
-function post_lex(_toklist, _seminfolist, _toklnlist)
+function M.post_lex(_toklist, _seminfolist, _toklnlist)
   toklist, seminfolist, toklnlist
     = _toklist, _seminfolist, _toklnlist
 end
@@ -152,9 +149,9 @@ end
 
 local function save_file(fname, dat)
   local OUTF = io.open(fname, "wb")
-  if not OUTF then base.error("cannot open \""..fname.."\" for writing") end
+  if not OUTF then error("cannot open \""..fname.."\" for writing") end
   local status = OUTF:write(dat)
-  if not status then base.error("cannot write to \""..fname.."\"") end
+  if not status then error("cannot write to \""..fname.."\"") end
   OUTF:close()
 end
 
@@ -162,7 +159,7 @@ end
 -- post-parsing processing, gives globalinfo, localinfo
 ------------------------------------------------------------------------
 
-function post_parse(globalinfo, localinfo)
+function M.post_parse(globalinfo, localinfo)
   local html = {}
   local function add(s)         -- html helpers
     html[#html + 1] = s
@@ -219,4 +216,4 @@ function post_parse(globalinfo, localinfo)
   option.EXIT = true
 end
 
-return _ENV
+return M

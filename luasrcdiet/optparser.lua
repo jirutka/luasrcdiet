@@ -23,13 +23,12 @@
 --   needed and improve entropy; e.g. 13 needed -> choose 4*4 instead
 ----------------------------------------------------------------------]]
 
-local base = _G
+local string = require "string"
+local table = require "table"
 
-local _ENV = {}
-setfenv(1, _ENV)
+local pairs = pairs
 
-local string = base.require "string"
-local table = base.require "table"
+local M = {}
 
 ----------------------------------------------------------------------
 -- Letter frequencies for reducing symbol entropy (fixed version)
@@ -220,7 +219,7 @@ end
 ----------------------------------------------------------------------
 
 local function stats_summary(globaluniq, localuniq, afteruniq, option)
-  local print = print or base.print
+  local print = M.print or print
   local fmt = string.format
   local opt_details = option.DETAILS
   if option.QUIET then return end
@@ -237,18 +236,18 @@ local function stats_summary(globaluniq, localuniq, afteruniq, option)
   --------------------------------------------------------------------
   -- collect statistics (note: globals do not have declarations!)
   --------------------------------------------------------------------
-  for name, uniq in base.pairs(globaluniq) do
+  for name, uniq in pairs(globaluniq) do
     uniq_g = uniq_g + 1
     token_g = token_g + uniq.token
     size_g = size_g + uniq.size
   end
-  for name, uniq in base.pairs(localuniq) do
+  for name, uniq in pairs(localuniq) do
     uniq_li = uniq_li + 1
     decl_li = decl_li + uniq.decl
     token_li = token_li + uniq.token
     size_li = size_li + uniq.size
   end
-  for name, uniq in base.pairs(afteruniq) do
+  for name, uniq in pairs(afteruniq) do
     uniq_lo = uniq_lo + 1
     decl_lo = decl_lo + uniq.decl
     token_lo = token_lo + uniq.token
@@ -267,7 +266,7 @@ local function stats_summary(globaluniq, localuniq, afteruniq, option)
   --------------------------------------------------------------------
   if opt_details then
     local sorted = {} -- sort table of unique global names by size
-    for name, uniq in base.pairs(globaluniq) do
+    for name, uniq in pairs(globaluniq) do
       uniq.name = name
       sorted[#sorted + 1] = uniq
     end
@@ -642,7 +641,7 @@ end
 -- main entry point
 ----------------------------------------------------------------------
 
-function optimize(option, _toklist, _seminfolist, xinfo)
+function M.optimize(option, _toklist, _seminfolist, xinfo)
   -- set tables
   toklist, seminfolist                  -- from lexer
     = _toklist, _seminfolist
@@ -665,4 +664,4 @@ function optimize(option, _toklist, _seminfolist, xinfo)
   end
 end
 
-return _ENV
+return M

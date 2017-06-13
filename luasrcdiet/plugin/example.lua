@@ -27,13 +27,11 @@
 
 -- if anything else is added before 'module', then onefile.lua must be
 -- changed in order to correctly embed the plugin
-local base = _G
 
-local _ENV = {}
-setfenv(1, _ENV)
+local string = require "string"
+local table = require "table"
 
-local string = base.require "string"
-local table = base.require "table"
+local M = {}
 
 ------------------------------------------------------------------------
 -- option handling, plays nice with --quiet option
@@ -45,14 +43,14 @@ local old_quiet
 
 local function print(...)               -- handle quiet option
   if option.QUIET then return end
-  base.print(...)
+  _G.print(...)
 end
 
 ------------------------------------------------------------------------
 -- initialization
 ------------------------------------------------------------------------
 
-function init(_option, _srcfl, _destfl)
+function M.init(_option, _srcfl, _destfl)
   option = _option
   srcfl, destfl = _srcfl, _destfl
   -- plugin can impose its own option starting from here
@@ -62,7 +60,7 @@ end
 -- message display, post-load processing, can return z
 ------------------------------------------------------------------------
 
-function post_load(z)
+function M.post_load(z)
   -- this message will print after the LuaSrcDiet title message
   print([[
 Example plugin module for LuaSrcDiet
@@ -79,7 +77,7 @@ end
 -- post-lexing processing, can work on lexer table output
 ------------------------------------------------------------------------
 
-function post_lex(toklist, seminfolist, toklnlist)
+function M.post_lex(toklist, seminfolist, toklnlist)
   print("Example: the number of lexed elements is "..#toklist)
 end
 
@@ -87,7 +85,7 @@ end
 -- post-parsing processing, gives globalinfo, localinfo
 ------------------------------------------------------------------------
 
-function post_parse(globalinfo, localinfo)
+function M.post_parse(globalinfo, localinfo)
   print("Example: size of globalinfo is "..#globalinfo)
   print("Example: size of localinfo is "..#localinfo)
   old_quiet = option.QUIET
@@ -98,7 +96,7 @@ end
 -- post-parser optimization processing, can get tables from elsewhere
 ------------------------------------------------------------------------
 
-function post_optparse()
+function M.post_optparse()
   option.QUIET = old_quiet
   print("Example: pretend to do post-optparse")
 end
@@ -107,7 +105,7 @@ end
 -- post-lexer optimization processing, can get tables from elsewhere
 ------------------------------------------------------------------------
 
-function post_optlex(toklist, seminfolist, toklnlist)
+function M.post_optlex(toklist, seminfolist, toklnlist)
   print("Example: pretend to do post-optlex")
   -- restore old settings, other file might need original settings
   option.QUIET = old_quiet
@@ -118,4 +116,4 @@ function post_optlex(toklist, seminfolist, toklnlist)
   option.EXIT = true
 end
 
-return _ENV
+return M

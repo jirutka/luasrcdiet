@@ -20,13 +20,10 @@
 -- * Ignores the --quiet option, print own result line.
 ----------------------------------------------------------------------]]
 
-local base = _G
+local string = require "string"
+local table = require "table"
 
-local _ENV = {}
-setfenv(1, _ENV)
-
-local string = base.require "string"
-local table = base.require "table"
+local M = {}
 
 ------------------------------------------------------------------------
 -- initialization
@@ -35,7 +32,7 @@ local table = base.require "table"
 local option                    -- local reference to list of options
 local srcfl                     -- source file name
 
-function init(_option, _srcfl, _destfl)
+function M.init(_option, _srcfl, _destfl)
   option = _option
   option.QUIET = true
   srcfl = _srcfl
@@ -66,7 +63,7 @@ end
 -- post-lexing processing, can work on lexer table output
 ------------------------------------------------------------------------
 
-function post_lex(toklist, seminfolist, toklnlist)
+function M.post_lex(toklist, seminfolist, toklnlist)
   local lnow, sloc = 0, 0
   local function chk(ln)        -- if a new line, count it as an SLOC
     if ln > lnow then           -- new line # must be > old line #
@@ -105,8 +102,8 @@ function post_lex(toklist, seminfolist, toklnlist)
     --------------------------------------------------------------------
     end
   end--for
-  base.print(srcfl..": "..sloc) -- display result
+  print(srcfl..": "..sloc) -- display result
   option.EXIT = true
 end
 
-return _ENV
+return M

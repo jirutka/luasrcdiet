@@ -15,26 +15,27 @@
 -- * TODO: (numbers) warn if overly significant digit
 ----------------------------------------------------------------------]]
 
-local base = _G
+local string = require "string"
 
-local _ENV = {}
-setfenv(1, _ENV)
-
-local string = base.require "string"
 local match = string.match
 local sub = string.sub
 local find = string.find
 local rep = string.rep
-local print
+local tonumber = tonumber
+local tostring = tostring
+
+local print                     -- set in optimize()
+
+local M = {}
 
 ------------------------------------------------------------------------
 -- variables and data structures
 ------------------------------------------------------------------------
 
 -- error function, can override by setting own function into module
-error = base.error
+M.error = error
 
-warn = {}                       -- table for warning flags
+M.warn = {}                       -- table for warning flags
 
 local stoks, sinfos, stoklns    -- source lists
 
@@ -215,7 +216,7 @@ local function do_number(i)
   local y                       -- 'after', if better
   --------------------------------------------------------------------
   if match(z, "^0[xX]") then            -- hexadecimal number
-    local v = base.tostring(base.tonumber(z))
+    local v = tostring(tonumber(z))
     if #v <= #z then
       z = v  -- change to integer, AND continue
     else
@@ -228,7 +229,7 @@ local function do_number(i)
     if z + 0 > 0 then
       z = match(z, "^0*([1-9]%d*)$")  -- remove leading zeros
       local v = #match(z, "0*$")
-      local nv = base.tostring(v)
+      local nv = tostring(v)
       if v > #nv + 1 then  -- scientific is shorter
         z = sub(z, 1, #z - v).."e"..nv
       end
@@ -255,7 +256,7 @@ local function do_number(i)
         y = "."..q  -- tentative, e.g. .000123
         local v = #match(q, "^0*")  -- # leading spaces
         local w = #q - v            -- # significant digits
-        local nv = base.tostring(#q)
+        local nv = tostring(#q)
         -- e.g. compare 123e-6 versus .000123
         if w + 2 + #nv < 1 + #q then
           y = sub(q, -w).."e-"..nv
@@ -265,7 +266,7 @@ local function do_number(i)
   --------------------------------------------------------------------
   else                                  -- scientific number
     local sig, ex = match(z, "^([^eE]+)[eE]([%+%-]?%d+)$")
-    ex = base.tonumber(ex)
+    ex = tonumber(ex)
     -- if got ".", shift out fractional portion of significand
     local p, q = match(sig, "^(%d*)%.(%d*)$")
     if p then
@@ -283,7 +284,7 @@ local function do_number(i)
         ex = ex + v
       end
       -- examine exponent and determine which format is best
-      local nex = base.tostring(ex)
+      local nex = tostring(ex)
       if ex == 0 then  -- it's just an integer
         y = sig
       elseif ex > 0 and (ex <= 1 + #nex) then  -- a number
@@ -472,7 +473,7 @@ local function do_lstring(I)
     if ln ~= "" then
       -- flag a warning if there are trailing spaces, won't optimize!
       if match(ln, "%s+$") then
-        warn.LSTRING = "trailing whitespace in long string near line "..stoklns[I]
+        M.warn.LSTRING = "trailing whitespace in long string near line "..stoklns[I]
       end
       y = y..ln
     end
@@ -613,7 +614,7 @@ end
 --   processing is a little messy or convoluted
 ------------------------------------------------------------------------
 
-function optimize(option, toklist, semlist, toklnlist)
+function M.optimize(option, toklist, semlist, toklnlist)
   --------------------------------------------------------------------
   -- set option flags
   --------------------------------------------------------------------
@@ -626,7 +627,7 @@ function optimize(option, toklist, semlist, toklnlist)
   local opt_x = option["opt-experimental"]
   local opt_keep = option.KEEP
   opt_details = option.DETAILS and 0  -- upvalues for details display
-  print = print or base.print
+  print = M.print or _G.print
   if opt_eols then  -- forced settings, otherwise won't work properly
     opt_comments = true
     opt_whitespace = true
@@ -858,4 +859,4 @@ function optimize(option, toklist, semlist, toklnlist)
   return stoks, sinfos, stoklns
 end
 
-return _ENV
+return M

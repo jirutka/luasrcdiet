@@ -26,17 +26,15 @@
 --   fails; you can use ChunkSpy and compare using visual diff
 ----------------------------------------------------------------------]]
 
-local base = _G
+local string = require "string"
 
-local _ENV = {}
-setfenv(1, _ENV)
-
-local string = base.require "string"
-local loadstring = base.loadstring
+local loadstring = loadstring
 local sub = string.sub
 local match = string.match
 local dump = string.dump
 local byte = string.byte
+
+local M = {}
 
 --[[--------------------------------------------------------------------
 -- variable and data initialization
@@ -62,7 +60,7 @@ local option, llex, warn
 -- initialization function
 ------------------------------------------------------------------------
 
-function init(_option, _llex, _warn)
+function M.init(_option, _llex, _warn)
   option = _option
   llex = _llex
   warn = _warn
@@ -93,7 +91,7 @@ end
 -- test source (lexer stream) equivalence
 ------------------------------------------------------------------------
 
-function source(z, dat)
+function M.source(z, dat)
   --------------------------------------------------------------------
   -- function to return a dumped string for seminfo compares
   --------------------------------------------------------------------
@@ -107,7 +105,7 @@ function source(z, dat)
   -- mark and optionally report non-equivalence
   --------------------------------------------------------------------
   local function bork(msg)
-    if option.DETAILS then base.print("SRCEQUIV: "..msg) end
+    if option.DETAILS then print("SRCEQUIV: "..msg) end
     warn.SRC_EQUIV = true
   end
   --------------------------------------------------------------------
@@ -169,7 +167,7 @@ end
 -- test binary chunk equivalence
 ------------------------------------------------------------------------
 
-function binary(z, dat)
+function M.binary(z, dat)
   local TNIL     = 0
   local TBOOLEAN = 1
   local TNUMBER  = 3
@@ -178,7 +176,7 @@ function binary(z, dat)
   -- mark and optionally report non-equivalence
   --------------------------------------------------------------------
   local function bork(msg)
-    if option.DETAILS then base.print("BINEQUIV: "..msg) end
+    if option.DETAILS then print("BINEQUIV: "..msg) end
     warn.BIN_EQUIV = true
   end
   --------------------------------------------------------------------
@@ -478,4 +476,4 @@ function binary(z, dat)
   --------------------------------------------------------------------
 end
 
-return _ENV
+return M

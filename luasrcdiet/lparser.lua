@@ -22,12 +22,11 @@
 --   full-on parsing and analysis.
 ----------------------------------------------------------------------]]
 
-local base = _G
+local string = require "string"
 
-local _ENV = {}
-setfenv(1, _ENV)
+local pairs = pairs
 
-local string = base.require "string"
+local M = {}
 
 --[[--------------------------------------------------------------------
 -- variable and data structure initialization
@@ -98,7 +97,7 @@ local UNARY_PRIORITY = 8        -- priority for unary operators
 ----------------------------------------------------------------------
 
 local function errorline(s, line)
-  local e = error or base.error
+  local e = M.error or error
   e(string.format("(source):%d: %s", line or ln, s))
 end
 
@@ -299,7 +298,7 @@ local function removevars()
     locallist = fs.locallist
   end
   -- enumerate the local list at current scope and deactivate 'em
-  for name, id in base.pairs(locallist) do
+  for name, id in pairs(locallist) do
     local obj = localinfo[id]
     obj.rem = xref                      -- set deactivation location
   end
@@ -1244,7 +1243,7 @@ end
 -- performs parsing, returns parsed data structure
 ----------------------------------------------------------------------
 
-function parser()
+function M.parser()
   open_func()
   fs.is_vararg = true  -- main func. is always vararg
   nextt()  -- read first token
@@ -1266,7 +1265,7 @@ end
 -- initialization function
 ----------------------------------------------------------------------
 
-function init(tokorig, seminfoorig, toklnorig)
+function M.init(tokorig, seminfoorig, toklnorig)
   tpos = 1                      -- token position
   top_fs = {}                   -- reset top level function state
   ------------------------------------------------------------------
@@ -1311,4 +1310,4 @@ function init(tokorig, seminfoorig, toklnorig)
   statinfo = {}  -- experimental
 end
 
-return _ENV
+return M
