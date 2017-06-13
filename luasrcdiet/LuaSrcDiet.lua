@@ -165,15 +165,6 @@ end
 
 MSG_USAGE = string.format(MSG_USAGE, MSG_OPTIONS, DEFAULT_CONFIG)
 
-if p_embedded then  -- embedded plugins
-  local EMBED_INFO = "\nembedded plugins:\n"
-  for i = 1, #p_embedded do
-    local p = p_embedded[i]
-    EMBED_INFO = EMBED_INFO.."  "..plugin_info[p].."\n"
-  end
-  MSG_USAGE = MSG_USAGE..EMBED_INFO
-end
-
 ------------------------------------------------------------------------
 -- global variable initialization, option set handling
 ------------------------------------------------------------------------
