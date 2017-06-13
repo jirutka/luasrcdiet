@@ -76,7 +76,7 @@ span.local { color: #0000ff; font-weight: bold; }
 
 local option                    -- local reference to list of options
 local srcfl, destfl             -- filenames
-local toklist, seminfolist, toklnlist  -- token data
+local toklist, seminfolist  -- token data
 
 local function print(...)               -- handle quiet option
   if option.QUIET then return end
@@ -87,14 +87,13 @@ end
 -- initialization
 ------------------------------------------------------------------------
 
-function M.init(_option, _srcfl, _destfl)
+function M.init(_option, _srcfl)
   option = _option
   srcfl = _srcfl
-  local extb, exte = string.find(srcfl, "%.[^%.%\\%/]*$")
-  local basename, extension = srcfl, ""
+  local extb, _ = string.find(srcfl, "%.[^%.%\\%/]*$")
+  local basename = srcfl
   if extb and extb > 1 then
     basename = string.sub(srcfl, 1, extb - 1)
-    extension = string.sub(srcfl, extb, exte)
   end
   destfl = basename..HTML_EXT
   if option.OUTPUT_FILE then
@@ -109,7 +108,7 @@ end
 -- message display, post-load processing
 ------------------------------------------------------------------------
 
-function M.post_load(z)
+function M.post_load()
   print([[
 HTML plugin module for LuaSrcDiet
 ]])
@@ -120,9 +119,8 @@ end
 -- post-lexing processing, can work on lexer table output
 ------------------------------------------------------------------------
 
-function M.post_lex(_toklist, _seminfolist, _toklnlist)
-  toklist, seminfolist, toklnlist
-    = _toklist, _seminfolist, _toklnlist
+function M.post_lex(_toklist, _seminfolist)
+  toklist, seminfolist = _toklist, _seminfolist
 end
 
 ------------------------------------------------------------------------

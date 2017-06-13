@@ -154,7 +154,7 @@ local function read_long_string(is_str, sep)
     i = inclinenumber(i)  -- skip it
   end
   while true do
-    local p, q, r = find(z, "([\r\n%]])", i) -- (long range match)
+    local p, _, r = find(z, "([\r\n%]])", i) -- (long range match)
     if not p then
       errorline(is_str and "unfinished long string" or
                 "unfinished long comment")
@@ -183,7 +183,7 @@ local function read_string(del)
   local find = find
   local sub = sub
   while true do
-    local p, q, r = find(z, "([\n\r\\\"\'])", i) -- (long range match)
+    local p, _, r = find(z, "([\n\r\\\"\'])", i) -- (long range match)
     if p then
       if r == "\n" or r == "\r" then
         errorline("unfinished string")
@@ -206,7 +206,7 @@ local function read_string(del)
           i = i + 1
         ------------------------------------------------------
         else                                    -- \xxx sequence
-          local p, q, s = find(z, "^(%d%d?%d?)", i)
+          local _, q, s = find(z, "^(%d%d?%d?)", i)
           i = q + 1
           if s + 1 > 256 then -- UCHAR_MAX
             errorline("escape sequence too large")

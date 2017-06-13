@@ -22,7 +22,6 @@
 
 -- standard libraries, functions
 local string = string
-local math = math
 local table = table
 local require = require
 local print = print

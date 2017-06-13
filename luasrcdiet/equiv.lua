@@ -168,7 +168,7 @@ end
 ------------------------------------------------------------------------
 
 function M.binary(z, dat)
-  local TNIL     = 0
+  local TNIL     = 0  --luacheck: ignore
   local TBOOLEAN = 1
   local TNUMBER  = 3
   local TSTRING  = 4
@@ -235,7 +235,7 @@ function M.binary(z, dat)
   local function getint_l(c)            -- return an int value (little-endian)
     local n, scale = 0, 1
     if not ensure(c, sz_int) then return end
-    for j = 1, sz_int do
+    for _ = 1, sz_int do
       n = n + scale * getbyte(c)
       scale = scale * 256
     end
@@ -245,7 +245,7 @@ function M.binary(z, dat)
   local function getint_b(c)            -- return an int value (big-endian)
     local n = 0
     if not ensure(c, sz_int) then return end
-    for j = 1, sz_int do
+    for _ = 1, sz_int do
       n = n * 256 + getbyte(c)
     end
     return n
@@ -254,7 +254,7 @@ function M.binary(z, dat)
   local function getsizet_l(c)          -- return a size_t value (little-endian)
     local n, scale = 0, 1
     if not ensure(c, sz_sizet) then return end
-    for j = 1, sz_sizet do
+    for _ = 1, sz_sizet do
       n = n + scale * getbyte(c)
       scale = scale * 256
     end
@@ -264,7 +264,7 @@ function M.binary(z, dat)
   local function getsizet_b(c)          -- return a size_t value (big-endian)
     local n = 0
     if not ensure(c, sz_sizet) then return end
-    for j = 1, sz_sizet do
+    for _ = 1, sz_sizet do
       n = n * 256 + getbyte(c)
     end
     return n
@@ -356,7 +356,7 @@ function M.binary(z, dat)
     if not nconst then
       bork("bad nconst"); return
     end
-    for i = 1, nconst do
+    for _ = 1, nconst do
       local ctype = goodbyte(c1, c2)
       if not ctype then
         bork("bad const type"); return
@@ -384,7 +384,7 @@ function M.binary(z, dat)
     if not nproto then
       bork("bad nproto"); return
     end
-    for i = 1, nproto do
+    for _ = 1, nproto do
       if not getfunc(c1, c2) then
         bork("bad function prototype"); return
       end
@@ -414,12 +414,12 @@ function M.binary(z, dat)
     if not sizelocvars2 then
       bork("bad sizelocvars2"); return
     end
-    for i = 1, sizelocvars1 do
+    for _ = 1, sizelocvars1 do
       if not getstring(c1) or not getint(c1) or not getint(c1) then
         bork("bad locvars1"); return
       end
     end
-    for i = 1, sizelocvars2 do
+    for _ = 1, sizelocvars2 do
       if not getstring(c2) or not getint(c2) or not getint(c2) then
         bork("bad locvars2"); return
       end
@@ -433,10 +433,10 @@ function M.binary(z, dat)
     if not sizeupvalues2 then
       bork("bad sizeupvalues2"); return
     end
-    for i = 1, sizeupvalues1 do
+    for _ = 1, sizeupvalues1 do
       if not getstring(c1) then bork("bad upvalues1"); return end
     end
-    for i = 1, sizeupvalues2 do
+    for _ = 1, sizeupvalues2 do
       if not getstring(c2) then bork("bad upvalues2"); return end
     end
     return true

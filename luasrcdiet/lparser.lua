@@ -298,7 +298,7 @@ local function removevars()
     locallist = fs.locallist
   end
   -- enumerate the local list at current scope and deactivate 'em
-  for name, id in pairs(locallist) do
+  for _, id in pairs(locallist) do
     local obj = localinfo[id]
     obj.rem = xref                      -- set deactivation location
   end
@@ -809,7 +809,6 @@ end
 
 local function fornum(varname)
   -- fornum -> NAME = exp1, exp1 [, exp1] DO body
-  local line = line
   new_localvarliteral("(for index)")
   new_localvarliteral("(for limit)")
   new_localvarliteral("(for step)")
@@ -846,7 +845,6 @@ local function forlist(indexname)
     nvars = nvars + 1
   end
   checknext("in")
-  local line = line
   explist1(e)
   forbody(nvars, false)
 end
@@ -1070,7 +1068,6 @@ local function if_stat()
   -- stat -> if_stat -> IF cond THEN block
   --                    {ELSEIF cond THEN block} [ELSE block] END
   local line = line
-  local v = {}
   test_then_block()  -- IF cond THEN block
   while tok == "elseif" do
     test_then_block()  -- ELSEIF cond THEN block

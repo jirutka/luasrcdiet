@@ -97,7 +97,7 @@ local function commenteols(lcomment)
   local z = sub(lcomment, sep + 1, -(sep - 1))  -- remove delims
   local i, c = 1, 0
   while true do
-    local p, q, r, s = find(z, "([\r\n])([\r\n]?)", i)
+    local p, _, r, s = find(z, "([\r\n])([\r\n]?)", i)
     if not p then break end     -- if no matches, done
     i = p + 1
     c = c + 1
@@ -421,7 +421,7 @@ local function do_string(I)
   if c_delim > c_ndelim then
     i = 1
     while i <= #z do
-      local p, q, r = find(z, "([\'\"])", i)
+      local p, _, r = find(z, "([\'\"])", i)
       if not p then break end
       if r == delim then                -- \<delim> -> <delim>
         z = sub(z, 1, p - 2)..sub(z, p)
@@ -462,7 +462,7 @@ local function do_lstring(I)
   local i = 1
   --------------------------------------------------------------------
   while true do
-    local p, q, r, s = find(z, "([\r\n])([\r\n]?)", i)
+    local p, _, r, s = find(z, "([\r\n])([\r\n]?)", i)
     -- deal with a single line
     local ln
     if not p then
@@ -529,7 +529,7 @@ local function do_lcomment(I)
   local i = 1
   --------------------------------------------------------------------
   while true do
-    local p, q, r, s = find(z, "([\r\n])([\r\n]?)", i)
+    local p, _, r, s = find(z, "([\r\n])([\r\n]?)", i)
     -- deal with a single line, extract and check trailing whitespace
     local ln
     if not p then
@@ -598,7 +598,6 @@ local function keep_lcomment(opt_keep, info)
   if not opt_keep then return false end  -- option not set
   local delim1 = match(info, "^%-%-%[=*%[")  -- cut out delimiters
   local sep = #delim1
-  local delim2 = sub(info, -sep, -1)
   local z = sub(info, sep + 1, -(sep - 1))  -- comment without delims
   if find(z, opt_keep, 1, true) then  -- try to match
     return true

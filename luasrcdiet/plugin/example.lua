@@ -28,9 +28,6 @@
 -- if anything else is added before 'module', then onefile.lua must be
 -- changed in order to correctly embed the plugin
 
-local string = require "string"
-local table = require "table"
-
 local M = {}
 
 ------------------------------------------------------------------------
@@ -77,7 +74,7 @@ end
 -- post-lexing processing, can work on lexer table output
 ------------------------------------------------------------------------
 
-function M.post_lex(toklist, seminfolist, toklnlist)
+function M.post_lex(toklist, seminfolist, toklnlist)  --luacheck: ignore
   print("Example: the number of lexed elements is "..#toklist)
 end
 
@@ -105,7 +102,7 @@ end
 -- post-lexer optimization processing, can get tables from elsewhere
 ------------------------------------------------------------------------
 
-function M.post_optlex(toklist, seminfolist, toklnlist)
+function M.post_optlex(toklist, seminfolist, toklnlist)  --luacheck: ignore
   print("Example: pretend to do post-optlex")
   -- restore old settings, other file might need original settings
   option.QUIET = old_quiet

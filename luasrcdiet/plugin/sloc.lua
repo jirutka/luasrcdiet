@@ -21,7 +21,6 @@
 ----------------------------------------------------------------------]]
 
 local string = require "string"
-local table = require "table"
 
 local M = {}
 
@@ -32,7 +31,7 @@ local M = {}
 local option                    -- local reference to list of options
 local srcfl                     -- source file name
 
-function M.init(_option, _srcfl, _destfl)
+function M.init(_option, _srcfl)
   option = _option
   option.QUIET = true
   srcfl = _srcfl
@@ -86,7 +85,7 @@ function M.post_lex(toklist, seminfolist, toklnlist)
     elseif tok == "TK_STRING" then      -- possible multi-line
       local t = split(info)
       ln = ln - #t + 1
-      for j = 1, #t do
+      for _ = 1, #t do
         chk(ln); ln = ln + 1
       end
     --------------------------------------------------------------------

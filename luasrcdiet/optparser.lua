@@ -236,18 +236,18 @@ local function stats_summary(globaluniq, localuniq, afteruniq, option)
   --------------------------------------------------------------------
   -- collect statistics (note: globals do not have declarations!)
   --------------------------------------------------------------------
-  for name, uniq in pairs(globaluniq) do
+  for _, uniq in pairs(globaluniq) do
     uniq_g = uniq_g + 1
     token_g = token_g + uniq.token
     size_g = size_g + uniq.size
   end
-  for name, uniq in pairs(localuniq) do
+  for _, uniq in pairs(localuniq) do
     uniq_li = uniq_li + 1
     decl_li = decl_li + uniq.decl
     token_li = token_li + uniq.token
     size_li = size_li + uniq.size
   end
-  for name, uniq in pairs(afteruniq) do
+  for _, uniq in pairs(afteruniq) do
     uniq_lo = uniq_lo + 1
     decl_lo = decl_lo + uniq.decl
     token_lo = token_lo + uniq.token
