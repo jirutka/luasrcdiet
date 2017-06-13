@@ -9,12 +9,8 @@ local a=''
 local a="foo bar BAZ 123"
 -- alphanumeric characters
 local a="abcdefghijklmnopqrstuvxyz0123456789"
--- escaped 'normal' alphabets
-local a="\c\d\e\g\h\i\j\k\l\m\o\p\q\s\u\x\y\z"
--- unescaped punctuation
+-- punctuation
 local a="~`!@#$%^&*()-_=+|[]{};:,.<>/?"
--- escaped punctuation
-local a="\~\`\!\@\#\$\%\^\&\*\(\)\-\_\=\+\|\[\]\{\}\;\:\,\.\<\>\/\?"
 -- \a\b\f\n\r\t\v -- no change
 local a="\a\b\f\n\r\t\v"
 -- \\ -- no change

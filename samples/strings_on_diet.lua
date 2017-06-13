@@ -9,11 +9,7 @@ local a=''
 local a="foo bar BAZ 123"
 -- alphanumeric characters
 local a="abcdefghijklmnopqrstuvxyz0123456789"
--- escaped 'normal' alphabets
-local a="cdeghijklmopqsuxyz"
--- unescaped punctuation
-local a="~`!@#$%^&*()-_=+|[]{};:,.<>/?"
--- escaped punctuation
+-- punctuation
 local a="~`!@#$%^&*()-_=+|[]{};:,.<>/?"
 -- \a\b\f\n\r\t\v -- no change
 local a="\a\b\f\n\r\t\v"
@@ -40,7 +36,7 @@ local a="\0\1\4\15"
 -- bug fixed: but if there is following digits, don't shorten
 local a="\00123\01623"
 -- \ddd -- if >= ascii 32, translate into literal, check \\,\",\' cases
-local a=" Aa¤"
+local a=" AaÂ¤"
 local a="\\"
 local a="'\""
 local a='\'"'

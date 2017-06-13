@@ -318,7 +318,7 @@ end
 --     \\             -- no change
 --     \"\'           -- depends on delim, other can remove \
 --     \[\]           -- remove \
---     \<char>        -- general escape, remove \
+--     \<char>        -- general escape, remove \  (Lua 5.1 only)
 --     \<eol>         -- normalize the EOL only
 --     \ddd           -- if \a\b\f\n\r\t\v, change to latter
 --                       if other < ascii 32, keep ddd but zap leading zeros
@@ -346,7 +346,7 @@ local function do_string(I)
       local d = sub(z, j, j)
       local p = find("abfnrtv\\\n\r\"\'0123456789", d, 1, true)
 
-      if not p then                     -- \<char> -- remove \
+      if not p then                     -- \<char> -- remove \  (Lua 5.1 only)
         z = sub(z, 1, i - 1)..sub(z, j)
         i = i + 1
 
