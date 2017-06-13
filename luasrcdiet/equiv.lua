@@ -5,7 +5,7 @@
 --
 -- * Intended as an extra safety check for mission-critical code,
 --   should give affirmative results if everything works.
--- * Heavy on loadstring() and string.dump(), which may be slowish,
+-- * Heavy on load() and string.dump(), which may be slowish,
 --   and may cause problems for cross-compiled applications.
 -- * Optional detailed information dump is mainly for debugging,
 --   reason being, if the two are not equivalent when they should be,
@@ -19,7 +19,7 @@
 ----
 local string = require "string"
 
-local loadstring = loadstring
+local load = loadstring or load
 local sub = string.sub
 local match = string.match
 local dump = string.dump
@@ -81,7 +81,7 @@ function M.source(z, dat)
 
   -- Returns a dumped string for seminfo compares.
   local function dumpsem(s)
-    local sf = loadstring("return "..s, "z")
+    local sf = load("return "..s, "z")
     if sf then
       return dump(sf)
     end
@@ -158,7 +158,7 @@ function M.binary(z, dat)
     warn.BIN_EQUIV = true
   end
 
-  -- Removes shbang line so that loadstring runs.
+  -- Removes shbang line so that load runs.
   local function zap_shbang(s)
     local shbang = match(s, "^(#[^\r\n]*\r?\n?)")
     if shbang then                      -- cut out shbang
@@ -168,16 +168,16 @@ function M.binary(z, dat)
   end
 
   -- Attempt to compile, then dump to get binary chunk string.
-  local cz = loadstring(zap_shbang(z), "z")
+  local cz = load(zap_shbang(z), "z")
   if not cz then
     bork("failed to compile original sources for binary chunk comparison")
     return
   end
-  local cdat = loadstring(zap_shbang(dat), "z")
+  local cdat = load(zap_shbang(dat), "z")
   if not cdat then
     bork("failed to compile compressed result for binary chunk comparison")
   end
-  -- if loadstring() works, dump assuming string.dump() is error-free
+  -- if load() works, dump assuming string.dump() is error-free
   local c1 = { i = 1, dat = dump(cz) }
   c1.len = #c1.dat
   local c2 = { i = 1, dat = dump(cdat) }
