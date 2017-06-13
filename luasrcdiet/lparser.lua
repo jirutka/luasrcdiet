@@ -1,5 +1,5 @@
 ---------
--- Lua 5.1 parser written in Lua.
+-- Lua 5.1+ parser written in Lua.
 --
 -- This file is part of LuaSrcDiet, based on Yueliang material.
 --
@@ -14,6 +14,8 @@
 -- * NO support for 'arg' vararg functions (LUA_COMPAT_VARARG).
 -- * A lot of the parser is unused, but might later be useful for
 --   full-on parsing and analysis.
+-- * Relaxed parsing of statement to not require "break" to be the
+--   last statement of block (Lua 5.2+).
 ----
 local string = require "string"
 
@@ -1206,8 +1208,8 @@ local function stat()
   if fn then
     statinfo[tpos - 1] = c
     fn()
-    -- return or break must be last statement
-    if c == "return" or c == "break" then return true end
+    -- return must be last statement
+    if c == "return" then return true end
   else
     expr_stat()
   end
