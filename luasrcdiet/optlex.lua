@@ -182,27 +182,28 @@ end
 --   (3) number is then processed as an integer
 --   (4) note: does not make 0[xX] consistent
 -- * integer:
---   (1) note: includes anything with trailing ".", ".0", ...
---   (2) remove useless fractional part, if present, e.g. 123.000
---   (3) remove leading zeros, e.g. 000123
---   (4) switch to scientific if shorter, e.g. 123000 -> 123e3
--- * with fraction:
+--   (1) reduce useless fractional part, if present, e.g. 123.000 -> 123.
+--   (2) remove leading zeros, e.g. 000123
+-- * float:
 --   (1) split into digits dot digits
 --   (2) if no integer portion, take as zero (can omit later)
 --   (3) handle degenerate .000 case, after which the fractional part
---       must be non-zero (if zero, it's matched as an integer)
+--       must be non-zero (if zero, it's matched as float .0)
 --   (4) remove trailing zeros for fractional portion
 --   (5) p.q where p > 0 and q > 0 cannot be shortened any more
 --   (6) otherwise p == 0 and the form is .q, e.g. .000123
 --   (7) if scientific shorter, convert, e.g. .000123 -> 123e-6
 -- * scientific:
 --   (1) split into (digits dot digits) [eE] ([+-] digits)
---   (2) if significand has ".", shift it out so it becomes an integer
---   (3) if significand is zero, just use zero
---   (4) remove leading zeros for significand
---   (5) shift out trailing zeros for significand
---   (6) examine exponent and determine which format is best:
---       integer, with fraction, scientific
+--   (2) if significand is zero, just use .0
+--   (3) remove leading zeros for significand
+--   (4) shift out trailing zeros for significand
+--   (5) examine exponent and determine which format is best:
+--       number with fraction, or scientific
+--
+-- Note: Number with fraction and scientific number is never converted
+-- to integer, because Lua 5.3 distinguishes between integers and floats.
+--
 --
 -- @tparam int i
 local function do_number(i)
@@ -219,25 +220,19 @@ local function do_number(i)
     end
   end
 
-  if match(z, "^%d+%.?0*$") then        -- integer or has useless frac
-    z = match(z, "^(%d+)%.?0*$")  -- int portion only
-    if z + 0 > 0 then
-      z = match(z, "^0*([1-9]%d*)$")  -- remove leading zeros
-      local v = #match(z, "0*$")
-      local nv = tostring(v)
-      if v > #nv + 1 then  -- scientific is shorter
-        z = sub(z, 1, #z - v).."e"..nv
-      end
-      y = z
+  if match(z, "^%d+$") then        -- integer
+    if tonumber(z) > 0 then
+      y = match(z, "^0*([1-9]%d*)$")  -- remove leading zeros
     else
       y = "0"  -- basic zero
     end
 
-  elseif not match(z, "[eE]") then      -- number with fraction part
-    local p, q = match(z, "^(%d*)%.(%d+)$")  -- split
+  elseif not match(z, "[eE]") then      -- float
+    local p, q = match(z, "^(%d*)%.(%d*)$")  -- split
     if p == "" then p = 0 end  -- int part zero
-    if q + 0 == 0 and p == 0 then
-      y = "0"  -- degenerate .000 case
+    if q == "" then q = "0" end  -- fraction part zero
+    if tonumber(q) == 0 and p == 0 then
+      y = ".0"  -- degenerate .000 to .0
     else
       -- now, q > 0 holds and p is a number
       local v = #match(q, "0*$")  -- remove trailing zeros
@@ -245,7 +240,7 @@ local function do_number(i)
         q = sub(q, 1, #q - v)
       end
       -- if p > 0, nothing else we can do to simplify p.q case
-      if p + 0 > 0 then
+      if tonumber(p) > 0 then
         y = p.."."..q
       else
         y = "."..q  -- tentative, e.g. .000123
@@ -268,8 +263,8 @@ local function do_number(i)
       ex = ex - #q
       sig = p..q
     end
-    if sig + 0 == 0 then
-      y = "0"  -- basic zero
+    if tonumber(sig) == 0 then
+      y = ".0"  -- basic float zero
     else
       local v = #match(sig, "^0*")  -- remove leading zeros
       sig = sub(sig, v + 1)
@@ -280,10 +275,8 @@ local function do_number(i)
       end
       -- examine exponent and determine which format is best
       local nex = tostring(ex)
-      if ex == 0 then  -- it's just an integer
-        y = sig
-      elseif ex > 0 and (ex <= 1 + #nex) then  -- a number
-        y = sig..rep("0", ex)
+      if ex >= 0 and (ex <= 1 + #nex) then  -- a float
+        y = sig..rep("0", ex).."."
       elseif ex < 0 and (ex >= -#sig) then  -- fraction, e.g. .123
         v = #sig + ex
         y = sub(sig, 1, v).."."..sub(sig, v + 1)
@@ -375,7 +368,7 @@ local function do_string(I)
       else                              -- \ddd -- various steps
         local s = match(z, "^(%d%d?%d?)", j)
         j = i + 1 + #s                  -- skip to location
-        local cv = s + 0
+        local cv = tonumber(s)
         local cc = string.char(cv)
         local p = find("\a\b\f\n\r\t\v", cc, 1, true)
         if p then                       -- special escapes
