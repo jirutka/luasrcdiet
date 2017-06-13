@@ -1,0 +1,277 @@
+= Changelog
+:repo-uri: https://github.com/jirutka/LuaSrcDiet
+:tags: {repo-uri}/releases/tag
+
+
+== link:{tags}/v0.12.1[0.12.1] (2012-04-07) by Kein-Hong Man
+
+* src/optlex.lua (do_lcomment): fixed ending delimiter extraction from long comment leading to 2 extra chars when using --keep option
+* src/optparser.lua (optimize_func1): implemented faster one-pass token deletion
+
+
+== link:{tags}/v0.12.0[0.12.0] (2011-09-13) by Kein-Hong Man
+
+* doc/src/Makefile: updated to generate output in separate directory
+* doc/src/sample.wiki: wiki-like source file sample
+* doc/src/FeaturesAndUsage.wiki, doc/src/LuaSrcDiet.wiki, doc/src/PerformanceStats.wiki, doc/src/TechNotes.wiki: wiki-like documentation source files
+* src/LuaSrcDiet.lua: added --opt-experimental option, made error message a bit less ambiguous
+* src/optlex.lua: implementated experimental optimization for ';' operator
+* src/lparser.lua, src/LuaSrcDiet.lua: adjustments to expose parser tables to optimizers, added statement label table
+* src/optparser.lua: implementated experimental optimization for f("string") type of function calls
+* doc/src/fakewiki.lua: updated from old codebase, added simple table generation with forced align right for numbers
+* samples/experimental1.lua: added for experimental optimizations ';' and f("string")
+* src/optlex.lua: when --opt-eols, remove last EOL too
+* src/plugin/example.lua, src/plugin/html.lua, src/plugin/sloc.lua: added, and fixed past module visibility issues
+* util/onefile.lua: updated to enable embedded plugins
+* Makefile: new Makefile to auto-generate sample files.
+* src/optlex.lua: fixed \ddd shortening bug when a digit follows the \ddd segment for ASCII codes 0-31
+* samples/numbers_on_diet.lua, samples/numbers_original.lua, samples/strings_on_diet.lua, samples/strings_original.lua: added to new samples folder
+* samples/strings_original.lua: added \ddd bug sample entry
+* src/LuaSrcDiet.lua (process_file): added support code for calling and reporting source and binary equivalency
+* src/LuaSrcDiet.lua (source_equiv): initial version of source lexer stream equivalency comparator
+* src/equiv.lua: moved equivalency comparison code here, also made necessary changes to src/LuaSrcDiet.lua, functionality unchanged
+* src/equiv.lua: added support functions for a limited capability to read binary chunks
+* src/equiv.lua: completed binary chunk equivalency compare functionality
+* src/llex.lua, src/lparser.lua, src/optlex.lua, src/optparser.lua, src/LuaSrcDiet.lua: added with module
+semantics fixed
+* util/onefile.lua: utility to insert modules into scripts
+* doc/fakewiki.lua: added C/C++ lexer
+* doc/fakewiki.lua (c_lexer): fixed "while true end" loop typo
+* doc/fakewiki.lua (c_lexer): forgot to close ')' a long 'not('
+line in if condition
+* doc/fakewiki.lua (c_lexer): missing 'end' in for loop due to
+cut-and-paste HTML generation code from lua_lexer
+* doc/fakewiki.lua (c_lexer): incorrect use of 'state' in loop
+* doc/fakewiki.lua (c_lexer): wrong index used, I instead of i
+* doc/fakewiki.lua (c_lexer): state not updated if index same
+* doc/fakewiki.lua (c_lexer): operator matcher forgot [] class
+* doc/fakewiki.lua: clean up code, works
+* llex.lua (read_long_string): deleted a local variable that does nothing
+* doc/LuaSrcDiet.wiki, doc/UsageNotes.wiki: added more static wiki source files
+* doc/Makefile: updated
+* doc/fakewiki.lua: fixed recognition of CamelCase with punctuation suffix
+* doc/Makefile: added technotes.txt entries
+* technotes.txt: removed, using static wiki-like files now
+* doc/LexerNotes.wiki, doc/LexerOptimizations.wiki, doc/LocalVariableOptimization.wiki, doc/OptimizationIdeas.wiki, doc/TechNotes.wiki: source files for technical notes wiki pages
+* plugin/html.lua: added style for numbers
+* doc/: created for documentation text
+* doc/Makefile: to automatically build docs from wiki sources
+* doc/fakewiki.lua: script to generate static wiki pages
+* lparser.lua: adjusted to use less locals, slightly smaller
+
+
+== link:{tags}/v0.11.2[0.11.2] (2008-06-08) by Kein-Hong Man
+
+* optparser.lua: improved local variable collision discrimination
+* technotes.txt: updated notes on local variable collision tests
+* optparser.lua: changed a collision test to be more conservative
+* plugin/sloc.lua, plugin/html.lua: added skeletons for two planned plugins
+* LuaSrcDiet.lua: added early exit options for plugins
+* plugin/example.lua: added early exit for plugin, filenames
+* plugin/sloc.lua: implemented SLOC plugin
+* plugin/html.lua: implemented HTML plugin
+* numbers_original.lua, numbers_on_diet.lua: fixed missing commas
+* LuaSrcDiet.lua: fixed early exit handling for multiple files
+* sample/Makefile: added generator entry for HTML plugin
+* sample/html_sample.html: added HTML plugin sample (html.lua)
+* plugin/example.lua: updated comments
+* technotes.txt: added note on maximum local identifiers needed
+* optparser.lua: minor formatting tweaks
+* plugin/: created directory for plugins
+* plugin/example.lua: created example plugin with specified calls
+* LuaSrcDiet.lua: added --plugin option with plugin handling code
+* LuaSrcDiet.lua: tweaked usage text
+
+
+== link:{tags}/v0.11.1[0.11.1] (2008-06-03) by Kein-Hong Man
+
+* LuaSrcDiet.lua: added --opt-entropy option handling
+* sample/Makefile: improved with an explanation list
+* optparser.lua: added implementation for --opt-entropy
+* technotes.txt: added notes on local variable rename algorithm
+* optparser.lua: bug fix, avoid keywords when generating names
+* test/test_benchmark1.lua: fixed missing die() to error()
+* test/test_benchmark1.lua: added verification of scripts after first loading them using loadstring()
+* LuaSrcDiet.lua, optlex.lua: --detail implementation for strings and numbers, extra info display
+* optlex.lua (do_number): fixed --detail handling where the converted number is no different
+* optparser.lua: updated final local renaming handling
+* optparser.lua: added --details statistics implementation for local variable renaming
+* sample/Makefile: added --details to standard 'all' build
+* LuaSrcDiet.lua, llex.lua, lparser.lua, optlex.lua: fixed some inadvertent or forgotten or unnecessary global variable accesses
+* test/test_benchmark1.lua: coded simple test for loader performance
+* test/LuaSrcDiet_fixed.lua, test/LuaSrcDiet_fixed_.lua: files without shbang first line to satisfy loadstring()
+
+== link:{tags}/v0.11.0[0.11.0] (2008-05-29) by Kein-Hong Man
+
+* lparser.lua: added isself flag to handle "self" specially
+* LuaSrcDiet.lua (dump_parser): added display for 'isself'
+* optparser.lua (optimize): added support for preserving implicit "self" parameter, updated local renaming loop
+* optparser.lua (stats_summary): improved with output stats, clean up
+* LuaSrcDiet.lua (process_file): clean up stats display
+* LuaSrcDiet.lua (process_file): mistake in assigning optional print, mistakenly assigned to lparser.print instead of optparser.print
+* sample/Makefile: added entries for dumping --dump-* samples
+* sample/Makefile: added entries for different optimization options
+* optparser.lua (optimize): finished coding local variable optimizer, to test now
+* optparser.lua (optimize): syntax error, used 'then' instead of 'do'
+* lparser.lua: bug in binopr_*, missing "%" operator, Yueliang bug
+* lparser.lua: added nameref, to track local variable declaration's position properly
+* lparser.lua (searchvar): bug, forgot to fix a "return 1" to return a proper useful id
+* optparser.lua (optimize): fix obj/object handling, no need to compare against nil
+* optparser.lua (optimize): rewrite local-local collision loop using a variable scanleft to track objects left to process
+* optparser.lua (optimize): objects assigned to mark properly with skip and done
+* lparser.lua (adjustlocalvars): change 'rem' assignment if local variables are overlapping
+* optparser.lua (optimize): added handling for 'rem' extension if it is negative
+* sample/Makefile: updated, plus second-generation test, auto-diffed
+* optparser.lua: local variable optimization seems to work
+* optparser.lua: added designs for stats tables
+* optparser.lua (debug_dump_info): beautify variable names
+* optparser.lua: added draft of statistics dump code
+* optparser.lua (optimize): added option as parm for future
+* optparser.lua (debug_dump_info): removed along with associated stuff, moved to main program as a dump option
+* LuaSrcDiet.lua: change name of --dump to --dump-lexer, added --dump-parser
+* LuaSrcDiet.lua (dump_parser): adapted from debug_dump_info
+* optparser.lua: rearranged some code
+* optparser.lua: fixed LETTERS, upper-case is valid also
+* optparser.lua (new_var_name): implemented variable name allocator
+* optparser.lua (preprocess): added preprocess to find first and last accesses of locals
+* lparser.lua (removevars): adapted from original parser, needed for proper local variable activation/deactivation tracking
+* optparser.lua: added some debugging display code
+* lparser.lua (forlist): bug, nvar set to 0 but should be 1, mistake in copy-and-paste
+* lparser.lua: global/local tables seems okay
+* lparser.lua (adjustlocalvars): adjusted activation order
+* LuaSrcDiet.lua: added --keep option to leave license or copyright texts alone
+* technotes.txt: added a list of possible optimizations
+* optparser.lua: updated constant strings to handle name entropy
+* LuaSrcDiet.lua: added --none option for zero optimizations
+* LuaSrcDiet.lua: added --details option (flag only) for display of extra or useful optimization output information
+* LuaSrcDiet.lua: enabled code for --opt-locals
+* LuaSrcDiet.lua: added code to call parser, parser optimizer
+* lparser.lua: added tables for deferred local variable activation
+* lparser.lua (adjustlocalvars): adapted from original parser, needed for deferred local variable activation, updated various functions that uses it as well
+* lparser.lua (init): off by 1 error for j index, 0 should be 1
+* lparser.lua: bug in unopr, missing "#" lookup, Yueliang bug
+* optparser.lua (optimize): added debug code
+* lparser.lua: working better
+* lparser.lua: fitted with new token retrieval scheme using tables
+* llex.lua: simplified locals declaration
+* sample/Makefile: added lparser.lua and optparser.lua for testing
+* lparser.lua: restored some earlier line numbering code
+* lparser.lua (init): rewrote token retrieval properly to take into consideration non-grammar tokens and fake constants
+* lparser.lua: removed unused token peeking code, added table init
+* lparser.lua: add local variable tracking code
+* lparser.lua: coded local/global variable tracking code
+* lparser.lua (singlevar): bug, tried to local globalinfo[id]
+* lparser.lua (init): rename mistake, toklist should be tokorig
+* lparser.lua (init): indexing mistake, target, i should be j
+* lparser.lua: passes parsing of LuaSrcDiet.lua
+
+
+== link:{tags}/v0.10.2[0.10.2] (2008-05-27) by Kein-Hong Man
+
+* sample/numbers_original.lua: adding number samples
+* optlex.lua (do_number): fixed trying to compare string variable and constant number in if statements
+* optlex.lua (do_number): mistake in scientific number regex, +/- sign must be optional
+* optlex.lua (do_number): mistake in taking substring, forgot first position index parameter
+* sample/numbers_original.lua: completed basic samples
+* optlex.lua (do_number): mostly works
+* optlex.lua (do_number): coded number optimizer
+* sample/strings_original.lua: adding string samples
+* sample/Makefile: added entry to build string samples
+* optlex.lua (do_string): bug, used string.byte instead of string.char in /ddd tests
+* LuaSrcDiet.lua: bug, missing handling for --opt*, --noopt* optimization options
+* optlex.lua (do_string): bug, incomplete code for handling \ddd for \\ and translation to literal char
+* sample/strings_original.lua: completed basic samples
+* optlex.lua (do_string): mostly works
+* lparser.lua: added, from Yueliang 0.4.0, removed log() calls
+* optparser.lua: added placeholder, parser-based optimizer file
+* test/test_optparser.lua: placeholder for optparser.lua testing
+* optlex.lua (optimize): fixed missing parameter for toklnlist
+* optlex.lua (do_string): forgot to initialize c_delim, c_ndelim to zero
+* optlex.lua (do_lstring): bad regex (missing '%' to escape '['), mistake in editing
+* optlex.lua (do_lstring, do_lcomment): attempted to use p from a string.find when it is nil
+* optlex.lua (do_lstring, do_lcomment): rearranged to allow a nil position variable p to break out of loop
+* optlex.lua (do_string): missing i update for \<delim> case
+* LuaSrcDiet.lua: enabled relevant command-line options
+* optlex.lua (do_string, do_lstring): seem to work
+* llex.lua: added tokln table for keeping line numbers
+* optlex.lua: added management of token line number list
+* optlex.lua (do_lstring): changed trailing whitespace warning message to include approximate line number
+* LuaSrcDiet.lua (process_file): adjusted warning handling
+* optlex.lua: comment updates, minor improvements
+* LuaSrcDiet.lua (process_file): added warning for when settings cause some CRLF or LFCR line endings to still exist
+* optlex.lua (do_string): coded string optimizer
+* optlex.lua: updated notes for number optimization
+* optlex.lua (do_comment): coded short comment optimizer
+* optlex.lua (do_lcomment): coded long comment optimizer
+* optlex.lua (do_lstring): coded long string optimizer
+
+
+== link:{tags}/v0.10.1[0.10.1] (2008-05-25) by Kein-Hong Man
+
+* LuaSrcDiet.lua (process_file): added code to print statistics
+* LuaSrcDiet.lua: set back executable flag, added #! line
+* sample/: added directory for samples
+* sample/Makefile: braindead Makefile to create samples, statistics.txt and *.lua files are Makefile-generated
+* LuaSrcDiet.lua: formatting adjustments for statistics output
+* LuaSrcDiet.lua: added version information option
+* optlex.lua (optimize): done pass 2 (opt-eols) and tested
+* LuaSrcDiet.lua: removed non-functional options for now
+* LuaSrcDiet.lua: updated option description for --opt-eols
+* LuaSrcDiet.lua: added function to save data
+* LuaSrcDiet.lua (process_file): preliminary implementation
+* LuaSrcDiet.lua (main): bug, avoid assigning option.OUTPUT_FILE if it is not set
+* technotes.txt: updated TK_OP-TK_OP behaviour, and behaviour of '-' followed by comments
+* optlex.lua (checkpair): fixed TK_OP-TK_OP behaviour
+* optlex.lua (optimize): fixed bug, option[] lookup wrong
+* optlex.lua (optimize): added option forcing for --opt-eols
+* optlex.lua: added support function to repack tokens
+* optlex.lua (optimize): fixed bug, don't allow reinterpret if current token deleted
+* optlex.lua: preliminary working version with pass 1 working, optimization calls to be done, pass 2 to be done
+* optlex.lua: support functions, pass 1/2 skeleton
+* technotes.txt: updated to reflect optlex.lua work
+* optlex.lua: added prototypes for optimization functions
+* optlex.lua: completed pass 1 of lexer-based optimization
+* optlex.lua: create file for lexer-based optimization code
+* test/test_optlex.lua: created file for optlex.lua testing
+* technotes.txt: updated, cut out some comments from llex.lua
+* optlex.lua: coding lexer-based optimization code
+* LuaSrcDiet.lua (main): fixed a missing return flag
+* LuaSrcDiet.lua: coded file loader, token dumper
+* LuaSrcDiet.lua: coded statistics dump feature
+* technotes.txt: new file detailing optimization tech notes
+* LuaSrcDiet.lua: coded messages, part of options handling
+* LuaSrcDiet.lua: coded argument handling
+* llex.lua: converted lexer to LuaSrcDiet needs
+* test/test_llex.lua: copied over from Yueliang for testing
+* llex.lua (init): reset token, seminfo tables at initialization
+* test/test_llex.lua: updated for LuaSrcDiet's lexer, testing
+* llex.lua (read_long_string): re-insert is_str parameter, needed for error message
+* test/test_llex.lua: adjusted test cases, all tests passes, except a test for accented character identifiers, fails for now
+* lparser.lua: remove first, work on lexer features first
+* LuaSrcDiet.lua: ported over file handling code
+* LuaSrcDiet.lua: created file for work on 5.1 version
+* llex.lua: added 5.1.x lexer from Yueliang, to be worked on
+* lparser.lua: added 5.1.x parser skeleton from Yueliang, to be worked on
+* 5.0/: created directory for old 5.0 scripts to make way for new 5.1 work
+* 5.0/LuaSrcDiet.lua, 5.0/LuaSrcDiet_.lua, 5.0/LSDTest.lua: moved from root directory
+
+
+== link:{tags}/v0.9.1[0.9.1] (2005-08-16) by Kein-Hong Man
+
+* LuaSrcDiet.lua (llex:lex): fixed buff init bug
+* LuaSrcDiet.lua (DumpTokens): added --dump option
+* LuaSrcDiet.lua: adjusted shellbang
+
+
+== link:{tags}/v0.9.0[0.9.0] (2005-02-15) by Kein-Hong Man
+
+* LuaSrcDiet.lua: preliminary functional script
+* LuaSrcDiet.lua: preliminary feature-complete
+* LuaSrcDiet.lua: finalized for preliminary release
+* LuaSrcDiet.lua: done modifying llex.lua for LuaSrcDiet
+* LSDTest.lua: created
+
+
+== link:{tags}/v0.0.0[0.0.0] (2005-01-14) by Kein-Hong Man
+
+* started project
