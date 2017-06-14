@@ -142,7 +142,7 @@ function M.source(z, dat)
   -- Successful comparison if end is reached with no borks.
 end
 
---- Tests binary chunk equivalence.
+--- Tests binary chunk equivalence (only for PUC Lua 5.1).
 --
 -- @tparam string z
 -- @tparam string dat

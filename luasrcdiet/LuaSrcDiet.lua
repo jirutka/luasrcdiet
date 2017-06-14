@@ -29,6 +29,12 @@ local optparser = require "luasrcdiet.optparser"
 local equiv = require "luasrcdiet.equiv"
 local plugin
 
+local LUA_VERSION = _VERSION:match(" (5%.[123])$") or "5.1"
+
+-- Is --opt-binequiv available for this Lua version?
+local BIN_EQUIV_AVAIL = LUA_VERSION == "5.1" and not package.loaded.jit
+
+
 ---------------------- Messages and textual data ----------------------
 
 local MSG_TITLE = [[
@@ -84,7 +90,7 @@ local OPTION = [[
 --opt-locals,'optimize local variable names'
 --opt-entropy,'tries to reduce symbol entropy of locals'
 --opt-srcequiv,'insist on source (lexer stream) equivalence'
---opt-binequiv,'insist on binary chunk equivalence'
+--opt-binequiv,'insist on binary chunk equivalence (only for PUC Lua 5.1)'
 --opt-experimental,'apply experimental optimizations'
 ]]
 
@@ -92,26 +98,27 @@ local OPTION = [[
 local DEFAULT_CONFIG = [[
   --opt-comments --opt-whitespace --opt-emptylines
   --opt-numbers --opt-locals
-  --opt-srcequiv --opt-binequiv
+  --opt-srcequiv --noopt-binequiv
 ]]
 -- Override configurations: MUST explicitly enable/disable everything.
 local BASIC_CONFIG = [[
   --opt-comments --opt-whitespace --opt-emptylines
   --noopt-eols --noopt-strings --noopt-numbers
   --noopt-locals --noopt-entropy
-  --opt-srcequiv --opt-binequiv
+  --opt-srcequiv --noopt-binequiv
 ]]
 local MAXIMUM_CONFIG = [[
   --opt-comments --opt-whitespace --opt-emptylines
   --opt-eols --opt-strings --opt-numbers
   --opt-locals --opt-entropy
-  --opt-srcequiv --opt-binequiv
-]]
+  --opt-srcequiv
+]] .. (BIN_EQUIV_AVAIL and ' --opt-binequiv' or ' --noopt-binequiv')
+
 local NONE_CONFIG = [[
   --noopt-comments --noopt-whitespace --noopt-emptylines
   --noopt-eols --noopt-strings --noopt-numbers
   --noopt-locals --noopt-entropy
-  --opt-srcequiv --opt-binequiv
+  --opt-srcequiv --noopt-binequiv
 ]]
 
 local DEFAULT_SUFFIX = "_"      -- default suffix for file renaming
@@ -451,7 +458,9 @@ local function process_file(srcfl, destfl)
   -- Test source and binary chunk equivalence.
   equiv.init(option, llex, warn)
   equiv.source(z, dat)
-  equiv.binary(z, dat)
+  if BIN_EQUIV_AVAIL then
+    equiv.binary(z, dat)
+  end
   local smsg = "before and after lexer streams are NOT equivalent!"
   local bmsg = "before and after binary chunks are NOT equivalent!"
   -- for reporting, die if option was selected, else just warn
@@ -466,7 +475,7 @@ local function process_file(srcfl, destfl)
   end
   if warn.BIN_EQUIV then
     if option["opt-binequiv"] then die(bmsg) end
-  else
+  elseif BIN_EQUIV_AVAIL then
     print("*** BINEQUIV: binary chunks are sort of equivalent")
     print()
   end
@@ -641,6 +650,9 @@ local function main()
     print(MSG_TITLE..MSG_USAGE); return true
   elseif option.VERSION then
     print(MSG_TITLE); return true
+  end
+  if option["opt-binequiv"] and not BIN_EQUIV_AVAIL then
+    die("--opt-binequiv is available only for PUC Lua 5.1!")
   end
   if #fspec > 0 then
     if #fspec > 1 and option.OUTPUT_FILE then
