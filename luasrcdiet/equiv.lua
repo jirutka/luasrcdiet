@@ -152,43 +152,20 @@ function M.binary(z, dat)
   local TNUMBER  = 3
   local TSTRING  = 4
 
+  -- sizes of data types
+  local endian
+  local sz_int
+  local sz_sizet
+  local sz_inst
+  local sz_number
+  local getint
+  local getsizet
+
   -- Marks and optionally reports non-equivalence.
   local function bork(msg)
     if option.DETAILS then print("BINEQUIV: "..msg) end
     warn.BIN_EQUIV = true
   end
-
-  -- Removes shbang line so that load runs.
-  local function zap_shbang(s)
-    local shbang = match(s, "^(#[^\r\n]*\r?\n?)")
-    if shbang then                      -- cut out shbang
-      s = sub(s, #shbang + 1)
-    end
-    return s
-  end
-
-  -- Attempt to compile, then dump to get binary chunk string.
-  local cz = load(zap_shbang(z), "z")
-  if not cz then
-    bork("failed to compile original sources for binary chunk comparison")
-    return
-  end
-  local cdat = load(zap_shbang(dat), "z")
-  if not cdat then
-    bork("failed to compile compressed result for binary chunk comparison")
-  end
-  -- if load() works, dump assuming string.dump() is error-free
-  local c1 = { i = 1, dat = dump(cz) }
-  c1.len = #c1.dat
-  local c2 = { i = 1, dat = dump(cdat) }
-  c2.len = #c2.dat
-
-  ---- Support functions to handle binary chunk reading ----
-
-  local endian,
-        sz_int, sz_sizet,               -- sizes of data types
-        sz_inst, sz_number,
-        getint, getsizet
 
   -- Checks if bytes exist.
   local function ensure(c, sz)
@@ -429,6 +406,34 @@ function M.binary(z, dat)
     return true
   end
 
+  -- Removes shbang line so that load runs.
+  local function zap_shbang(s)
+    local shbang = match(s, "^(#[^\r\n]*\r?\n?)")
+    if shbang then                      -- cut out shbang
+      s = sub(s, #shbang + 1)
+    end
+    return s
+  end
+
+  -- Attempt to compile, then dump to get binary chunk string.
+  local cz = load(zap_shbang(z), "z")
+  if not cz then
+    bork("failed to compile original sources for binary chunk comparison")
+    return
+  end
+
+  local cdat = load(zap_shbang(dat), "z")
+  if not cdat then
+    bork("failed to compile compressed result for binary chunk comparison")
+  end
+
+  -- if load() works, dump assuming string.dump() is error-free
+  local c1 = { i = 1, dat = dump(cz) }
+  c1.len = #c1.dat
+
+  local c2 = { i = 1, dat = dump(cdat) }
+  c2.len = #c2.dat
+
   -- Parse binary chunks to verify equivalence.
   -- * For headers, handle sizes to allow a degree of flexibility.
   -- * Assume a valid binary chunk is generated, since it was not
@@ -444,6 +449,7 @@ function M.binary(z, dat)
   sz_number = getbyte(c1)
   skip(c1)                      -- skip integral flag
   skip(c2, 12)                  -- skip other header (assume similar)
+
   if endian == 1 then           -- set for endian sensitive data we need
     getint   = getint_l
     getsizet = getsizet_l
@@ -452,6 +458,7 @@ function M.binary(z, dat)
     getsizet = getsizet_b
   end
   getfunc(c1, c2)               -- get prototype at root
+
   if c1.i ~= c1.len + 1 then
     bork("inconsistent binary chunk1"); return
   elseif c2.i ~= c2.len + 1 then

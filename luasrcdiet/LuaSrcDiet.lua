@@ -537,7 +537,6 @@ end
 ---------------------------- Main functions ---------------------------
 
 local arg = {...}  -- program arguments
-local fspec = {}
 set_options(DEFAULT_CONFIG)     -- set to default options at beginning
 
 --- Does per-file handling, ship off to tasks.
@@ -578,6 +577,7 @@ end
 
 --- The main function.
 local function main()
+  local fspec = {}
   local argn, i = #arg, 1
   if argn == 0 then
     option.HELP = true

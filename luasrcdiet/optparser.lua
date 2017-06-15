@@ -213,12 +213,12 @@ local function stats_summary(globaluniq, localuniq, afteruniq, option)
   local fmt = string.format
   local opt_details = option.DETAILS
   if option.QUIET then return end
-  local uniq_g , uniq_li, uniq_lo, uniq_ti, uniq_to,  -- stats needed
-        decl_g, decl_li, decl_lo, decl_ti, decl_to,
-        token_g, token_li, token_lo, token_ti, token_to,
-        size_g, size_li, size_lo, size_ti, size_to
-    = 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+
+  local uniq_g , uniq_li, uniq_lo = 0, 0, 0
+  local decl_g, decl_li, decl_lo = 0, 0, 0
+  local token_g, token_li, token_lo = 0, 0, 0
+  local size_g, size_li, size_lo = 0, 0, 0
+
   local function avg(c, l)              -- safe average function
     if c == 0 then return 0 end
     return l / c
@@ -242,14 +242,14 @@ local function stats_summary(globaluniq, localuniq, afteruniq, option)
     token_lo = token_lo + uniq.token
     size_lo = size_lo + uniq.size
   end
-  uniq_ti = uniq_g + uniq_li
-  decl_ti = decl_g + decl_li
-  token_ti = token_g + token_li
-  size_ti = size_g + size_li
-  uniq_to = uniq_g + uniq_lo
-  decl_to = decl_g + decl_lo
-  token_to = token_g + token_lo
-  size_to = size_g + size_lo
+  local uniq_ti = uniq_g + uniq_li
+  local decl_ti = decl_g + decl_li
+  local token_ti = token_g + token_li
+  local size_ti = size_g + size_li
+  local uniq_to = uniq_g + uniq_lo
+  local decl_to = decl_g + decl_lo
+  local token_to = token_g + token_lo
+  local size_to = size_g + size_lo
 
   -- Detailed stats: global list
   if opt_details then
@@ -263,62 +263,69 @@ local function stats_summary(globaluniq, localuniq, afteruniq, option)
         return v1.size > v2.size
       end
     )
-    local tabf1, tabf2 = "%8s%8s%10s  %s", "%8d%8d%10.2f  %s"
-    local hl = string.rep("-", 44)
-    print("*** global variable list (sorted by size) ***\n"..hl)
-    print(fmt(tabf1, "Token",  "Input", "Input", "Global"))
-    print(fmt(tabf1, "Count", "Bytes", "Average", "Name"))
-    print(hl)
-    for i = 1, #sorted do
-      local uniq = sorted[i]
-      print(fmt(tabf2, uniq.token, uniq.size, avg(uniq.token, uniq.size), uniq.name))
-    end
-    print(hl)
-    print(fmt(tabf2, token_g, size_g, avg(token_g, size_g), "TOTAL"))
-    print(hl.."\n")
 
-  -- Detailed stats: local list
-    local tabf1, tabf2 = "%8s%8s%8s%10s%8s%10s  %s", "%8d%8d%8d%10.2f%8d%10.2f  %s"
-    local hl = string.rep("-", 70)
-    print("*** local variable list (sorted by allocation order) ***\n"..hl)
-    print(fmt(tabf1, "Decl.", "Token",  "Input", "Input", "Output", "Output", "Global"))
-    print(fmt(tabf1, "Count", "Count", "Bytes", "Average", "Bytes", "Average", "Name"))
-    print(hl)
-    for i = 1, #varlist do  -- iterate according to order assigned
-      local name = varlist[i]
-      local uniq = afteruniq[name]
-      local old_t, old_s = 0, 0
-      for j = 1, #localinfo do  -- find corresponding old names and calculate
-        local obj = localinfo[j]
-        if obj.name == name then
-          old_t = old_t + obj.xcount
-          old_s = old_s + obj.xcount * #obj.oldname
-        end
+    do
+      local tabf1, tabf2 = "%8s%8s%10s  %s", "%8d%8d%10.2f  %s"
+      local hl = string.rep("-", 44)
+      print("*** global variable list (sorted by size) ***\n"..hl)
+      print(fmt(tabf1, "Token",  "Input", "Input", "Global"))
+      print(fmt(tabf1, "Count", "Bytes", "Average", "Name"))
+      print(hl)
+      for i = 1, #sorted do
+        local uniq = sorted[i]
+        print(fmt(tabf2, uniq.token, uniq.size, avg(uniq.token, uniq.size), uniq.name))
       end
-      print(fmt(tabf2, uniq.decl, uniq.token, old_s, avg(old_t, old_s),
-                uniq.size, avg(uniq.token, uniq.size), name))
+      print(hl)
+      print(fmt(tabf2, token_g, size_g, avg(token_g, size_g), "TOTAL"))
+      print(hl.."\n")
     end
-    print(hl)
-    print(fmt(tabf2, decl_lo, token_lo, size_li, avg(token_li, size_li),
-              size_lo, avg(token_lo, size_lo), "TOTAL"))
-    print(hl.."\n")
+
+    -- Detailed stats: local list
+    do
+      local tabf1, tabf2 = "%8s%8s%8s%10s%8s%10s  %s", "%8d%8d%8d%10.2f%8d%10.2f  %s"
+      local hl = string.rep("-", 70)
+      print("*** local variable list (sorted by allocation order) ***\n"..hl)
+      print(fmt(tabf1, "Decl.", "Token",  "Input", "Input", "Output", "Output", "Global"))
+      print(fmt(tabf1, "Count", "Count", "Bytes", "Average", "Bytes", "Average", "Name"))
+      print(hl)
+      for i = 1, #varlist do  -- iterate according to order assigned
+        local name = varlist[i]
+        local uniq = afteruniq[name]
+        local old_t, old_s = 0, 0
+        for j = 1, #localinfo do  -- find corresponding old names and calculate
+          local obj = localinfo[j]
+          if obj.name == name then
+            old_t = old_t + obj.xcount
+            old_s = old_s + obj.xcount * #obj.oldname
+          end
+        end
+        print(fmt(tabf2, uniq.decl, uniq.token, old_s, avg(old_t, old_s),
+                  uniq.size, avg(uniq.token, uniq.size), name))
+      end
+      print(hl)
+      print(fmt(tabf2, decl_lo, token_lo, size_li, avg(token_li, size_li),
+                size_lo, avg(token_lo, size_lo), "TOTAL"))
+      print(hl.."\n")
+    end
   end--if opt_details
 
   -- Display output
-  local tabf1, tabf2 = "%-16s%8s%8s%8s%8s%10s", "%-16s%8d%8d%8d%8d%10.2f"
-  local hl = string.rep("-", 58)
-  print("*** local variable optimization summary ***\n"..hl)
-  print(fmt(tabf1, "Variable",  "Unique", "Decl.", "Token", "Size", "Average"))
-  print(fmt(tabf1, "Types", "Names", "Count", "Count", "Bytes", "Bytes"))
-  print(hl)
-  print(fmt(tabf2, "Global", uniq_g, decl_g, token_g, size_g, avg(token_g, size_g)))
-  print(hl)
-  print(fmt(tabf2, "Local (in)", uniq_li, decl_li, token_li, size_li, avg(token_li, size_li)))
-  print(fmt(tabf2, "TOTAL (in)", uniq_ti, decl_ti, token_ti, size_ti, avg(token_ti, size_ti)))
-  print(hl)
-  print(fmt(tabf2, "Local (out)", uniq_lo, decl_lo, token_lo, size_lo, avg(token_lo, size_lo)))
-  print(fmt(tabf2, "TOTAL (out)", uniq_to, decl_to, token_to, size_to, avg(token_to, size_to)))
-  print(hl.."\n")
+  do
+    local tabf1, tabf2 = "%-16s%8s%8s%8s%8s%10s", "%-16s%8d%8d%8d%8d%10.2f"
+    local hl = string.rep("-", 58)
+    print("*** local variable optimization summary ***\n"..hl)
+    print(fmt(tabf1, "Variable",  "Unique", "Decl.", "Token", "Size", "Average"))
+    print(fmt(tabf1, "Types", "Names", "Count", "Count", "Bytes", "Bytes"))
+    print(hl)
+    print(fmt(tabf2, "Global", uniq_g, decl_g, token_g, size_g, avg(token_g, size_g)))
+    print(hl)
+    print(fmt(tabf2, "Local (in)", uniq_li, decl_li, token_li, size_li, avg(token_li, size_li)))
+    print(fmt(tabf2, "TOTAL (in)", uniq_ti, decl_ti, token_ti, size_ti, avg(token_ti, size_ti)))
+    print(hl)
+    print(fmt(tabf2, "Local (out)", uniq_lo, decl_lo, token_lo, size_lo, avg(token_lo, size_lo)))
+    print(fmt(tabf2, "TOTAL (out)", uniq_to, decl_to, token_to, size_to, avg(token_to, size_to)))
+    print(hl.."\n")
+  end
 end
 
 --- Does experimental optimization for f("string") statements.
@@ -353,45 +360,50 @@ local function optimize_func1()
   --   so any other optimization is done after processing locals
   --   (of course, we can also lex the source data again...).
   -- * Faster one-pass token deletion.
-  local i, dst, idend = 1, 1, #tokpar
   local del_list2 = {}
-  while dst <= idend do         -- process parser tables
-    if del_list[i] then         -- found a token to delete?
-      del_list2[xrefpar[i]] = true
-      i = i + 1
-    end
-    if i > dst then
-      if i <= idend then        -- shift table items lower
-        tokpar[dst] = tokpar[i]
-        seminfopar[dst] = seminfopar[i]
-        xrefpar[dst] = xrefpar[i] - (i - dst)
-        statinfo[dst] = statinfo[i]
-      else                      -- nil out excess entries
-        tokpar[dst] = nil
-        seminfopar[dst] = nil
-        xrefpar[dst] = nil
-        statinfo[dst] = nil
+  do
+    local i, dst, idend = 1, 1, #tokpar
+    while dst <= idend do         -- process parser tables
+      if del_list[i] then         -- found a token to delete?
+        del_list2[xrefpar[i]] = true
+        i = i + 1
       end
+      if i > dst then
+        if i <= idend then        -- shift table items lower
+          tokpar[dst] = tokpar[i]
+          seminfopar[dst] = seminfopar[i]
+          xrefpar[dst] = xrefpar[i] - (i - dst)
+          statinfo[dst] = statinfo[i]
+        else                      -- nil out excess entries
+          tokpar[dst] = nil
+          seminfopar[dst] = nil
+          xrefpar[dst] = nil
+          statinfo[dst] = nil
+        end
+      end
+      i = i + 1
+      dst = dst + 1
     end
-    i = i + 1
-    dst = dst + 1
   end
-  local i, dst, idend = 1, 1, #toklist
-  while dst <= idend do         -- process lexer tables
-    if del_list2[i] then        -- found a token to delete?
-      i = i + 1
-    end
-    if i > dst then
-      if i <= idend then        -- shift table items lower
-        toklist[dst] = toklist[i]
-        seminfolist[dst] = seminfolist[i]
-      else                      -- nil out excess entries
-        toklist[dst] = nil
-        seminfolist[dst] = nil
+
+  do
+    local i, dst, idend = 1, 1, #toklist
+    while dst <= idend do         -- process lexer tables
+      if del_list2[i] then        -- found a token to delete?
+        i = i + 1
       end
+      if i > dst then
+        if i <= idend then        -- shift table items lower
+          toklist[dst] = toklist[i]
+          seminfolist[dst] = seminfolist[i]
+        else                      -- nil out excess entries
+          toklist[dst] = nil
+          seminfolist[dst] = nil
+        end
+      end
+      i = i + 1
+      dst = dst + 1
     end
-    i = i + 1
-    dst = dst + 1
   end
 end
 

@@ -121,7 +121,6 @@ end
 ----------------------------------------------------------------------
 
 local function syntaxerror(msg)
-  local tok = tok
   if tok ~= "<number>" and tok ~= "<string>" then
     if tok == "<name>" then tok = seminfo end
     tok = "'"..tok.."'"
@@ -499,17 +498,6 @@ local function recfield(cc)
   end
   checknext("=")
   expr(val)
-end
-
-----------------------------------------------------------------------
--- emit a set list instruction if enough elements (LFIELDS_PER_FLUSH)
--- * note: retained in this skeleton because it modifies cc.v.k
--- * used in constructor()
-----------------------------------------------------------------------
-
-local function closelistfield(cc)
-  if cc.v.k == "VVOID" then return end  -- there is no list item
-  cc.v.k = "VVOID"
 end
 
 ----------------------------------------------------------------------
@@ -908,11 +896,9 @@ end
 
 local function localfunc()
   -- localfunc -> NAME body
-  local v, b = {}
   new_localvar(str_checkname())
-  v.k = "VLOCAL"
   adjustlocalvars(1)
-  body(b, false, ln)
+  body(nil, false, ln)
 end
 
 ----------------------------------------------------------------------

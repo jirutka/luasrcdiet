@@ -235,9 +235,9 @@ local function do_number(i)
       y = ".0"  -- degenerate .000 to .0
     else
       -- now, q > 0 holds and p is a number
-      local v = #match(q, "0*$")  -- remove trailing zeros
-      if v > 0 then
-        q = sub(q, 1, #q - v)
+      local zeros_cnt = #match(q, "0*$")  -- remove trailing zeros
+      if zeros_cnt > 0 then
+        q = sub(q, 1, #q - zeros_cnt)
       end
       -- if p > 0, nothing else we can do to simplify p.q case
       if tonumber(p) > 0 then
@@ -370,7 +370,7 @@ local function do_string(I)
         j = i + 1 + #s                  -- skip to location
         local cv = tonumber(s)
         local cc = string.char(cv)
-        local p = find("\a\b\f\n\r\t\v", cc, 1, true)
+        p = find("\a\b\f\n\r\t\v", cc, 1, true)
         if p then                       -- special escapes
           s = "\\"..sub("abfnrtv", p, p)
         elseif cv < 32 then             -- normalized \ddd
@@ -826,7 +826,7 @@ function M.optimize(option, toklist, semlist, toklnlist)
       i = 3
     end
     while true do
-      tok, info = stoks[i], sinfos[i]
+      tok = stoks[i]
 
       if tok == "TK_EOS" then           -- end of stream/pass
         break
