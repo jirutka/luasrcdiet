@@ -1,0 +1,54 @@
+sudo: false
+dist: trusty
+language: minimal
+env:
+  global:
+    - secure: LoM21xuy0UNvioPjSp+2nW3YjegkLh8HnWVZsas+8O1gQ2VDsx+yfiozklCs+/viQIAlg+jW2sG6ofM2SKZUGL7q1Mk4olySeZjtFooY5W8DUu/WY054mOG67L9VhiITrH25uKKOkj7UXPCq8kZy9Vw3QUb4xRNqECTGCOEHzWy9jbszDd6KaQuJWm15xOKaK446niHVF3sSeM+9yqwxz0EDNjocykvlfEGdzfS2lLJNggm7esIKwR2YS4NlROP1P2uN5eoEMi6CAR85lMoCRVYK1LVhJYvw262WCPyQGr8wTonY3r/xJFHRd4LR5rTgJw1W6CxVxUZM/X1ELe+gythU+XY/GlYFfCDYsrafWgVLd57OfDjs/1adKMEVz+ndFa4B5iPNaeNELUcBa/OBYradbqvQQ1qhhmXXjgMXoVLCwxNCl1miCfD+yAESwxqtJn1r9NmwfgpIGjWu8uLNOigzKXjNfGC/uLNQsDD4oE1XyN+vgNJNfQ2kULNzyt9UdjkXSklLodFqVoNnhzl2UJ7QUyrA+5mOssvEfPNls34mjpYRa75ODLoHVy3TK/P9t+RoNgXlMQfztBKXYVdSGfBlfmB+vJ+HeXwN2WrxU1+xYYskUksqR+xk7IGkJP6Ct6v4ZY+X1SgKjLFGrKpt10tNfHVBVfG4zPin1P91fPs=  # GH_TOKEN
+    - secure: Iu4ejVVXH9KYYqLp1I1Rw9X6Dn2+HDIncQRu0WOWm+9Vy4eOeZKms1pSYXBTlbXX4vFuiCx6gv8YTiLLZKM4N6fWG7sOH7g0NPjnDUamUWThHWnH6S3CocoYiIlItIH6L10wajykZY7WJvzRLL+xQLp1+GQotaF+e2yFDwLnx4ho+QsnrOCRC6fOVDM8qhUmXqH5YTg8JuIUS8OqhRIek4ihF6carN64Pq9W9e5QyHAbNwCQhMtN+U50BQkzDbTv9GEOdV+2ic/H3fEwfVrCpOMQAl6wGsJNmUvjZIbvSq80E8AgAD1OrkLmcn5QyXZ7WMglYKNEcJigJbldKkbTd4klQoN8tr6XpvPS7hKE14/d2xDoRZfF0xFruQxPoqdBwlqM4FlsQDhI+IwoUQcAoZ4P92o9p3gu/p0wthXdzFlw4DC7UIHz4mTOXTrp7Vrm02xnhyzCO2FPQ8zU0EDK46F5lC8Yjfm+v9ECvVpG93djWbCYIK25LTgBUfVAjXgp9neTBZx1hm1s5uFjb+YGkoo5wSLfERXSOm0/IIi4To0YxIWPR6MDHs/qIU3NJ67ZwuJw9acnJAxkpBw2eN4V1r0tnV/j49qVPhXID4q8Uh7NOX5DXflkhl2YJHw0/83VpON7akgkW9Gty0OdX3mniNsU3PC1IJOtavQ3uuVX7o0=  # LUAROCKS_KEY
+  matrix:
+    #- LUA_VERSION=luajit-2.0
+    #- LUA_VERSION=luajit-2.1
+    - LUA_VERSION=lua-5.1
+    - LUA_VERSION=lua-5.2
+    - LUA_VERSION=lua-5.3
+cache:
+  directories:
+    - .venv
+install:
+  - script/bootstrap
+script:
+  - script/test
+
+jobs:
+  include:
+    # Deploy documentation to GitHub Pages.
+    - stage: deploy
+      env:
+        - NAME="Deploy docs"
+        - LUA_VERSION=lua-5.3
+      install:
+        - script/bootstrap
+      script:
+        - script/build-docs
+      deploy:
+        provider: script
+        script: script/deploy-docs
+        skip_cleanup: true
+        on:
+          branch: master
+
+    # Deploy Lua packages to LuaRocks.
+    - stage: deploy
+      env:
+        - NAME="Deploy rocks"
+        - LUA_VERSION=lua-5.3
+      install:
+        - script/bootstrap
+      script: skip
+      deploy:
+        provider: script
+        script: script/deploy-rocks
+        skip_cleanup: true
+        all_branches: true
+        on:
+          condition: '"$TRAVIS_BRANCH" = master || -n "$TRAVIS_TAG"'
