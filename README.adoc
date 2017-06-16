@@ -7,7 +7,7 @@ This is revival of LuaSrcDiet originally written by mailto:keinhong@gmail.com[Ke
 
 == Introduction
 
-LuaSrcDiet is a utility written in Lua for the purpose of turning Lua 5.1 source code like this:
+LuaSrcDiet is a utility written in Lua for the purpose of turning Lua 5.1+ source code like this:
 
 [source, lua]
 ----
@@ -38,9 +38,9 @@ end
 return r.floor(e/8)end
 ----
 
-and still be able to run normally under standard Lua 5.1.
+and still be able to run normally under standard Lua 5.1+ or LuaJIT 2.0+.
 
-LuaSrcDiet reduces the size of https://www.lua.org/[Lua] 5.1.x source files by aggressively removing all unnecessary whitespace and comments, optimizing constant tokens, and renaming local variables to shorter names.
+LuaSrcDiet reduces the size of https://www.lua.org/[Lua] 5.1+ source files by aggressively removing all unnecessary whitespace and comments, optimizing constant tokens, and renaming local variables to shorter names.
 For example, LuaSrcDiet squeezes its own sources from 156 kiB down to 42 kiB.
 Further bzip2 or lzma compression can bring the file size further down to under 13 kiB.
 That’s _12×_ reduction in size, if you don’t mind the decompression and compilation time.
@@ -70,6 +70,15 @@ Owing to the use of LuaSrcDiet among certain things like WoW add-ons, the follow
 * Obfuscation cannot be defined precisely so we are dealing with subjective judgements.
   I think it’s fair if people want to apply a mild deterrent against casual plagiarism.
   Those desperate for original sources should instead turn their energies towards Open Source or Free Software.
+
+
+== Changes in This Fork
+
+* Code-base updated to be compatible with Lua 5.1–5.3.
+* Added support for processing Lua 5.2–5.3 code (except binary equivalence checking).
+* Published on https://luarocks.org/[LuaRocks] (the Lua package manager).
+* Documentation comments converted to https://github.com/stevedonovan/LDoc[LDoc’s] format (except lparser.lua).
+* Documentation wiki pages converted to AsciiDoc.
 
 
 == Documentation
