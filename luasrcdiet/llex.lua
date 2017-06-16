@@ -222,7 +222,7 @@ function M.llex()
   while true do--outer
     local i = I
     -- inner loop allows break to be used to nicely section tests
-    while true do--inner
+    while true do --luacheck: ignore 512
 
       local p, _, r = find(z, "^([_%a][_%w]*)", i)
       if p then

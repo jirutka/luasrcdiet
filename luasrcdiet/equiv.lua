@@ -19,7 +19,7 @@
 ----
 local string = require "string"
 
-local load = loadstring or load
+local load = loadstring or load  --luacheck: ignore 113
 local sub = string.sub
 local match = string.match
 local dump = string.dump
@@ -147,7 +147,7 @@ end
 -- @tparam string z
 -- @tparam string dat
 function M.binary(z, dat)
-  local TNIL     = 0  --luacheck: ignore
+  local TNIL     = 0  --luacheck: ignore 211
   local TBOOLEAN = 1
   local TNUMBER  = 3
   local TSTRING  = 4

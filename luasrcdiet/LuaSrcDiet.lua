@@ -389,7 +389,8 @@ end
 -- @tparam string srcfl Path of the source file.
 -- @tparam string destfl Path of the destination file where to write optimized source.
 local function process_file(srcfl, destfl)
-  local function print(...)             -- handle quiet option
+  -- handle quiet option
+  local function print(...)  --luacheck: ignore 431
     if option.QUIET then return end
     _G.print(...)
   end
