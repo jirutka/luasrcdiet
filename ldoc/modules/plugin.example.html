@@ -1,0 +1,282 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>LuaSrcDiet docs</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>LuaSrcDiet</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/LuaSrcDiet.html">LuaSrcDiet</a></li>
+  <li><a href="../modules/equiv.html">equiv</a></li>
+  <li><a href="../modules/llex.html">llex</a></li>
+  <li><a href="../modules/optlex.html">optlex</a></li>
+  <li><a href="../modules/optparser.html">optparser</a></li>
+  <li><strong>plugin.example</strong></li>
+  <li><a href="../modules/plugin.html.html">plugin.html</a></li>
+  <li><a href="../modules/plugin.sloc.html">plugin.sloc</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>plugin.example</code></h1>
+<p>Example of a plugin for LuaSrcDiet.</p>
+<p>
+
+
+<p> WARNING: highly experimental! interface liable to change</p>
+
+<p> <strong>Notes:</strong></p>
+
+<ul>
+    <li>Any function can be omitted and LuaSrcDiet won't call it.</li>
+    <li>The functions are:
+    (1) init(_option, _srcfl, <em>destfl)
+    (2) post</em>load(z) can return z
+    (3) post<em>lex(toklist, seminfolist, toklnlist)
+    (4) post</em>parse(globalinfo, localinfo)
+    (5) post<em>optparse()
+    (6) post</em>optlex(toklist, seminfolist, toklnlist)</li>
+    <li>Older tables can be copied and kept in the plugin and used later.</li>
+    <li>If you modify 'option', remember that LuaSrcDiet might be
+    processing more than one file.</li>
+    <li>Arrangement of the functions is not final!</li>
+    <li>TODO: can't process additional options from command line yet</li>
+</ul>
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#init">init (_option, _srcfl, _destfl)</a></td>
+	<td class="summary">Initialization.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#post_load">post_load (z)</a></td>
+	<td class="summary">Message display, post-load processing, can return z.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#post_lex">post_lex (toklist, seminfolist, toklnlist)</a></td>
+	<td class="summary">Post-lexing processing, can work on lexer table output.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#post_parse">post_parse (globalinfo, localinfo)</a></td>
+	<td class="summary">Post-parsing processing, gives globalinfo, localinfo.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#post_optparse">post_optparse ()</a></td>
+	<td class="summary">Post-parser optimization processing, can get tables from elsewhere.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#post_optlex">post_optlex (toklist, seminfolist, toklnlist)</a></td>
+	<td class="summary">Post-lexer optimization processing, can get tables from elsewhere.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "init"></a>
+    <strong>init (_option, _srcfl, _destfl)</strong>
+    </dt>
+    <dd>
+    Initialization.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">_option</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">{[string]=bool,...}</a></span>
+
+
+
+        </li>
+        <li><span class="parameter">_srcfl</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         Path of the source file.
+        </li>
+        <li><span class="parameter">_destfl</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         Path of the destination file.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "post_load"></a>
+    <strong>post_load (z)</strong>
+    </dt>
+    <dd>
+    Message display, post-load processing, can return z.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">z</span>
+        this message will print after the LuaSrcDiet title message
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "post_lex"></a>
+    <strong>post_lex (toklist, seminfolist, toklnlist)</strong>
+    </dt>
+    <dd>
+    Post-lexing processing, can work on lexer table output.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">toklist</span>
+            <span class="types"><span class="type">luacheck</span></span>
+
+
+
+        </li>
+        <li><span class="parameter">seminfolist</span>
+
+
+
+        </li>
+        <li><span class="parameter">toklnlist</span>
+         ignore
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "post_parse"></a>
+    <strong>post_parse (globalinfo, localinfo)</strong>
+    </dt>
+    <dd>
+    Post-parsing processing, gives globalinfo, localinfo.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">globalinfo</span>
+
+
+
+        </li>
+        <li><span class="parameter">localinfo</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "post_optparse"></a>
+    <strong>post_optparse ()</strong>
+    </dt>
+    <dd>
+    Post-parser optimization processing, can get tables from elsewhere.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "post_optlex"></a>
+    <strong>post_optlex (toklist, seminfolist, toklnlist)</strong>
+    </dt>
+    <dd>
+    Post-lexer optimization processing, can get tables from elsewhere.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">toklist</span>
+            <span class="types"><span class="type">luacheck</span></span>
+
+
+
+        </li>
+        <li><span class="parameter">seminfolist</span>
+
+
+
+        </li>
+        <li><span class="parameter">toklnlist</span>
+         ignore
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

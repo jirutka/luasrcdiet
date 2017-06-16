@@ -1,0 +1,224 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>LuaSrcDiet docs</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>LuaSrcDiet</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Local_Functions">Local Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/LuaSrcDiet.html">LuaSrcDiet</a></li>
+  <li><strong>equiv</strong></li>
+  <li><a href="../modules/llex.html">llex</a></li>
+  <li><a href="../modules/optlex.html">optlex</a></li>
+  <li><a href="../modules/optparser.html">optparser</a></li>
+  <li><a href="../modules/plugin.example.html">plugin.example</a></li>
+  <li><a href="../modules/plugin.html.html">plugin.html</a></li>
+  <li><a href="../modules/plugin.sloc.html">plugin.sloc</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>equiv</code></h1>
+<p>
+<p>Source and binary equivalency comparisons</p>
+
+<p> <strong>Notes:</strong></p>
+
+<ul>
+    <li>Intended as an extra safety check for mission-critical code,
+    should give affirmative results if everything works.</li>
+</ul>
+</p>
+<p>
+
+<ul>
+    <li>Heavy on load() and string.dump(), which may be slowish,
+    and may cause problems for cross-compiled applications.</li>
+    <li>Optional detailed information dump is mainly for debugging,
+    reason being, if the two are not equivalent when they should be,
+    then some form of optimization has failed.</li>
+    <li>source: IMPORTANT: TK_NAME not compared if opt-locals enabled.</li>
+    <li>binary: IMPORTANT: Some shortcuts are taken with int and size_t
+    value reading -- if the functions break, then the binary chunk
+    is very large indeed.</li>
+    <li>binary: There is a lack of diagnostic information when a compare
+    fails; you can use ChunkSpy and compare using visual diff.</li>
+</ul>
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#init">init (_option, _llex, _warn)</a></td>
+	<td class="summary">The initialization function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#binary">binary (z, dat)</a></td>
+	<td class="summary">Tests binary chunk equivalence (only for PUC Lua 5.1).</td>
+	</tr>
+</table>
+<h2><a href="#Local_Functions">Local Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#build_stream">build_stream (s)</a></td>
+	<td class="summary">Builds lists containing a 'normal' lexer stream.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "init"></a>
+    <strong>init (_option, _llex, _warn)</strong>
+    </dt>
+    <dd>
+    The initialization function.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">_option</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">{[string]=bool,...}</a></span>
+
+
+
+        </li>
+        <li><span class="parameter">_llex</span>
+            <span class="types"><span class="type">luasrcdiet.llex</span></span>
+
+
+
+        </li>
+        <li><span class="parameter">_warn</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "binary"></a>
+    <strong>binary (z, dat)</strong>
+    </dt>
+    <dd>
+    Tests binary chunk equivalence (only for PUC Lua 5.1).
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">z</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+
+
+
+        </li>
+        <li><span class="parameter">dat</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Local_Functions"></a>Local Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "build_stream"></a>
+    <strong>build_stream (s)</strong>
+    </dt>
+    <dd>
+    Builds lists containing a 'normal' lexer stream.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         The source code.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+
+
+</li>
+        <li>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+
+
+</li>
+    </ol>
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

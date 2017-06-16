@@ -1,0 +1,350 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>LuaSrcDiet docs</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>LuaSrcDiet</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Local_Functions">Local Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/LuaSrcDiet.html">LuaSrcDiet</a></li>
+  <li><a href="../modules/equiv.html">equiv</a></li>
+  <li><a href="../modules/llex.html">llex</a></li>
+  <li><a href="../modules/optlex.html">optlex</a></li>
+  <li><strong>optparser</strong></li>
+  <li><a href="../modules/plugin.example.html">plugin.example</a></li>
+  <li><a href="../modules/plugin.html.html">plugin.html</a></li>
+  <li><a href="../modules/plugin.sloc.html">plugin.sloc</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>optparser</code></h1>
+<p>This module does parser-based optimizations.</p>
+<p>
+
+
+<p> <strong>Notes:</strong></p>
+
+<ul>
+    <li>The processing load is quite significant, but since this is an
+    off-line text processor, I believe we can wait a few seconds.</li>
+    <li>TODO: Might process "local a,a,a" wrongly... need tests!</li>
+    <li>TODO: Remove position handling if overlapped locals (rem &lt; 0)
+    needs more study, to check behaviour.</li>
+    <li>TODO: There are probably better ways to do allocation, e.g. by
+    choosing better methods to sort and pick locals...</li>
+    <li>TODO: We don't need 53*63 two-letter identifiers; we can make
+    do with significantly less depending on how many that are really
+    needed and improve entropy; e.g. 13 needed -> choose 4*4 instead.</li>
+</ul>
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#optimize">optimize (option, _toklist, _seminfolist, xinfo)</a></td>
+	<td class="summary">The main entry point.</td>
+	</tr>
+</table>
+<h2><a href="#Local_Functions">Local Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#preprocess">preprocess (infotable)</a></td>
+	<td class="summary">Preprocesses information table to get lists of unique names.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#recalc_for_entropy">recalc_for_entropy (option)</a></td>
+	<td class="summary">Calculates actual symbol frequencies, in order to reduce entropy.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#new_var_name">new_var_name ()</a></td>
+	<td class="summary">Returns a string containing a new local variable name to use, and
+ a flag indicating whether it collides with a global variable.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#stats_summary">stats_summary (globaluniq, localuniq, afteruniq, option)</a></td>
+	<td class="summary">Calculates and prints some statistics.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#optimize_func1">optimize_func1 ()</a></td>
+	<td class="summary">Does experimental optimization for f("string") statements.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#optimize_locals">optimize_locals (option)</a></td>
+	<td class="summary">Does local variable optimization.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "optimize"></a>
+    <strong>optimize (option, _toklist, _seminfolist, xinfo)</strong>
+    </dt>
+    <dd>
+    The main entry point.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">option</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+
+
+
+        </li>
+        <li><span class="parameter">_toklist</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">{string,...}</a></span>
+
+
+
+        </li>
+        <li><span class="parameter">_seminfolist</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">{string,...}</a></span>
+
+
+
+        </li>
+        <li><span class="parameter">xinfo</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Local_Functions"></a>Local Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "preprocess"></a>
+    <strong>preprocess (infotable)</strong>
+    </dt>
+    <dd>
+    Preprocesses information table to get lists of unique names.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">infotable</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">{table,...}</a></span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+
+
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "recalc_for_entropy"></a>
+    <strong>recalc_for_entropy (option)</strong>
+    </dt>
+    <dd>
+
+<p>Calculates actual symbol frequencies, in order to reduce entropy. </p>
+
+<ul>
+    <li>This may help further reduce the size of compressed sources.</li>
+    <li>Note that since parsing optimizations is put before lexing
+    optimizations, the frequency table is not exact!</li>
+    <li>Yes, this will miss --keep block comments too...</li>
+</ul>
+
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">option</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "new_var_name"></a>
+    <strong>new_var_name ()</strong>
+    </dt>
+    <dd>
+    Returns a string containing a new local variable name to use, and
+ a flag indicating whether it collides with a global variable. </p>
+
+<p> Trapping keywords and other names like 'self' is done elsewhere.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+        A new local variable name.</li>
+        <li>
+           <span class="types"><span class="type">bool</span></span>
+        Whether the name collides with a global variable.</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "stats_summary"></a>
+    <strong>stats_summary (globaluniq, localuniq, afteruniq, option)</strong>
+    </dt>
+    <dd>
+    Calculates and prints some statistics. </p>
+
+<p> Note: probably better in main source, put here for now.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">globaluniq</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+
+
+
+        </li>
+        <li><span class="parameter">localuniq</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+
+
+
+        </li>
+        <li><span class="parameter">afteruniq</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+
+
+
+        </li>
+        <li><span class="parameter">option</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.6">table</a></span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "optimize_func1"></a>
+    <strong>optimize_func1 ()</strong>
+    </dt>
+    <dd>
+    Does experimental optimization for f("string") statements. </p>
+
+<p> It's safe to delete parentheses without adding whitespace, as both
+ kinds of strings can abut with anything else.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "optimize_locals"></a>
+    <strong>optimize_locals (option)</strong>
+    </dt>
+    <dd>
+    Does local variable optimization.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">option</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">{[string]=bool,...}</a></span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

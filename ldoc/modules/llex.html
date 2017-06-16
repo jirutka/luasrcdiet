@@ -1,0 +1,406 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>LuaSrcDiet docs</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>LuaSrcDiet</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Local_Functions">Local Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/LuaSrcDiet.html">LuaSrcDiet</a></li>
+  <li><a href="../modules/equiv.html">equiv</a></li>
+  <li><strong>llex</strong></li>
+  <li><a href="../modules/optlex.html">optlex</a></li>
+  <li><a href="../modules/optparser.html">optparser</a></li>
+  <li><a href="../modules/plugin.example.html">plugin.example</a></li>
+  <li><a href="../modules/plugin.html.html">plugin.html</a></li>
+  <li><a href="../modules/plugin.sloc.html">plugin.sloc</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>llex</code></h1>
+<p>Lua 5.1+ lexical analyzer written in Lua.</p>
+<p>
+
+
+<p> This file is part of LuaSrcDiet, based on Yueliang material.</p>
+
+<p> <strong>Notes:</strong></p>
+
+<ul>
+    <li>This is a version of the native 5.1.x lexer from Yueliang 0.4.0,
+with significant modifications to handle LuaSrcDiet's needs:
+(1) llex.error is an optional error function handler,
+(2) seminfo for strings include their delimiters and no
+
+<pre>
+translation operations are performed on them.
+</pre>
+</li>
+    <li>ADDED shbang handling has been added to support executable scripts.</li>
+    <li>NO localized decimal point replacement magic.</li>
+    <li>NO limit to number of lines.</li>
+    <li>NO support for compatible long strings (LUA_COMPAT_LSTR).</li>
+    <li>Added goto keyword and double-colon operator (Lua 5.2+).</li>
+</ul>
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#init">init (_z, _sourceid)</a></td>
+	<td class="summary">Initializes lexer for given source _z and source name _sourceid.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#chunkid">chunkid ()</a></td>
+	<td class="summary">Returns a chunk name or id, no truncation for long names.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#errorline">errorline (s, line)</a></td>
+	<td class="summary">Formats error message and throws error.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#llex">llex ()</a></td>
+	<td class="summary">The main lexer function.</td>
+	</tr>
+</table>
+<h2><a href="#Local_Functions">Local Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#addtoken">addtoken (token, info)</a></td>
+	<td class="summary">Adds information to token listing.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#inclinenumber">inclinenumber (i, is_tok)</a></td>
+	<td class="summary">Handles line number incrementation and end-of-line characters.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#skip_sep">skip_sep (i)</a></td>
+	<td class="summary">Counts separators (<code>=&quot;</code> in a long string delimiter.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#read_long_string">read_long_string (is_str, sep)</a></td>
+	<td class="summary">Reads a long string or long comment.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#read_string">read_string (del)</a></td>
+	<td class="summary">Reads a string.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "init"></a>
+    <strong>init (_z, _sourceid)</strong>
+    </dt>
+    <dd>
+    Initializes lexer for given source _z and source name _sourceid.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">_z</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         The source code.
+        </li>
+        <li><span class="parameter">_sourceid</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         Name of the source.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "chunkid"></a>
+    <strong>chunkid ()</strong>
+    </dt>
+    <dd>
+    Returns a chunk name or id, no truncation for long names.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+
+
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "errorline"></a>
+    <strong>errorline (s, line)</strong>
+    </dt>
+    <dd>
+    Formats error message and throws error. </p>
+
+<p> A simplified version, does not report what token was responsible.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+
+
+
+        </li>
+        <li><span class="parameter">line</span>
+            <span class="types"><span class="type">int</span></span>
+         The line number.
+        </li>
+    </ul>
+
+
+    <h3>Raises:</h3>
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "llex"></a>
+    <strong>llex ()</strong>
+    </dt>
+    <dd>
+    The main lexer function.
+
+
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Local_Functions"></a>Local Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "addtoken"></a>
+    <strong>addtoken (token, info)</strong>
+    </dt>
+    <dd>
+    Adds information to token listing.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">token</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+
+
+
+        </li>
+        <li><span class="parameter">info</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "inclinenumber"></a>
+    <strong>inclinenumber (i, is_tok)</strong>
+    </dt>
+    <dd>
+    Handles line number incrementation and end-of-line characters.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">i</span>
+            <span class="types"><span class="type">int</span></span>
+         Position of lexer in the source stream.
+        </li>
+        <li><span class="parameter">is_tok</span>
+            <span class="types"><span class="type">bool</span></span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">int</span></span>
+
+
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "skip_sep"></a>
+    <strong>skip_sep (i)</strong>
+    </dt>
+    <dd>
+    Counts separators (<code>=&quot;</code> in a long string delimiter.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">i</span>
+            <span class="types"><span class="type">int</span></span>
+         Position of lexer in the source stream.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">int</span></span>
+
+
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "read_long_string"></a>
+    <strong>read_long_string (is_str, sep)</strong>
+    </dt>
+    <dd>
+    Reads a long string or long comment.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">is_str</span>
+            <span class="types"><span class="type">bool</span></span>
+
+
+
+        </li>
+        <li><span class="parameter">sep</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+
+
+
+    </ol>
+
+    <h3>Raises:</h3>
+    if unfinished long string or comment.
+
+
+
+</dd>
+    <dt>
+    <a name = "read_string"></a>
+    <strong>read_string (del)</strong>
+    </dt>
+    <dd>
+    Reads a string.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">del</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         The delimiter.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+
+
+
+    </ol>
+
+    <h3>Raises:</h3>
+    if unfinished string or too large escape sequence.
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

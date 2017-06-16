@@ -1,0 +1,613 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>LuaSrcDiet docs</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>LuaSrcDiet</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Local_Functions">Local Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/LuaSrcDiet.html">LuaSrcDiet</a></li>
+  <li><a href="../modules/equiv.html">equiv</a></li>
+  <li><a href="../modules/llex.html">llex</a></li>
+  <li><strong>optlex</strong></li>
+  <li><a href="../modules/optparser.html">optparser</a></li>
+  <li><a href="../modules/plugin.example.html">plugin.example</a></li>
+  <li><a href="../modules/plugin.html.html">plugin.html</a></li>
+  <li><a href="../modules/plugin.sloc.html">plugin.sloc</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>optlex</code></h1>
+<p>This module does lexer-based optimizations.</p>
+<p>
+
+
+<p> <strong>Notes:</strong></p>
+
+<ul>
+    <li>TODO: General string delimiter conversion optimizer.</li>
+    <li>TODO: (numbers) warn if overly significant digit.</li>
+</ul>
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#optimize">optimize (option, toklist, semlist, toklnlist)</a></td>
+	<td class="summary">The main entry point.</td>
+	</tr>
+</table>
+<h2><a href="#Local_Functions">Local Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#atlinestart">atlinestart (i)</a></td>
+	<td class="summary">Returns true if current token is at the start of a line.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#atlineend">atlineend (i)</a></td>
+	<td class="summary">Returns true if current token is at the end of a line.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#commenteols">commenteols (lcomment)</a></td>
+	<td class="summary">Counts comment EOLs inside a long comment.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#checkpair">checkpair (i, j)</a></td>
+	<td class="summary">Compares two tokens (i, j) and returns the whitespace required.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#repack_tokens">repack_tokens ()</a></td>
+	<td class="summary">Repack tokens, removing deletions caused by optimization process.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#do_number">do_number (i)</a></td>
+	<td class="summary">Does number optimization.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#do_string">do_string (I)</a></td>
+	<td class="summary">Does string optimization.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#do_lstring">do_lstring (I)</a></td>
+	<td class="summary">Does long string optimization.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#do_lcomment">do_lcomment (I)</a></td>
+	<td class="summary">Does long comment optimization.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#do_comment">do_comment (i)</a></td>
+	<td class="summary">Does short comment optimization.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#keep_lcomment">keep_lcomment (opt_keep, info)</a></td>
+	<td class="summary">Returns true if string found in long comment.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "optimize"></a>
+    <strong>optimize (option, toklist, semlist, toklnlist)</strong>
+    </dt>
+    <dd>
+
+<p>The main entry point. </p>
+
+<ul>
+    <li>currently, lexer processing has 2 passes</li>
+    <li>processing is done on a line-oriented basis, which is easier to
+    grok due to the next point...</li>
+    <li>since there are various options that can be enabled or disabled,
+    processing is a little messy or convoluted</li>
+</ul>
+
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">option</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">{[string]=bool,...}</a></span>
+
+
+
+        </li>
+        <li><span class="parameter">toklist</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">{string,...}</a></span>
+
+
+
+        </li>
+        <li><span class="parameter">semlist</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">{string,...}</a></span>
+
+
+
+        </li>
+        <li><span class="parameter">toklnlist</span>
+            <span class="types"><span class="type">{int,...}</span></span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">{string,...}</a></span>
+        toklist</li>
+        <li>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">{string,...}</a></span>
+        semlist</li>
+        <li>
+           <span class="types"><span class="type">{int,...}</span></span>
+        toklnlist</li>
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Local_Functions"></a>Local Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "atlinestart"></a>
+    <strong>atlinestart (i)</strong>
+    </dt>
+    <dd>
+    Returns true if current token is at the start of a line. </p>
+
+<p> It skips over deleted tokens via recursion.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">i</span>
+            <span class="types"><span class="type">int</span></span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">bool</span></span>
+
+
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "atlineend"></a>
+    <strong>atlineend (i)</strong>
+    </dt>
+    <dd>
+    Returns true if current token is at the end of a line. </p>
+
+<p> It skips over deleted tokens via recursion.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">i</span>
+            <span class="types"><span class="type">int</span></span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">bool</span></span>
+
+
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "commenteols"></a>
+    <strong>commenteols (lcomment)</strong>
+    </dt>
+    <dd>
+    Counts comment EOLs inside a long comment. </p>
+
+<p> In order to keep line numbering, EOLs need to be reinserted.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">lcomment</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">int</span></span>
+
+
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "checkpair"></a>
+    <strong>checkpair (i, j)</strong>
+    </dt>
+    <dd>
+    Compares two tokens (i, j) and returns the whitespace required. </p>
+
+<p> See documentation for a reference table of interactions.</p>
+
+<p> Only two grammar/real tokens are being considered:</p>
+
+<ul>
+    <li>if <code>&quot;&quot;</code>, no separation is needed,</li>
+    <li>if <code>&quot; &quot;</code>, then at least one whitespace (or EOL) is required.</li>
+</ul>
+
+<p> Note: This doesn't work at the start or the end or for EOS!
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">i</span>
+            <span class="types"><span class="type">int</span></span>
+
+
+
+        </li>
+        <li><span class="parameter">j</span>
+            <span class="types"><span class="type">int</span></span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+
+
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "repack_tokens"></a>
+    <strong>repack_tokens ()</strong>
+    </dt>
+    <dd>
+    Repack tokens, removing deletions caused by optimization process.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "do_number"></a>
+    <strong>do_number (i)</strong>
+    </dt>
+    <dd>
+    Does number optimization. </p>
+
+<p> Optimization using string formatting functions is one way of doing this,
+ but here, we consider all cases and handle them separately (possibly an
+ idiotic approach...).</p>
+
+<p> Scientific notation being generated is not in canonical form, this may or
+ may not be a bad thing.</p>
+
+<p> Note: Intermediate portions need to fit into a normal number range.</p>
+
+<p> Optimizations can be divided based on number patterns:</p>
+
+<ul>
+    <li>hexadecimal:
+    (1) no need to remove leading zeros, just skip to (2)
+    (2) convert to integer if size equal or smaller
+    <ul>
+        <li>change if equal size -> lose the 'x' to reduce entropy
+        (3) number is then processed as an integer
+        (4) note: does not make 0[xX] consistent</li>
+    </ul></li>
+    <li>integer:
+    (1) reduce useless fractional part, if present, e.g. 123.000 -> 123.
+    (2) remove leading zeros, e.g. 000123</li>
+    <li>float:
+    (1) split into digits dot digits
+    (2) if no integer portion, take as zero (can omit later)
+    (3) handle degenerate .000 case, after which the fractional part
+       must be non-zero (if zero, it's matched as float .0)
+    (4) remove trailing zeros for fractional portion
+    (5) p.q where p > 0 and q > 0 cannot be shortened any more
+    (6) otherwise p == 0 and the form is .q, e.g. .000123
+    (7) if scientific shorter, convert, e.g. .000123 -> 123e-6</li>
+    <li>scientific:
+    (1) split into (digits dot digits) [eE] ([+-] digits)
+    (2) if significand is zero, just use .0
+    (3) remove leading zeros for significand
+    (4) shift out trailing zeros for significand
+    (5) examine exponent and determine which format is best:
+       number with fraction, or scientific</li>
+</ul>
+
+<p> Note: Number with fraction and scientific number is never converted
+ to integer, because Lua 5.3 distinguishes between integers and floats.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">i</span>
+            <span class="types"><span class="type">int</span></span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "do_string"></a>
+    <strong>do_string (I)</strong>
+    </dt>
+    <dd>
+    Does string optimization. </p>
+
+<p> Note: It works on well-formed strings only!</p>
+
+<p> Optimizations on characters can be summarized as follows:</p>
+
+<pre><code> \a\b\f\n\r\t\v -- no change
+ \\             -- no change
+ \"\'           -- depends on delim, other can remove \
+ \[\]           -- remove \
+ \&lt;char&gt;        -- general escape, remove \  (Lua 5.1 only)
+ \&lt;eol&gt;         -- normalize the EOL only
+ \ddd           -- if \a\b\f\n\r\t\v, change to latter
+                   if other &lt; ascii 32, keep ddd but zap leading zeros
+                                        but cannot have following digits
+                   if &gt;= ascii 32, translate it into the literal, then also
+                                   do escapes for \\,\",\' cases
+ &lt;other&gt;        -- no change
+</code></pre>
+
+<p> Switch delimiters if string becomes shorter.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">I</span>
+            <span class="types"><span class="type">int</span></span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "do_lstring"></a>
+    <strong>do_lstring (I)</strong>
+    </dt>
+    <dd>
+    Does long string optimization. </p>
+
+<ul>
+    <li>remove first optional newline</li>
+    <li>normalize embedded newlines</li>
+    <li>reduce '=' separators in delimiters if possible</li>
+</ul>
+
+<p> Note: warning flagged if trailing whitespace found, not trimmed.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">I</span>
+            <span class="types"><span class="type">int</span></span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "do_lcomment"></a>
+    <strong>do_lcomment (I)</strong>
+    </dt>
+    <dd>
+    Does long comment optimization. </p>
+
+<ul>
+    <li>trim trailing whitespace</li>
+    <li>normalize embedded newlines</li>
+    <li>reduce '=' separators in delimiters if possible</li>
+</ul>
+
+<p> Note: It does not remove first optional newline.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">I</span>
+            <span class="types"><span class="type">int</span></span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "do_comment"></a>
+    <strong>do_comment (i)</strong>
+    </dt>
+    <dd>
+
+<p>Does short comment optimization. </p>
+
+<ul>
+    <li>trim trailing whitespace</li>
+</ul>
+
+
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">i</span>
+            <span class="types"><span class="type">int</span></span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "keep_lcomment"></a>
+    <strong>keep_lcomment (opt_keep, info)</strong>
+    </dt>
+    <dd>
+    Returns true if string found in long comment. </p>
+
+<p> This is a feature to keep copyright or license texts.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">opt_keep</span>
+            <span class="types"><span class="type">bool</span></span>
+
+
+
+        </li>
+        <li><span class="parameter">info</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><span class="type">bool</span></span>
+
+
+
+    </ol>
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>

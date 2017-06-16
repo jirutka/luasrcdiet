@@ -1,0 +1,270 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>LuaSrcDiet docs</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>LuaSrcDiet</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Local_Functions">Local Functions</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/LuaSrcDiet.html">LuaSrcDiet</a></li>
+  <li><a href="../modules/equiv.html">equiv</a></li>
+  <li><a href="../modules/llex.html">llex</a></li>
+  <li><a href="../modules/optlex.html">optlex</a></li>
+  <li><a href="../modules/optparser.html">optparser</a></li>
+  <li><a href="../modules/plugin.example.html">plugin.example</a></li>
+  <li><strong>plugin.html</strong></li>
+  <li><a href="../modules/plugin.sloc.html">plugin.sloc</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>plugin.html</code></h1>
+<p>Turns Lua 5.1 source code into HTML files.</p>
+<p>
+
+
+<p> WARNING: highly experimental! interface liable to change</p>
+
+<p> <strong>Notes:</strong></p>
+
+<ul>
+    <li>This HTML highlighter marks globals brightly so that their usage
+    can be manually optimized.</li>
+    <li>Either uses a .html extension for output files or it follows the
+    -o <filespec> option.</li>
+    <li>The HTML style tries to follow that of the Lua wiki.</li>
+</ul>
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#init">init (_option, _srcfl)</a></td>
+	<td class="summary">Initialization.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#post_load">post_load ()</a></td>
+	<td class="summary">Message display, post-load processing.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#post_lex">post_lex (_toklist, _seminfolist)</a></td>
+	<td class="summary">Post-lexing processing, can work on lexer table output.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#post_parse">post_parse (globalinfo, localinfo)</a></td>
+	<td class="summary">Post-parsing processing, gives globalinfo, localinfo.</td>
+	</tr>
+</table>
+<h2><a href="#Local_Functions">Local Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#do_entities">do_entities (z)</a></td>
+	<td class="summary">Escapes the usual suspects for HTML/XML.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#save_file">save_file (fname, dat)</a></td>
+	<td class="summary">Saves source code to file.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "init"></a>
+    <strong>init (_option, _srcfl)</strong>
+    </dt>
+    <dd>
+    Initialization.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">_option</span>
+
+
+
+        </li>
+        <li><span class="parameter">_srcfl</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "post_load"></a>
+    <strong>post_load ()</strong>
+    </dt>
+    <dd>
+    Message display, post-load processing.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "post_lex"></a>
+    <strong>post_lex (_toklist, _seminfolist)</strong>
+    </dt>
+    <dd>
+    Post-lexing processing, can work on lexer table output.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">_toklist</span>
+
+
+
+        </li>
+        <li><span class="parameter">_seminfolist</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "post_parse"></a>
+    <strong>post_parse (globalinfo, localinfo)</strong>
+    </dt>
+    <dd>
+    Post-parsing processing, gives globalinfo, localinfo.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">globalinfo</span>
+
+
+
+        </li>
+        <li><span class="parameter">localinfo</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Local_Functions"></a>Local Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "do_entities"></a>
+    <strong>do_entities (z)</strong>
+    </dt>
+    <dd>
+    Escapes the usual suspects for HTML/XML.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">z</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "save_file"></a>
+    <strong>save_file (fname, dat)</strong>
+    </dt>
+    <dd>
+    Saves source code to file.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">fname</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         The file name.
+        </li>
+        <li><span class="parameter">dat</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         The data to write to the file.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
