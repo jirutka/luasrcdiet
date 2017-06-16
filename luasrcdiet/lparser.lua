@@ -195,7 +195,7 @@ end
 -- adds given string s in string pool, sets e as VK
 ----------------------------------------------------------------------
 
-local function codestring(e, s)
+local function codestring(e, s)  --luacheck: ignore 212
   e.k = "VK"
 end
 
@@ -488,7 +488,7 @@ end
 -- * used in constructor()
 ----------------------------------------------------------------------
 
-local function recfield(cc)
+local function recfield(cc)  --luacheck: ignore 212
   -- recfield -> (NAME | '['exp1']') = exp1
   local key, val = {}, {}
   if tok == "<name>" then
@@ -778,7 +778,7 @@ end
 -- * used in fornum(), forlist()
 ----------------------------------------------------------------------
 
-local function forbody(nvars, isnum)
+local function forbody(nvars, isnum)  --luacheck: ignore 212
   -- forbody -> DO block
   checknext("do")
   enterblock(false)  -- scope for declared variables
@@ -943,7 +943,7 @@ end
 ----------------------------------------------------------------------
 
 -- this is a forward-referenced local
-function body(e, needself, line)
+function body(e, needself, line)  --luacheck: ignore 212
   -- body ->  '(' parlist ')' chunk END
   open_func()
   checknext("(")

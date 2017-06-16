@@ -643,7 +643,7 @@ function M.optimize(option, toklist, semlist, toklnlist)
                 -- on same line (for TK_SPACE stuff)
 
   -- Changes a token, info pair.
-  local function settoken(tok, info, I)
+  local function settoken(tok, info, I)  --luacheck: ignore 431
     I = I or i
     stoks[I] = tok or ""
     sinfos[I] = info or ""

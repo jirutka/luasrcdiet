@@ -208,7 +208,7 @@ end
 -- @tparam table localuniq
 -- @tparam table afteruniq
 -- @tparam table option
-local function stats_summary(globaluniq, localuniq, afteruniq, option)
+local function stats_summary(globaluniq, localuniq, afteruniq, option)  --luacheck: ignore 431
   local print = M.print or print
   local fmt = string.format
   local opt_details = option.DETAILS

@@ -238,7 +238,7 @@ function M.llex()
       local p, _, r = find(z, "^(%.?)%d", i)
       if p then                                 -- numeral
         if r == "." then i = i + 1 end
-        local _, q, r = find(z, "^%d*[%.%d]*([eE]?)", i)
+        local _, q, r = find(z, "^%d*[%.%d]*([eE]?)", i)  --luacheck: ignore 421
         i = q + 1
         if #r == 1 then                         -- optional exponent
           if match(z, "^[%+%-]", i) then        -- optional sign
@@ -276,7 +276,7 @@ function M.llex()
       local r = match(z, "^%p", i)
       if r then
         buff = i
-        local p = find("-[\"\'.=<>~", r, 1, true)
+        local p = find("-[\"\'.=<>~", r, 1, true)  --luacheck: ignore 421
         if p then
 
           -- two-level if block for punctuation/symbols
