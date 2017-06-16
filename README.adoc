@@ -1,4 +1,14 @@
 = LuaSrcDiet
+:proj-name: luasrcdiet
+:gh-name: jirutka/{proj-name}
+:gh-branch: master
+:ldoc-url: https://jirutka.github.io/{proj-name}/ldoc/
+
+ifdef::env-github[]
+image:https://travis-ci.org/{gh-name}.svg?branch={gh-branch}["Build Status", link="https://travis-ci.org/{gh-name}"]
+image:https://img.shields.io/badge/ldoc-docs-blue.svg["LDoc", link="{ldoc-url}"]
+endif::env-github[]
+
 
 Compresses Lua source code by removing unnecessary characters.
 
