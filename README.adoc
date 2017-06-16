@@ -1,4 +1,6 @@
 = LuaSrcDiet
+:toc: macro
+:toc-title:
 :proj-name: luasrcdiet
 :gh-name: jirutka/{proj-name}
 :gh-branch: master
@@ -13,6 +15,12 @@ endif::env-github[]
 Compresses Lua source code by removing unnecessary characters.
 
 This is revival of LuaSrcDiet originally written by mailto:keinhong@gmail.com[Kein-Hong Man].
+
+
+[discrete]
+== Table of Contents
+
+toc::[]
 
 
 == Introduction
