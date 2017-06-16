@@ -91,6 +91,46 @@ Owing to the use of LuaSrcDiet among certain things like WoW add-ons, the follow
 * Documentation wiki pages converted to AsciiDoc.
 
 
+== Installation
+
+Note: If you want to bootstrap development environment for running tests, read the next section.
+
+
+=== Using LuaRocks
+
+You can install {proj-name} using https://luarocks.org[LuaRocks] (the Lua package manager):
+
+[source, subs="+attributes"]
+luarocks install {proj-name}
+
+or to get the latest development version:
+
+[source, subs="+attributes"]
+luarocks install --server=http://luarocks.org/dev {proj-name}
+
+
+== Set Up Development Environment
+
+. Clone this repository:
+[source, subs="+attributes"]
+git clone https://github.com/{gh-name}.git
+cd {proj-name}
+
+. Source file `.envrc` into your shell (or manually add `$(pwd)/.venv/bin` to your `PATH`):
+[source]
+source .envrc
+
+. Install Lua and modules for running tests into directory `.venv`:
+[source]
+./script/bootstrap
+
+. Start hacking!
+
+. Run linters and tests:
+[source]
+./script/test
+
+
 == Documentation
 
 * <<doc/features-and-usage#, Features and Usage>>
