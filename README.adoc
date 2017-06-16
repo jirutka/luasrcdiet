@@ -81,6 +81,8 @@ Owing to the use of LuaSrcDiet among certain things like WoW add-ons, the follow
 
 == Acknowledgements
 
+* The original author of LuaSrcDiet and its documentation is mailto:keinhong@gmail.com[Kein-Hong Man].
+  History of this repository until 2012 has been recreated from https://code.google.com/archive/p/luasrcdiet/downloads[release tarballs] hosted on Google Code.
 * Parts of LuaSrcDiet is based on http://yueliang.luaforge.net/[Yueliang], which is in turn based on the https://www.lua.org/[Lua] sources.
 
 
