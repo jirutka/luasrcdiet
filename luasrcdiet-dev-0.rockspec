@@ -28,6 +28,7 @@ build = {
     ['luasrcdiet.plugin.html'] = 'luasrcdiet/plugin/html.lua',
     ['luasrcdiet.plugin.sloc'] = 'luasrcdiet/plugin/sloc.lua',
     ['luasrcdiet.equiv'] = 'luasrcdiet/equiv.lua',
+    ['luasrcdiet.fs'] = 'luasrcdiet/fs.lua',
     ['luasrcdiet.llex'] = 'luasrcdiet/llex.lua',
     ['luasrcdiet.lparser'] = 'luasrcdiet/lparser.lua',
     ['luasrcdiet.LuaSrcDiet'] = 'luasrcdiet/LuaSrcDiet.lua',

@@ -11,6 +11,8 @@
 --   -o <filespec> option.
 -- * The HTML style tries to follow that of the Lua wiki.
 ----
+local fs = require "luasrcdiet.fs"
+
 local concat = table.concat
 local find = string.find
 local fmt = string.format
@@ -114,18 +116,6 @@ local function do_entities(z)
   return z
 end
 
---- Saves source code to file.
---
--- @tparam string fname The file name.
--- @tparam string dat The data to write to the file.
-local function save_file(fname, dat)
-  local OUTF = io.open(fname, "wb")
-  if not OUTF then error("cannot open \""..fname.."\" for writing") end
-  local status = OUTF:write(dat)
-  if not status then error("cannot write to \""..fname.."\"") end
-  OUTF:close()
-end
-
 --- Post-parsing processing, gives globalinfo, localinfo.
 function M.post_parse(globalinfo, localinfo)
   local html = {}
@@ -180,7 +170,7 @@ function M.post_parse(globalinfo, localinfo)
     end
   end--for
   add(FOOTER)
-  save_file(destfl, concat(html))
+  assert(fs.write_file(destfl, concat(html), "wb"))
   option.EXIT = true
 end
 

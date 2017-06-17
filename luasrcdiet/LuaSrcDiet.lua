@@ -14,6 +14,7 @@
 -- * TODO: the plugin module is highly experimental and unstable.
 ----
 local equiv = require "luasrcdiet.equiv"
+local fs = require "luasrcdiet.fs"
 local llex = require "luasrcdiet.llex"
 local lparser = require "luasrcdiet.lparser"
 local optlex = require "luasrcdiet.optlex"
@@ -199,12 +200,9 @@ local EOLTYPES = {                      -- EOL names for token dump
 -- @tparam string fname Path of the file to read.
 -- @treturn string Content of the file.
 local function load_file(fname)
-  local INF = io.open(fname, "rb")
-  if not INF then die('cannot open "'..fname..'" for reading') end
-  local dat = INF:read("*a")
-  if not dat then die('cannot read from "'..fname..'"') end
-  INF:close()
-  return dat
+  local data, err = fs.read_file(fname, "rb")
+  if not data then die(err) end
+  return data
 end
 
 --- Saves source code to the file.
@@ -212,11 +210,8 @@ end
 -- @tparam string fname Path of the destination file.
 -- @tparam string dat The data to write into the file.
 local function save_file(fname, dat)
-  local OUTF = io.open(fname, "wb")
-  if not OUTF then die('cannot open "'..fname..'" for writing') end
-  local status = OUTF:write(dat)
-  if not status then die('cannot write to "'..fname..'"') end
-  OUTF:close()
+  local ok, err = fs.write_file(fname, dat, "wb")
+  if not ok then die(err) end
 end
 
 
