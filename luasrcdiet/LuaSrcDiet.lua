@@ -17,6 +17,7 @@ local equiv = require "luasrcdiet.equiv"
 local fs = require "luasrcdiet.fs"
 local llex = require "luasrcdiet.llex"
 local lparser = require "luasrcdiet.lparser"
+local luasrcdiet = require "luasrcdiet.init"
 local optlex = require "luasrcdiet.optlex"
 local optparser = require "luasrcdiet.optparser"
 
@@ -40,10 +41,10 @@ local BIN_EQUIV_AVAIL = LUA_VERSION == "5.1" and not package.loaded.jit
 
 ---------------------- Messages and textual data ----------------------
 
-local MSG_TITLE = [[
+local MSG_TITLE = fmt([[
 LuaSrcDiet: Puts your Lua 5.1+ source code on a diet
-Version 0.2.0 (2017-06-17) <https://github.com/jirutka/luasrcdiet>
-]]
+Version %s <%s>
+]], luasrcdiet._VERSION, luasrcdiet._HOMEPAGE)
 
 local MSG_USAGE = [[
 usage: LuaSrcDiet [options] [filenames]
