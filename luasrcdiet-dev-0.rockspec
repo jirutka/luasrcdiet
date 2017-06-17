@@ -4,7 +4,7 @@ package = 'LuaSrcDiet'
 version = 'dev-0'
 
 source = {
-  url = 'git://github.com/jirutka/LuaSrcDiet.git',
+  url = 'git://github.com/jirutka/luasrcdiet.git',
   branch = 'master',
 }
 
@@ -12,7 +12,7 @@ description = {
   summary = 'Compresses Lua source code by removing unnecessary characters',
   detailed = [[
 This is revival of LuaSrcDiet originally written by Kein-Hong Man.]],
-  homepage = 'https://github.com/jirutka/LuaSrcDiet',
+  homepage = 'https://github.com/jirutka/luasrcdiet',
   maintainer = 'Jakub Jirutka <jakub@jirutka.cz>',
   license = 'MIT',
 }
