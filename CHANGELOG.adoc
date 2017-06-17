@@ -1,15 +1,15 @@
 = Changelog
-:repo-uri: https://github.com/jirutka/LuaSrcDiet
-:tags: {repo-uri}/releases/tag
+:repo-uri: https://github.com/jirutka/luasrcdiet
+:compare: {repo-uri}/compare
 
 
-== link:{tags}/v0.12.1[0.12.1] (2012-04-07) by Kein-Hong Man
+== link:{compare}/v0.12.0\...v0.12.1[0.12.1] (2012-04-07) by Kein-Hong Man
 
 * src/optlex.lua (do_lcomment): fixed ending delimiter extraction from long comment leading to 2 extra chars when using --keep option
 * src/optparser.lua (optimize_func1): implemented faster one-pass token deletion
 
 
-== link:{tags}/v0.12.0[0.12.0] (2011-09-13) by Kein-Hong Man
+== link:{compare}/v0.11.2\...v0.12.0[0.12.0] (2011-09-13) by Kein-Hong Man
 
 * doc/src/Makefile: updated to generate output in separate directory
 * doc/src/sample.wiki: wiki-like source file sample
@@ -60,7 +60,7 @@ cut-and-paste HTML generation code from lua_lexer
 * lparser.lua: adjusted to use less locals, slightly smaller
 
 
-== link:{tags}/v0.11.2[0.11.2] (2008-06-08) by Kein-Hong Man
+== link:{compare}/v0.11.1\...v0.11.2[0.11.2] (2008-06-08) by Kein-Hong Man
 
 * optparser.lua: improved local variable collision discrimination
 * technotes.txt: updated notes on local variable collision tests
@@ -83,7 +83,7 @@ cut-and-paste HTML generation code from lua_lexer
 * LuaSrcDiet.lua: tweaked usage text
 
 
-== link:{tags}/v0.11.1[0.11.1] (2008-06-03) by Kein-Hong Man
+== link:{compare}/v0.11.0\...v0.11.1[0.11.1] (2008-06-03) by Kein-Hong Man
 
 * LuaSrcDiet.lua: added --opt-entropy option handling
 * sample/Makefile: improved with an explanation list
@@ -101,7 +101,7 @@ cut-and-paste HTML generation code from lua_lexer
 * test/test_benchmark1.lua: coded simple test for loader performance
 * test/LuaSrcDiet_fixed.lua, test/LuaSrcDiet_fixed_.lua: files without shbang first line to satisfy loadstring()
 
-== link:{tags}/v0.11.0[0.11.0] (2008-05-29) by Kein-Hong Man
+== link:{compare}/v0.10.2\...v0.11.0[0.11.0] (2008-05-29) by Kein-Hong Man
 
 * lparser.lua: added isself flag to handle "self" specially
 * LuaSrcDiet.lua (dump_parser): added display for 'isself'
@@ -166,7 +166,7 @@ cut-and-paste HTML generation code from lua_lexer
 * lparser.lua: passes parsing of LuaSrcDiet.lua
 
 
-== link:{tags}/v0.10.2[0.10.2] (2008-05-27) by Kein-Hong Man
+== link:{compare}/v0.10.1\...v0.10.2[0.10.2] (2008-05-27) by Kein-Hong Man
 
 * sample/numbers_original.lua: adding number samples
 * optlex.lua (do_number): fixed trying to compare string variable and constant number in if statements
@@ -206,7 +206,7 @@ cut-and-paste HTML generation code from lua_lexer
 * optlex.lua (do_lstring): coded long string optimizer
 
 
-== link:{tags}/v0.10.1[0.10.1] (2008-05-25) by Kein-Hong Man
+== link:{compare}/v0.9.1\...v0.10.1[0.10.1] (2008-05-25) by Kein-Hong Man
 
 * LuaSrcDiet.lua (process_file): added code to print statistics
 * LuaSrcDiet.lua: set back executable flag, added #! line
@@ -256,14 +256,14 @@ cut-and-paste HTML generation code from lua_lexer
 * 5.0/LuaSrcDiet.lua, 5.0/LuaSrcDiet_.lua, 5.0/LSDTest.lua: moved from root directory
 
 
-== link:{tags}/v0.9.1[0.9.1] (2005-08-16) by Kein-Hong Man
+== link:{compare}/v0.9.0\...v0.9.1[0.9.1] (2005-08-16) by Kein-Hong Man
 
 * LuaSrcDiet.lua (llex:lex): fixed buff init bug
 * LuaSrcDiet.lua (DumpTokens): added --dump option
 * LuaSrcDiet.lua: adjusted shellbang
 
 
-== link:{tags}/v0.9.0[0.9.0] (2005-02-15) by Kein-Hong Man
+== 0.9.0 (2005-02-15) by Kein-Hong Man
 
 * LuaSrcDiet.lua: preliminary functional script
 * LuaSrcDiet.lua: preliminary feature-complete
@@ -272,6 +272,6 @@ cut-and-paste HTML generation code from lua_lexer
 * LSDTest.lua: created
 
 
-== link:{tags}/v0.0.0[0.0.0] (2005-01-14) by Kein-Hong Man
+== 0.0.0 (2005-01-14) by Kein-Hong Man
 
 * started project
