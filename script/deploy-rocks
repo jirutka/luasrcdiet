@@ -11,7 +11,7 @@ set -eu
 
 . "$(dirname "$0")/bootstrap"
 
-TARBALL_URI='https://github.com/jirutka/luasrcdiet/archive/v%s.tar.gz'
+TARBALL_URI='https://github.com/jirutka/luasrcdiet/archive/%s/luasrcdiet-%s.tar.gz'
 
 create_release_spec() {
 	local dev_spec="$1"
@@ -47,12 +47,12 @@ remote_md5sum() (
 
 if is_release; then
 	version=$(git_based_version)
-	tarball_url=$(printf "$TARBALL_URI" "$version")
+	tarball_url=$(printf "$TARBALL_URI" "v$version" "$version")
 fi
 
 for dev_spec in *-dev-0.rockspec; do
 	if is_release; then
-		rel_spec=$(create_release_spec "$dev_spec" "$version-1" "$tarball_url")
+		rel_spec=$(create_release_spec "$dev_spec" "$version-2" "$tarball_url")
 
 		einfo "Uploading ${rel_spec##*/} to LuaRocks"
 		luarocks upload --api-key="$LUAROCKS_KEY" "$rel_spec"
