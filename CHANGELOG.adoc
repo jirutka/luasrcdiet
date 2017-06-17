@@ -9,6 +9,9 @@ Since release 0.2.0 the format of this file is based on http://keepachangelog.co
 
 == Unreleased
 
+Added::
+  * API for simple programmatic use (module `luasrcdiet.init`).
+
 Fixed::
   * Fix missing source file in `samples/Makefile`.
 
