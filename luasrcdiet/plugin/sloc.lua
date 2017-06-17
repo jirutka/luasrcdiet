@@ -32,11 +32,11 @@ local function split(blk)
   local lines = {}
   local i, nblk = 1, #blk
   while i <= nblk do
-    local p, q, r, s = string.find(blk, "([\r\n])([\r\n]?)", i)
+    local p, q, r, s = blk:find("([\r\n])([\r\n]?)", i)
     if not p then
       p = nblk + 1
     end
-    lines[#lines + 1] = string.sub(blk, i, p - 1)
+    lines[#lines + 1] = blk:sub(i, p - 1)
     i = p + 1
     if p < nblk and q > p and r ~= s then  -- handle Lua-style CRLF, LFCR
       i = i + 1

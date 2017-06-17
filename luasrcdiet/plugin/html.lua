@@ -11,6 +11,10 @@
 --   -o <filespec> option.
 -- * The HTML style tries to follow that of the Lua wiki.
 ----
+local concat = table.concat
+local find = string.find
+local fmt = string.format
+local sub = string.sub
 
 local M = {}
 
@@ -68,10 +72,10 @@ end
 function M.init(_option, _srcfl)
   option = _option
   srcfl = _srcfl
-  local extb, _ = string.find(srcfl, "%.[^%.%\\%/]*$")
+  local extb, _ = find(srcfl, "%.[^%.%\\%/]*$")
   local basename = srcfl
   if extb and extb > 1 then
-    basename = string.sub(srcfl, 1, extb - 1)
+    basename = sub(srcfl, 1, extb - 1)
   end
   destfl = basename..HTML_EXT
   if option.OUTPUT_FILE then
@@ -99,11 +103,11 @@ end
 local function do_entities(z)
   local i = 1
   while i <= #z do
-    local c = string.sub(z, i, i)
+    local c = sub(z, i, i)
     local d = ENTITIES[c]
     if d then
       c = d
-      z = string.sub(z, 1, i - 1)..c..string.sub(z, i + 1)
+      z = sub(z, 1, i - 1)..c..sub(z, i + 1)
     end
     i = i + #c
   end--while
@@ -150,7 +154,7 @@ function M.post_parse(globalinfo, localinfo)
     end
   end--for
 
-  add(string.format(HEADER,     -- header and leading stuff
+  add(fmt(HEADER,     -- header and leading stuff
     do_entities(srcfl),
     STYLESHEET))
   for i = 1, #toklist do        -- enumerate token list
@@ -176,7 +180,7 @@ function M.post_parse(globalinfo, localinfo)
     end
   end--for
   add(FOOTER)
-  save_file(destfl, table.concat(html))
+  save_file(destfl, concat(html))
   option.EXIT = true
 end
 

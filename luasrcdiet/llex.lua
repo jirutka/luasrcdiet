@@ -17,6 +17,7 @@
 -- * Added goto keyword and double-colon operator (Lua 5.2+).
 ----
 local find = string.find
+local fmt = string.format
 local match = string.match
 local sub = string.sub
 local tonumber = tonumber
@@ -24,9 +25,9 @@ local tonumber = tonumber
 local M = {}
 
 local kw = {}
-for v in string.gmatch([[
+for v in ([[
 and break do else elseif end false for function goto if in
-local nil not or repeat return then true until while]], "%S+") do
+local nil not or repeat return then true until while]]):gmatch("%S+") do
   kw[v] = true
 end
 
@@ -113,7 +114,7 @@ local chunkid = M.chunkid
 -- @raise
 function M.errorline(s, line)
   local e = M.error or error
-  e(string.format("%s:%d: %s", chunkid(), line or ln, s))
+  e(fmt("%s:%d: %s", chunkid(), line or ln, s))
 end
 local errorline = M.errorline
 

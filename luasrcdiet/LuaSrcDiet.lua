@@ -19,16 +19,19 @@ local lparser = require "luasrcdiet.lparser"
 local optlex = require "luasrcdiet.optlex"
 local optparser = require "luasrcdiet.optparser"
 
+local byte = string.byte
+local concat = table.concat
+local find = string.find
+local fmt = string.format
 local gmatch = string.gmatch
 local match = string.match
 local print = print
-local string = string
+local rep = string.rep
 local sub = string.sub
-local table = table
 
 local plugin
 
-local LUA_VERSION = _VERSION:match(" (5%.[123])$") or "5.1"
+local LUA_VERSION = match(_VERSION, " (5%.[123])$") or "5.1"
 
 -- Is --opt-binequiv available for this Lua version?
 local BIN_EQUIV_AVAIL = LUA_VERSION == "5.1" and not package.loaded.jit
@@ -139,7 +142,7 @@ do
   local o = {}
   for op, desc in gmatch(OPTION, "%s*([^,]+),'([^']+)'") do
     local msg = "  "..op
-    msg = msg..string.rep(" ", WIDTH - #msg)..desc.."\n"
+    msg = msg..rep(" ", WIDTH - #msg)..desc.."\n"
     MSG_OPTIONS = MSG_OPTIONS..msg
     o[op] = true
     o["--no"..sub(op, 3)] = true
@@ -147,7 +150,7 @@ do
   OPTION = o  -- replace OPTION with lookup table
 end
 
-MSG_USAGE = string.format(MSG_USAGE, MSG_OPTIONS, DEFAULT_CONFIG)
+MSG_USAGE = fmt(MSG_USAGE, MSG_OPTIONS, DEFAULT_CONFIG)
 
 
 --------- Global variable initialization, option set handling ---------
@@ -280,8 +283,8 @@ local function dump_tokens(srcfl)
   -- Display output.
   for i = 1, #toklist do
     local tok, seminfo = toklist[i], seminfolist[i]
-    if tok == "TK_OP" and string.byte(seminfo) < 32 then
-      seminfo = "(".. string.byte(seminfo)..")"
+    if tok == "TK_OP" and byte(seminfo) < 32 then
+      seminfo = "("..byte(seminfo)..")"
     elseif tok == "TK_EOL" then
       seminfo = EOLTYPES[seminfo]
     else
@@ -309,7 +312,7 @@ local function dump_parser(srcfl)
     xinfo.globalinfo, xinfo.localinfo
 
   -- Display output.
-  local hl = string.rep("-", 72)
+  local hl = rep("-", 72)
   print("*** Local/Global Variable Tracker Tables ***")
   print(hl.."\n GLOBALS\n"..hl)
   -- global tables have a list of xref numbers only
@@ -360,12 +363,11 @@ local function read_only(srcfl)
   local stat_a = stat_calc()
 
   -- Display output.
-  local fmt = string.format
   local function figures(tt)
     return stat_c[tt], stat_l[tt], stat_a[tt]
   end
   local tabf1, tabf2 = "%-16s%8s%8s%10s", "%-16s%8d%8d%10.2f"
-  local hl = string.rep("-", 42)
+  local hl = rep("-", 42)
   print(fmt(tabf1, "Lexical",  "Input", "Input", "Input"))
   print(fmt(tabf1, "Elements", "Count", "Bytes", "Average"))
   print(hl)
@@ -445,11 +447,11 @@ local function process_file(srcfl, destfl)
     plugin.post_optlex(toklist, seminfolist, toklnlist)
     if option.EXIT then return end
   end
-  local dat = table.concat(seminfolist)
+  local dat = concat(seminfolist)
   -- Depending on options selected, embedded EOLs in long strings and
   -- long comments may not have been translated to \n, tack a warning.
-  if string.find(dat, "\r\n", 1, 1) or
-     string.find(dat, "\n\r", 1, 1) then
+  if find(dat, "\r\n", 1, 1) or
+     find(dat, "\n\r", 1, 1) then
     warn.MIXEDEOL = true
   end
 
@@ -491,14 +493,13 @@ local function process_file(srcfl, destfl)
 
   -- Display output.
   print("Statistics for: "..srcfl.." -> "..destfl.."\n")
-  local fmt = string.format
   local function figures(tt)
     return stat1_c[tt], stat1_l[tt], stat1_a[tt],
            stat_c[tt],  stat_l[tt],  stat_a[tt]
   end
   local tabf1, tabf2 = "%-16s%8s%8s%10s%8s%8s%10s",
                        "%-16s%8d%8d%10.2f%8d%8d%10.2f"
-  local hl = string.rep("-", 68)
+  local hl = rep("-", 68)
   print("*** lexer-based optimizations summary ***\n"..hl)
   print(fmt(tabf1, "Lexical",
             "Input", "Input", "Input",
@@ -546,7 +547,7 @@ local function do_files(fspec)
     local destfl
 
     -- Find and replace extension for filenames.
-    local extb, exte = string.find(srcfl, "%.[^%.%\\%/]*$")
+    local extb, exte = find(srcfl, "%.[^%.%\\%/]*$")
     local basename, extension = srcfl, ""
     if extb and extb > 1 then
       basename = sub(srcfl, 1, extb - 1)

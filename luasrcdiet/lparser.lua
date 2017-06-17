@@ -19,6 +19,8 @@
 -- * Added basic support for goto and label statements, i.e. parser
 --   does not crash on them (Lua 5.2+).
 ----
+local fmt = string.format
+local gmatch = string.gmatch
 local pairs = pairs
 
 local M = {}
@@ -58,8 +60,6 @@ local explist1, expr, block, exp1, body, chunk
 -- initialization: data structures
 ----------------------------------------------------------------------
 
-local gmatch = string.gmatch
-
 local block_follow = {}         -- lookahead check in chunk(), returnstat()
 for v in gmatch("else elseif end until <eof>", "%S+") do
   block_follow[v] = true
@@ -93,7 +93,7 @@ local UNARY_PRIORITY = 8        -- priority for unary operators
 
 local function errorline(s, line)
   local e = M.error or error
-  e(string.format("(source):%d: %s", line or ln, s))
+  e(fmt("(source):%d: %s", line or ln, s))
 end
 
 ----------------------------------------------------------------------
@@ -307,7 +307,7 @@ end
 ----------------------------------------------------------------------
 
 local function new_localvarliteral(name, special)
-  if string.sub(name, 1, 1) == "(" then  -- can skip internal locals
+  if name:sub(1, 1) == "(" then  -- can skip internal locals
     return
   end
   new_localvar(name, special)

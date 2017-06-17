@@ -20,7 +20,6 @@
 local byte = string.byte
 local dump = string.dump
 local load = loadstring or load  --luacheck: ignore 113
-local match = string.match
 local sub = string.sub
 
 local M = {}
@@ -96,8 +95,8 @@ function M.source(z, dat)
   local tok2, seminfo2 = build_stream(dat)      -- compressed
 
   -- Compare shbang lines ignoring EOL.
-  local sh1 = match(z, "^(#[^\r\n]*)")
-  local sh2 = match(dat, "^(#[^\r\n]*)")
+  local sh1 = z:match("^(#[^\r\n]*)")
+  local sh2 = dat:match("^(#[^\r\n]*)")
   if sh1 or sh2 then
     if not sh1 or not sh2 or sh1 ~= sh2 then
       bork("shbang lines different")
@@ -406,7 +405,7 @@ function M.binary(z, dat)
 
   -- Removes shbang line so that load runs.
   local function zap_shbang(s)
-    local shbang = match(s, "^(#[^\r\n]*\r?\n?)")
+    local shbang = s:match("^(#[^\r\n]*\r?\n?)")
     if shbang then                      -- cut out shbang
       s = sub(s, #shbang + 1)
     end
