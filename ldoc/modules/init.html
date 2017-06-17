@@ -1,0 +1,325 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>LuaSrcDiet docs</title>
+    <link rel="stylesheet" href="../ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>LuaSrcDiet</h1>
+
+<ul>
+  <li><a href="../index.html">Index</a></li>
+</ul>
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Functions">Functions</a></li>
+<li><a href="#Tables">Tables</a></li>
+<li><a href="#Fields">Fields</a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="nowrap">
+  <li><a href="../modules/LuaSrcDiet.html">LuaSrcDiet</a></li>
+  <li><a href="../modules/equiv.html">equiv</a></li>
+  <li><a href="../modules/fs.html">fs</a></li>
+  <li><strong>init</strong></li>
+  <li><a href="../modules/llex.html">llex</a></li>
+  <li><a href="../modules/optlex.html">optlex</a></li>
+  <li><a href="../modules/optparser.html">optparser</a></li>
+  <li><a href="../modules/plugin.example.html">plugin.example</a></li>
+  <li><a href="../modules/plugin.html.html">plugin.html</a></li>
+  <li><a href="../modules/plugin.sloc.html">plugin.sloc</a></li>
+  <li><a href="../modules/utils.html">utils</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>init</code></h1>
+<p>LuaSrcDiet API</p>
+<p>
+
+</p>
+
+
+<h2><a href="#Functions">Functions</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#optimize">optimize (opts, source)</a></td>
+	<td class="summary">Optimizes the given Lua source code.</td>
+	</tr>
+</table>
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#NONE_OPTS">NONE_OPTS</a></td>
+	<td class="summary">All optimizations disabled.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#BASIC_OPTS">BASIC_OPTS</a></td>
+	<td class="summary">Basic optimizations enabled.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#DEFAULT_OPTS">DEFAULT_OPTS</a></td>
+	<td class="summary">Defaults.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#MAXIMUM_OPTS">MAXIMUM_OPTS</a></td>
+	<td class="summary">Maximum optimizations enabled (all except experimental).</td>
+	</tr>
+</table>
+<h2><a href="#Fields">Fields</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#_NAME">_NAME</a></td>
+	<td class="summary">The module's name.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_VERSION">_VERSION</a></td>
+	<td class="summary">The module's version number.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#_HOMEPAGE">_HOMEPAGE</a></td>
+	<td class="summary">The module's homepage.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Functions"></a>Functions</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "optimize"></a>
+    <strong>optimize (opts, source)</strong>
+    </dt>
+    <dd>
+    Optimizes the given Lua source code.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">opts</span>
+            <span class="types">optional <a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">{[string]=bool,...}</a></span>
+         Optimizations to do (default is <a href="../modules/init.html#DEFAULT_OPTS">DEFAULT_OPTS</a>).
+        </li>
+        <li><span class="parameter">source</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         The Lua source code to optimize.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+        Optimized source.
+    </ol>
+
+    <h3>Raises:</h3>
+    if the source is malformed, source equivalence test failed, or some
+   other error occured.
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Tables"></a>Tables</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "NONE_OPTS"></a>
+    <strong>NONE_OPTS</strong>
+    </dt>
+    <dd>
+    All optimizations disabled.
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">binequiv</span>
+
+
+
+        </li>
+        <li><span class="parameter">comments</span>
+
+
+
+        </li>
+        <li><span class="parameter">emptylines</span>
+
+
+
+        </li>
+        <li><span class="parameter">entropy</span>
+
+
+
+        </li>
+        <li><span class="parameter">eols</span>
+
+
+
+        </li>
+        <li><span class="parameter">experimental</span>
+
+
+
+        </li>
+        <li><span class="parameter">locals</span>
+
+
+
+        </li>
+        <li><span class="parameter">numbers</span>
+
+
+
+        </li>
+        <li><span class="parameter">srcequiv</span>
+
+
+
+        </li>
+        <li><span class="parameter">strings</span>
+
+
+
+        </li>
+        <li><span class="parameter">whitespace</span>
+
+
+
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "BASIC_OPTS"></a>
+    <strong>BASIC_OPTS</strong>
+    </dt>
+    <dd>
+    Basic optimizations enabled.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "DEFAULT_OPTS"></a>
+    <strong>DEFAULT_OPTS</strong>
+    </dt>
+    <dd>
+    Defaults.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "MAXIMUM_OPTS"></a>
+    <strong>MAXIMUM_OPTS</strong>
+    </dt>
+    <dd>
+    Maximum optimizations enabled (all except experimental).
+
+
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Fields"></a>Fields</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "_NAME"></a>
+    <strong>_NAME</strong>
+    </dt>
+    <dd>
+    The module's name.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_VERSION"></a>
+    <strong>_VERSION</strong>
+    </dt>
+    <dd>
+    The module's version number.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "_HOMEPAGE"></a>
+    <strong>_HOMEPAGE</strong>
+    </dt>
+    <dd>
+    The module's homepage.
+
+
+
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.6</a></i>
+
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
