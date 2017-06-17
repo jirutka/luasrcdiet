@@ -8,16 +8,9 @@
 LUA = LUA_PATH=../?.lua lua
 LUAC = luac
 
-FILES = ../luasrcdiet/llex.lua \
-	../luasrcdiet/lparser.lua \
-        ../luasrcdiet/optlex.lua \
-	../luasrcdiet/optparser.lua \
-	../luasrcdiet/equiv.lua \
-	../luasrcdiet/LuaSrcDiet.lua \
-	../luasrcdiet/plugin/html.lua \
-	../luasrcdiet/plugin/sloc.lua
-
 LUASRCDIET = ../luasrcdiet/LuaSrcDiet.lua
+
+SOURCE = LuaSrcDiet.lua
 
 APPSAMPLES = app_default.lua \
 	     app_basic.lua \
@@ -44,30 +37,30 @@ all: $(APPSAMPLES) $(GENSAMPLES)
 
 # samples for major processing options
 
-app_default.lua:
+app_default.lua: $(SOURCE)
 	$(LUA) $(LUASRCDIET) $(<F) -o $(@F) --details > $(@F).txt
 
-app_basic.lua:
+app_basic.lua: $(SOURCE)
 	$(LUA) $(LUASRCDIET) $(<F) -o $(@F) --basic --details > $(@F).txt
 
-app_maximum.lua:
+app_maximum.lua: $(SOURCE)
 	$(LUA) $(LUASRCDIET) $(<F) -o $(@F) --maximum --details > $(@F).txt
 
-app_experimental.lua:
+app_experimental.lua: $(SOURCE)
 	$(LUA) $(LUASRCDIET) $(<F) -o $(@F) --maximum --opt-experimental --noopt-srcequiv --details > $(@F).txt
 
 # samples for individual options
 
-opt_comments.lua:
+opt_comments.lua: $(SOURCE)
 	$(LUA) $(LUASRCDIET) $(<F) -o $(@F) --none --quiet --opt-comments
 
-opt_whitespace.lua:
+opt_whitespace.lua: $(SOURCE)
 	$(LUA) $(LUASRCDIET) $(<F) -o $(@F) --none --quiet --opt-whitespace
 
-opt_emptylines.lua:
+opt_emptylines.lua: $(SOURCE)
 	$(LUA) $(LUASRCDIET) $(<F) -o $(@F) --none --quiet --opt-emptylines
 
-opt_locals.lua:
+opt_locals.lua: $(SOURCE)
 	$(LUA) $(LUASRCDIET) $(<F) -o $(@F) --none --quiet --opt-locals
 
 # other samples
