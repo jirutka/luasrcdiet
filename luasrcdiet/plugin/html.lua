@@ -11,9 +11,6 @@
 --   -o <filespec> option.
 -- * The HTML style tries to follow that of the Lua wiki.
 ----
-local string = require "string"
-local table = require "table"
-local io = require "io"
 
 local M = {}
 

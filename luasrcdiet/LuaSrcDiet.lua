@@ -13,20 +13,19 @@
 -- * TODO: need some automatic testing for a semblance of sanity.
 -- * TODO: the plugin module is highly experimental and unstable.
 ----
-
-local string = string
-local table = table
-local require = require
-local print = print
-local sub = string.sub
-local gmatch = string.gmatch
-local match = string.match
-
+local equiv = require "luasrcdiet.equiv"
 local llex = require "luasrcdiet.llex"
 local lparser = require "luasrcdiet.lparser"
 local optlex = require "luasrcdiet.optlex"
 local optparser = require "luasrcdiet.optparser"
-local equiv = require "luasrcdiet.equiv"
+
+local gmatch = string.gmatch
+local match = string.match
+local print = print
+local string = string
+local sub = string.sub
+local table = table
+
 local plugin
 
 local LUA_VERSION = _VERSION:match(" (5%.[123])$") or "5.1"

@@ -14,9 +14,6 @@
 --   do with significantly less depending on how many that are really
 --   needed and improve entropy; e.g. 13 needed -> choose 4*4 instead.
 ----
-local string = require "string"
-local table = require "table"
-
 local pairs = pairs
 
 local M = {}

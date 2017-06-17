@@ -17,13 +17,11 @@
 -- * binary: There is a lack of diagnostic information when a compare
 --   fails; you can use ChunkSpy and compare using visual diff.
 ----
-local string = require "string"
-
-local load = loadstring or load  --luacheck: ignore 113
-local sub = string.sub
-local match = string.match
-local dump = string.dump
 local byte = string.byte
+local dump = string.dump
+local load = loadstring or load  --luacheck: ignore 113
+local match = string.match
+local sub = string.sub
 
 local M = {}
 

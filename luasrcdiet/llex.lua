@@ -16,8 +16,6 @@
 -- * NO support for compatible long strings (LUA\_COMPAT_LSTR).
 -- * Added goto keyword and double-colon operator (Lua 5.2+).
 ----
-local string = require "string"
-
 local find = string.find
 local match = string.match
 local sub = string.sub

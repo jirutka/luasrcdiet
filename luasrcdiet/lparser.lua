@@ -19,8 +19,6 @@
 -- * Added basic support for goto and label statements, i.e. parser
 --   does not crash on them (Lua 5.2+).
 ----
-local string = require "string"
-
 local pairs = pairs
 
 local M = {}

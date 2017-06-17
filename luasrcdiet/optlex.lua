@@ -6,12 +6,10 @@
 -- * TODO: General string delimiter conversion optimizer.
 -- * TODO: (numbers) warn if overly significant digit.
 ----
-local string = require "string"
-
-local match = string.match
-local sub = string.sub
 local find = string.find
+local match = string.match
 local rep = string.rep
+local sub = string.sub
 local tonumber = tonumber
 local tostring = tostring
 

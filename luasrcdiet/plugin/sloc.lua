@@ -12,7 +12,6 @@
 --   line strings for C. But an empty line is still an empty line.
 -- * Ignores the --quiet option, print own result line.
 ----
-local string = require "string"
 
 local M = {}
 
