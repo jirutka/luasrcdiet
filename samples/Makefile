@@ -5,7 +5,7 @@
 # by Kein-Hong Man <keinhong@gmail.com>, PUBLIC DOMAIN
 #
 
-LUA = lua
+LUA = LUA_PATH=../?.lua lua
 LUAC = luac
 
 FILES = ../luasrcdiet/llex.lua \
@@ -17,7 +17,7 @@ FILES = ../luasrcdiet/llex.lua \
 	../luasrcdiet/plugin/html.lua \
 	../luasrcdiet/plugin/sloc.lua
 
-ONEAPP = LuaSrcDiet.lua
+LUASRCDIET = ../luasrcdiet/LuaSrcDiet.lua
 
 APPSAMPLES = app_default.lua \
 	     app_basic.lua \
@@ -40,64 +40,59 @@ GENSAMPLES = numbers_on_diet.lua \
 	     llex-plugin-output.html \
 	     experimental1_output.lua
 
-all: $(ONEAPP) $(APPSAMPLES) $(GENSAMPLES)
-
-# all-in-one application script
-
-$(ONEAPP): ../util/onefile.lua $(FILES)
-	cd ../util && $(LUA) $(<F)
+all: $(APPSAMPLES) $(GENSAMPLES)
 
 # samples for major processing options
 
-app_default.lua: $(ONEAPP)
-	$(LUA) $(<F) $(<F) -o $(@F) --details > $(@F).txt
+app_default.lua:
+	$(LUA) $(LUASRCDIET) $(<F) -o $(@F) --details > $(@F).txt
 
-app_basic.lua: $(ONEAPP)
-	$(LUA) $(<F) $(<F) -o $(@F) --basic --details > $(@F).txt
+app_basic.lua:
+	$(LUA) $(LUASRCDIET) $(<F) -o $(@F) --basic --details > $(@F).txt
 
-app_maximum.lua: $(ONEAPP)
-	$(LUA) $(<F) $(<F) -o $(@F) --maximum --details > $(@F).txt
+app_maximum.lua:
+	$(LUA) $(LUASRCDIET) $(<F) -o $(@F) --maximum --details > $(@F).txt
 
-app_experimental.lua: $(ONEAPP)
-	$(LUA) $(<F) $(<F) -o $(@F) --maximum --opt-experimental --noopt-srcequiv --details > $(@F).txt
+app_experimental.lua:
+	$(LUA) $(LUASRCDIET) $(<F) -o $(@F) --maximum --opt-experimental --noopt-srcequiv --details > $(@F).txt
 
 # samples for individual options
 
-opt_comments.lua: $(ONEAPP)
-	$(LUA) $(<F) $(<F) -o $(@F) --none --quiet --opt-comments
+opt_comments.lua:
+	$(LUA) $(LUASRCDIET) $(<F) -o $(@F) --none --quiet --opt-comments
 
-opt_whitespace.lua: $(ONEAPP)
-	$(LUA) $(<F) $(<F) -o $(@F) --none --quiet --opt-whitespace
+opt_whitespace.lua:
+	$(LUA) $(LUASRCDIET) $(<F) -o $(@F) --none --quiet --opt-whitespace
 
-opt_emptylines.lua: $(ONEAPP)
-	$(LUA) $(<F) $(<F) -o $(@F) --none --quiet --opt-emptylines
+opt_emptylines.lua:
+	$(LUA) $(LUASRCDIET) $(<F) -o $(@F) --none --quiet --opt-emptylines
 
-opt_locals.lua: $(ONEAPP)
-	$(LUA) $(<F) $(<F) -o $(@F) --none --quiet --opt-locals
+opt_locals.lua:
+	$(LUA) $(LUASRCDIET) $(<F) -o $(@F) --none --quiet --opt-locals
 
 # other samples
 
-numbers_on_diet.lua: numbers_original.lua $(ONEAPP)
-	$(LUA) $(ONEAPP) $< -o $@ --none --opt-numbers --quiet
+numbers_on_diet.lua: numbers_original.lua
+	$(LUA) $(LUASRCDIET) $< -o $@ --none --opt-numbers --quiet
 
-strings_on_diet.lua: strings_original.lua $(ONEAPP)
-	$(LUA) $(ONEAPP) $< -o $@ --none --opt-strings --quiet
+strings_on_diet.lua: strings_original.lua
+	$(LUA) $(LUASRCDIET) $< -o $@ --none --opt-strings --quiet
 
-dump-llex-lexer.dat: ../luasrcdiet/llex.lua $(ONEAPP)
-	$(LUA) $(ONEAPP) $< --dump-lexer > $@
+dump-llex-lexer.dat: ../luasrcdiet/llex.lua
+	$(LUA) $(LUASRCDIET) $< --dump-lexer > $@
 
-dump-llex-parser.dat: ../luasrcdiet/llex.lua $(ONEAPP)
-	$(LUA) $(ONEAPP) $< --dump-parser > $@
+dump-llex-parser.dat: ../luasrcdiet/llex.lua
+	$(LUA) $(LUASRCDIET) $< --dump-parser > $@
 
-llex-plugin-output.html: ../luasrcdiet/llex.lua $(ONEAPP)
-	$(LUA) $(ONEAPP) $< -o $@ --plugin html --quiet
+llex-plugin-output.html: ../luasrcdiet/llex.lua
+	$(LUA) $(LUASRCDIET) $< -o $@ --plugin html --quiet
 
-experimental1_output.lua: experimental1.lua $(ONEAPP)
-	$(LUA) $(ONEAPP) $< -o $@ --none --opt-experimental --noopt-srcequiv --quiet
+experimental1_output.lua: experimental1.lua
+	$(LUA) $(LUASRCDIET) $< -o $@ --none --opt-experimental --noopt-srcequiv --quiet
 
 # housekeeping
 
 clean:
-	rm -f $(ONEAPP) $(APPSAMPLES) $(APPREPORTS) $(GENSAMPLES)
+	rm -f $(APPSAMPLES) $(APPREPORTS) $(GENSAMPLES)
 
 .PHONY: all clean
