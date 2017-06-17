@@ -6,7 +6,9 @@ readonly TEMP_DIR="$(pwd)/.tmp"
 readonly VENV_DIR="$(pwd)/.venv"
 
 case "$HOST_OS" in
-	Darwin) alias sha256sum='shasum -a 256';;
+	Darwin)
+		alias sha256sum='shasum -a 256'
+		alias md5sum='md5'
 esac
 
 einfo() {
