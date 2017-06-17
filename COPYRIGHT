@@ -19,8 +19,9 @@ Parts of LuaSrcDiet is based on Lua 5 code. See the file COPYRIGHT_Lua51
 
 ===============================================================================
 
-Copyright (C) 2005-2008,2011 Kein-Hong Man <keinhong@gmail.com>
-Lua 5.1.4 Copyright (C) 1994-2008 Lua.org, PUC-Rio.
+Copyright 2005-2008, 2011-2012 Kein-Hong Man <keinhong@gmail.com>.
+Copyright 2017 Jakub Jirutka <jakub@jirutka.cz>.
+Lua 5.1.4 Copyright 1994-2008 Lua.org, PUC-Rio.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
