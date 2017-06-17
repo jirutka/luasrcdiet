@@ -3,7 +3,7 @@
 -- LuaSrcDiet
 --
 -- Compresses Lua source code by removing unnecessary characters.
--- For Lua 5.1.x source code.
+-- For Lua 5.1+ source code.
 --
 -- **Notes:**
 --
@@ -38,10 +38,8 @@ local BIN_EQUIV_AVAIL = LUA_VERSION == "5.1" and not package.loaded.jit
 ---------------------- Messages and textual data ----------------------
 
 local MSG_TITLE = [[
-LuaSrcDiet: Puts your Lua 5.1 source code on a diet
-Version 0.12.1 (20120407)  Copyright (c) 2012 Kein-Hong Man
-The COPYRIGHT file describes the conditions under which this
-software may be distributed.
+LuaSrcDiet: Puts your Lua 5.1+ source code on a diet
+Version 0.2.0 (2017-06-17) <https://github.com/jirutka/luasrcdiet>
 ]]
 
 local MSG_USAGE = [[
