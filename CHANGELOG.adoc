@@ -2,6 +2,33 @@
 :repo-uri: https://github.com/jirutka/luasrcdiet
 :compare: {repo-uri}/compare
 
+All notable changes to this project will be documented in this file.
+
+Since release 0.13.0 the format of this file is based on http://keepachangelog.com/[Keep a Changelog] and this project adheres to http://semver.org/[Semantic Versioning].
+
+
+== Unreleased
+
+Added::
+  * Rockspec and start releasing on LuaRocks.
+  * Basic support for `goto` and label statements (Lua 5.2+).
+  * Compatibility with Lua 5.2 and 5.3, i.e. LuaSrcDiet runs on Lua 5.1–5.3 and can process Lua 5.1–5.3 sources (except binary equivalence checking).
+
+Changed::
+  * Move content of `bin` directory into `samples`.
+  * Rename directory `src` to `luasrcdiet`.
+  * Add prefix `luasrcdiet.` to name of the project’s modules.
+  * Migrate modules from deprecated Lua 5.0 modules way (using `module` function) to Lua 5.1+ (using module table).
+  * Change numbers optimisation to never convert number with fraction or in scientific notation (float) into integer (these are different types since Lua 5.3).
+  * Change parser to not require keyword `break` to be the last statement of block (Lua 5.2+).
+  * If _not_ running on Lua 5.1, then disable _--opt-binequiv_ by default and exit with error if _--opt-binequiv_ is enabled.
+
+Removed::
+  * Script `doc/src/fakewiki.lua`.
+  * Script `util/onefile.lua`.
+
+
+'''
 
 == link:{compare}/v0.12.0\...v0.12.1[0.12.1] (2012-04-07) by Kein-Hong Man
 
