@@ -91,7 +91,7 @@ function M.optimize (opts, source)
   opts = opts and merge(M.NONE_OPTS, opts) or M.DEFAULT_OPTS
   local legacy_opts = opts_to_legacy(opts)
 
-  local toklist, seminfolist, toklnlist = llex.llex(source)
+  local toklist, seminfolist, toklnlist = llex.lex(source)
 
   lparser.init(toklist, seminfolist, toklnlist)
   local xinfo = lparser.parser()

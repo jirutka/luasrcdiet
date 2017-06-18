@@ -221,7 +221,7 @@ end
 -- @treturn {string,...} A list of lexed tokens.
 -- @treturn {string,...} A list of semantic information (lexed strings).
 -- @treturn {int,...} A list of line numbers.
-function M.llex(source, source_name)
+function M.lex(source, source_name)
   init(source, source_name)
 
   while true do--outer
