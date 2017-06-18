@@ -14,6 +14,7 @@ Added::
 
 Changed::
   * Change name of `localinfo`’s key `isself` to `is_special` and use it even for `_ENV`.
+  * Move `luasrcdiet/LuaSrcDiet.lua` to `bin/luasrcdiet`.
 
 Fixed::
   * Fix missing source file in `samples/Makefile`.

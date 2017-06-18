@@ -47,10 +47,10 @@ Version %s <%s>
 ]], luasrcdiet._VERSION, luasrcdiet._HOMEPAGE)
 
 local MSG_USAGE = [[
-usage: LuaSrcDiet [options] [filenames]
+usage: luasrcdiet [options] [filenames]
 
 example:
-  >LuaSrcDiet myscript.lua -o myscript_.lua
+  >luasrcdiet myscript.lua -o myscript_.lua
 
 options:
   -v, --version       prints version information

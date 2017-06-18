@@ -29,7 +29,6 @@ build = {
     ['luasrcdiet.fs'] = 'luasrcdiet/fs.lua',
     ['luasrcdiet.llex'] = 'luasrcdiet/llex.lua',
     ['luasrcdiet.lparser'] = 'luasrcdiet/lparser.lua',
-    ['luasrcdiet.LuaSrcDiet'] = 'luasrcdiet/LuaSrcDiet.lua',
     ['luasrcdiet.optlex'] = 'luasrcdiet/optlex.lua',
     ['luasrcdiet.optparser'] = 'luasrcdiet/optparser.lua',
     ['luasrcdiet.plugin.example'] = 'luasrcdiet/plugin/example.lua',
@@ -39,7 +38,7 @@ build = {
   },
   install = {
     bin = {
-      luasrcdiet = 'luasrcdiet/LuaSrcDiet.lua',
+      luasrcdiet = 'bin/luasrcdiet',
     }
   }
 }

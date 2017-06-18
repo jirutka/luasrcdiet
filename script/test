@@ -9,7 +9,7 @@ set -eu
 
 einfo 'Running linters'
 
-luacheck $PKG_NAME/*
+luacheck .
 
 for rockspec in *.rockspec; do
 	luarocks lint "$rockspec"

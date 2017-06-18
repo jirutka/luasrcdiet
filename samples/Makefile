@@ -8,7 +8,7 @@
 LUA = LUA_PATH=../?.lua lua
 LUAC = luac
 
-LUASRCDIET = ../luasrcdiet/LuaSrcDiet.lua
+LUASRCDIET = ../bin/luasrcdiet
 
 SOURCE = LuaSrcDiet.lua
 
