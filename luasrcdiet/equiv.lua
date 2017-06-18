@@ -54,8 +54,7 @@ end
 -- @treturn table
 -- @treturn table
 local function build_stream(s)
-  llex.init(s)
-  local stok, sseminfo = llex.llex() -- source list (with whitespace elements)
+  local stok, sseminfo = llex.llex(s) -- source list (with whitespace elements)
   local tok, seminfo   -- processed list (real elements only)
     = {}, {}
   for i = 1, #stok do

@@ -272,8 +272,7 @@ end
 local function dump_tokens(srcfl)
   -- Load file and process source input into tokens.
   local z = load_file(srcfl)
-  llex.init(z)
-  local toklist, seminfolist = llex.llex()
+  local toklist, seminfolist = llex.llex(z)
 
   -- Display output.
   for i = 1, #toklist do
@@ -295,8 +294,7 @@ end
 local function dump_parser(srcfl)
   -- Load file and process source input into tokens,
   local z = load_file(srcfl)
-  llex.init(z)
-  local toklist, seminfolist, toklnlist = llex.llex()
+  local toklist, seminfolist, toklnlist = llex.llex(z)
 
   -- Do parser optimization here.
   lparser.init(toklist, seminfolist, toklnlist)
@@ -341,8 +339,7 @@ end
 local function read_only(srcfl)
   -- Load file and process source input into tokens.
   local z = load_file(srcfl)
-  llex.init(z)
-  local toklist, seminfolist = llex.llex()
+  local toklist, seminfolist = llex.llex(z)
   print(MSG_TITLE)
   print("Statistics for: "..srcfl.."\n")
 
@@ -398,8 +395,7 @@ local function process_file(srcfl, destfl)
     z = plugin.post_load(z) or z
     if option.EXIT then return end
   end
-  llex.init(z)
-  local toklist, seminfolist, toklnlist = llex.llex()
+  local toklist, seminfolist, toklnlist = llex.llex(z)
   if plugin and plugin.post_lex then    -- plugin post-lex
     plugin.post_lex(toklist, seminfolist, toklnlist)
     if option.EXIT then return end

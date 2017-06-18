@@ -196,7 +196,7 @@ end
 --
 -- @tparam string _z The source code.
 -- @tparam string _sourceid Name of the source.
-function M.init(_z, _sourceid)
+local function init(_z, _sourceid)
   z = _z                        -- source
   sourceid = _sourceid          -- name of source
   I = 1                         -- lexer's position in source
@@ -214,12 +214,16 @@ function M.init(_z, _sourceid)
   end
 end
 
---- Runs lexer.
+--- Runs lexer on the given source code.
 --
+-- @tparam string source The Lua source to scan.
+-- @tparam ?string source_name Name of the source (optional).
 -- @treturn {string,...} A list of lexed tokens.
 -- @treturn {string,...} A list of semantic information (lexed strings).
 -- @treturn {int,...} A list of line numbers.
-function M.llex()
+function M.llex(source, source_name)
+  init(source, source_name)
+
   while true do--outer
     local i = I
     -- inner loop allows break to be used to nicely section tests
