@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 Since release 0.2.0 the format of this file is based on http://keepachangelog.com/[Keep a Changelog] and this project adheres to http://semver.org/[Semantic Versioning].
 
 
-== Unreleased
+== link:{compare}/v0.2.0\...v0.3.0[0.3.0] (2017-07-19)
 
 Added::
   * API for simple programmatic use (module `luasrcdiet.init`).
