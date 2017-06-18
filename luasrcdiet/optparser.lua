@@ -438,7 +438,7 @@ local function optimize_locals(option)
   local temp, j, gotself = {}, 1, false
   for i = 1, #object do
     local obj = object[i]
-    if not obj.isself then
+    if not obj.is_special then
       temp[j] = obj
       j = j + 1
     else

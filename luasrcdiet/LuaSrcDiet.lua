@@ -327,8 +327,8 @@ local function dump_parser(srcfl)
     local obj = localinfo[i]
     local msg = "("..i..") '"..obj.name.."' decl:"..obj.decl..
                 " act:"..obj.act.." rem:"..obj.rem
-    if obj.isself then
-      msg = msg.." isself"
+    if obj.is_special then
+      msg = msg.." is_special"
     end
     msg = msg.." -> "
     local xref = obj.xref
