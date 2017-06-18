@@ -1211,32 +1211,10 @@ function chunk()
 end
 
 ----------------------------------------------------------------------
--- performs parsing, returns parsed data structure
-----------------------------------------------------------------------
-
-function M.parser()
-  open_func()
-  fs.is_vararg = true  -- main func. is always vararg
-  nextt()  -- read first token
-  chunk()
-  check("<eof>")
-  close_func()
-  return {  -- return everything
-    globalinfo = globalinfo,
-    localinfo = localinfo,
-    statinfo = statinfo,
-    toklist = toklist,
-    seminfolist = seminfolist,
-    toklnlist = toklnlist,
-    xreflist = xreflist,
-  }
-end
-
-----------------------------------------------------------------------
 -- initialization function
 ----------------------------------------------------------------------
 
-function M.init(tokorig, seminfoorig, toklnorig)
+local function init(tokorig, seminfoorig, toklnorig)
   tpos = 1                      -- token position
   top_fs = {}                   -- reset top level function state
   ------------------------------------------------------------------
@@ -1279,6 +1257,30 @@ function M.init(tokorig, seminfoorig, toklnorig)
   globalinfo, globallookup, localinfo = {}, {}, {}
   ilocalinfo, ilocalrefs = {}, {}
   statinfo = {}  -- experimental
+end
+
+----------------------------------------------------------------------
+-- performs parsing, returns parsed data structure
+----------------------------------------------------------------------
+
+function M.parser(tokens, seminfo, tokens_ln)
+  init(tokens, seminfo, tokens_ln)
+
+  open_func()
+  fs.is_vararg = true  -- main func. is always vararg
+  nextt()  -- read first token
+  chunk()
+  check("<eof>")
+  close_func()
+  return {  -- return everything
+    globalinfo = globalinfo,
+    localinfo = localinfo,
+    statinfo = statinfo,
+    toklist = toklist,
+    seminfolist = seminfolist,
+    toklnlist = toklnlist,
+    xreflist = xreflist,
+  }
 end
 
 return M
