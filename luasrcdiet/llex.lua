@@ -46,7 +46,7 @@ local z,                -- source stream
 -- @tparam string token
 -- @tparam string info
 local function addtoken(token, info)
-  local i = #M.tok + 1
+  local i = #tok + 1
   M.tok[i] = token
   M.seminfo[i] = info
   M.tokln[i] = ln
@@ -215,7 +215,11 @@ function M.init(_z, _sourceid)
   end
 end
 
---- The main lexer function.
+--- Runs lexer.
+--
+-- @treturn {string,...} A list of lexed tokens.
+-- @treturn {string,...} A list of semantic information (lexed strings).
+-- @treturn {int,...} A list of line numbers.
 function M.llex()
   while true do--outer
     local i = I
@@ -334,7 +338,7 @@ function M.llex()
         break
       end
       addtoken("TK_EOS", "")                    -- end of stream,
-      return                                    -- exit here
+      return M.tok, M.seminfo, M.tokln          -- exit here
 
     end--while inner
   end--while outer
