@@ -71,29 +71,6 @@ local function inclinenumber(i, is_tok)
   return i
 end
 
---- Initializes lexer for given source _z and source name _sourceid.
---
--- @tparam string _z The source code.
--- @tparam string _sourceid Name of the source.
-function M.init(_z, _sourceid)
-  z = _z                        -- source
-  sourceid = _sourceid          -- name of source
-  I = 1                         -- lexer's position in source
-  ln = 1                        -- line number
-  M.tok = {}                    -- lexed token list*
-  M.seminfo = {}                -- lexed semantic information list*
-  M.tokln = {}                  -- line numbers for messages*
-                                -- (*) externally visible thru' module
-
-  -- Initial processing (shbang handling).
-  local p, _, q, r = find(z, "^(#[^\r\n]*)(\r?\n?)")
-  if p then                             -- skip first line
-    I = I + #q
-    addtoken("TK_COMMENT", q)
-    if #r > 0 then inclinenumber(I, true) end
-  end
-end
-
 --- Returns a chunk name or id, no truncation for long names.
 --
 -- @treturn string
@@ -212,6 +189,30 @@ local function read_string(del)
     end--if p
   end--while
   errorline("unfinished string")
+end
+
+
+--- Initializes lexer for given source _z and source name _sourceid.
+--
+-- @tparam string _z The source code.
+-- @tparam string _sourceid Name of the source.
+function M.init(_z, _sourceid)
+  z = _z                        -- source
+  sourceid = _sourceid          -- name of source
+  I = 1                         -- lexer's position in source
+  ln = 1                        -- line number
+  M.tok = {}                    -- lexed token list*
+  M.seminfo = {}                -- lexed semantic information list*
+  M.tokln = {}                  -- line numbers for messages*
+                                -- (*) externally visible thru' module
+
+  -- Initial processing (shbang handling).
+  local p, _, q, r = find(z, "^(#[^\r\n]*)(\r?\n?)")
+  if p then                             -- skip first line
+    I = I + #q
+    addtoken("TK_COMMENT", q)
+    if #r > 0 then inclinenumber(I, true) end
+  end
 end
 
 --- The main lexer function.
