@@ -297,7 +297,7 @@ local function dump_parser(srcfl)
   local toklist, seminfolist, toklnlist = llex.lex(z)
 
   -- Do parser optimization here.
-  local xinfo = lparser.parser(toklist, seminfolist, toklnlist)
+  local xinfo = lparser.parse(toklist, seminfolist, toklnlist)
   local globalinfo, localinfo = xinfo.globalinfo, xinfo.localinfo
 
   -- Display output.
@@ -410,7 +410,7 @@ local function process_file(srcfl, destfl)
 
   -- Do parser optimization here.
   optparser.print = print  -- hack
-  local xinfo = lparser.parser(toklist, seminfolist, toklnlist)
+  local xinfo = lparser.parse(toklist, seminfolist, toklnlist)
   if plugin and plugin.post_parse then          -- plugin post-parse
     plugin.post_parse(xinfo.globalinfo, xinfo.localinfo)
     if option.EXIT then return end

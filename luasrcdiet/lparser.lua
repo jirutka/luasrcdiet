@@ -1263,7 +1263,7 @@ end
 -- performs parsing, returns parsed data structure
 ----------------------------------------------------------------------
 
-function M.parser(tokens, seminfo, tokens_ln)
+function M.parse(tokens, seminfo, tokens_ln)
   init(tokens, seminfo, tokens_ln)
 
   open_func()

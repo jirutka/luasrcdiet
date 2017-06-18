@@ -92,7 +92,7 @@ function M.optimize (opts, source)
   local legacy_opts = opts_to_legacy(opts)
 
   local toklist, seminfolist, toklnlist = llex.lex(source)
-  local xinfo = lparser.parser(toklist, seminfolist, toklnlist)
+  local xinfo = lparser.parse(toklist, seminfolist, toklnlist)
 
   optparser.print = noop
   optparser.optimize(legacy_opts, toklist, seminfolist, xinfo)
