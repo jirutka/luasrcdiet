@@ -90,14 +90,6 @@ translation operations are performed on them.
 	<td class="summary">Initializes lexer for given source _z and source name _sourceid.</td>
 	</tr>
 	<tr>
-	<td class="name" nowrap><a href="#chunkid">chunkid ()</a></td>
-	<td class="summary">Returns a chunk name or id, no truncation for long names.</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#errorline">errorline (s, line)</a></td>
-	<td class="summary">Formats error message and throws error.</td>
-	</tr>
-	<tr>
 	<td class="name" nowrap><a href="#llex">llex ()</a></td>
 	<td class="summary">The main lexer function.</td>
 	</tr>
@@ -111,6 +103,14 @@ translation operations are performed on them.
 	<tr>
 	<td class="name" nowrap><a href="#inclinenumber">inclinenumber (i, is_tok)</a></td>
 	<td class="summary">Handles line number incrementation and end-of-line characters.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#chunkid">chunkid ()</a></td>
+	<td class="summary">Returns a chunk name or id, no truncation for long names.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#errorline">errorline (s, line)</a></td>
+	<td class="summary">Formats error message and throws error.</td>
 	</tr>
 	<tr>
 	<td class="name" nowrap><a href="#skip_sep">skip_sep (i)</a></td>
@@ -152,61 +152,6 @@ translation operations are performed on them.
          Name of the source.
         </li>
     </ul>
-
-
-
-
-
-</dd>
-    <dt>
-    <a name = "chunkid"></a>
-    <strong>chunkid ()</strong>
-    </dt>
-    <dd>
-    Returns a chunk name or id, no truncation for long names.
-
-
-
-    <h3>Returns:</h3>
-    <ol>
-
-           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
-
-
-
-    </ol>
-
-
-
-
-</dd>
-    <dt>
-    <a name = "errorline"></a>
-    <strong>errorline (s, line)</strong>
-    </dt>
-    <dd>
-    Formats error message and throws error. </p>
-
-<p> A simplified version, does not report what token was responsible.
-
-
-    <h3>Parameters:</h3>
-    <ul>
-        <li><span class="parameter">s</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
-
-
-
-        </li>
-        <li><span class="parameter">line</span>
-            <span class="types"><span class="type">int</span></span>
-         The line number.
-        </li>
-    </ul>
-
-
-    <h3>Raises:</h3>
-
 
 
 
@@ -290,6 +235,61 @@ translation operations are performed on them.
 
 
     </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "chunkid"></a>
+    <strong>chunkid ()</strong>
+    </dt>
+    <dd>
+    Returns a chunk name or id, no truncation for long names.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+
+
+
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "errorline"></a>
+    <strong>errorline (s, line)</strong>
+    </dt>
+    <dd>
+    Formats error message and throws error. </p>
+
+<p> A simplified version, does not report what token was responsible.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+
+
+
+        </li>
+        <li><span class="parameter">line</span>
+            <span class="types"><span class="type">int</span></span>
+         The line number.
+        </li>
+    </ul>
+
+
+    <h3>Raises:</h3>
+
+
 
 
 
