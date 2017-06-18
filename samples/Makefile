@@ -71,13 +71,13 @@ numbers_on_diet.lua: numbers_original.lua
 strings_on_diet.lua: strings_original.lua
 	$(LUA) $(LUASRCDIET) $< -o $@ --none --opt-strings --quiet
 
-dump-llex-lexer.dat: ../luasrcdiet/llex.lua
+dump-llex-lexer.dat: llex.lua
 	$(LUA) $(LUASRCDIET) $< --dump-lexer > $@
 
-dump-llex-parser.dat: ../luasrcdiet/llex.lua
+dump-llex-parser.dat: llex.lua
 	$(LUA) $(LUASRCDIET) $< --dump-parser > $@
 
-llex-plugin-output.html: ../luasrcdiet/llex.lua
+llex-plugin-output.html: llex.lua
 	$(LUA) $(LUASRCDIET) $< -o $@ --plugin html --quiet
 
 experimental1_output.lua: experimental1.lua
