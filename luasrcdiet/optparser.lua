@@ -43,7 +43,7 @@ local SKIP_NAME = {}
 for v in ([[
 and break do else elseif end false for function if in
 local nil not or repeat return then true until while
-self]]):gmatch("%S+") do
+self _ENV]]):gmatch("%S+") do
   SKIP_NAME[v] = true
 end
 
@@ -423,7 +423,7 @@ local function optimize_locals(option)
   -- token count, this might help assign more tokens to more common
   -- variable names such as 'e' thus possibly reducing entropy.
   -- * An object knows its localinfo index via its 'id' field.
-  -- * Special handling for "self" special local (parameter) here.
+  -- * Special handling for "self" and "_ENV" special local (parameter) here.
   local object = {}
   for i = 1, #localinfo do
     object[i] = localinfo[i]
@@ -432,17 +432,17 @@ local function optimize_locals(option)
       return v1.xcount > v2.xcount
     end)
 
-  -- The special "self" function parameters must be preserved.
+  -- The special "self" and "_ENV" function parameters must be preserved.
   -- * The allocator below will never use "self", so it is safe to
   --   keep those implicit declarations as-is.
-  local temp, j, gotself = {}, 1, false
+  local temp, j, used_specials = {}, 1, {}
   for i = 1, #object do
     local obj = object[i]
     if not obj.is_special then
       temp[j] = obj
       j = j + 1
     else
-      gotself = true
+      used_specials[#used_specials + 1] = obj.name
     end
   end
   object = temp
@@ -607,8 +607,8 @@ local function optimize_locals(option)
   end
 
   -- Deal with statistics output.
-  if gotself then  -- add 'self' to end of list
-    varlist[#varlist + 1] = "self"
+  for _, name in ipairs(used_specials) do
+    varlist[#varlist + 1] = name
   end
   local afteruniq = preprocess(localinfo)
   stats_summary(globaluniq, localuniq, afteruniq, option)

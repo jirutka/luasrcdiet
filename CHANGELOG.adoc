@@ -13,10 +13,11 @@ Added::
   * API for simple programmatic use (module `luasrcdiet.init`).
 
 Changed::
-  * Change name of `localinfo`’s key `isself` to `is_special`.
+  * Change name of `localinfo`’s key `isself` to `is_special` and use it even for `_ENV`.
 
 Fixed::
   * Fix missing source file in `samples/Makefile`.
+  * Treat local variable/parameter `_ENV` as special, i.e. never rename it.
 
 
 == link:{compare}/v0.12.1\...v0.2.0[0.2.0] (2017-07-17)
