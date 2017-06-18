@@ -97,13 +97,12 @@ end
 --- Returns a chunk name or id, no truncation for long names.
 --
 -- @treturn string
-function M.chunkid()
+local function chunkid()
   if sourceid and match(sourceid, "^[=@]") then
     return sub(sourceid, 2)  -- remove first char
   end
   return "[string]"
 end
-local chunkid = M.chunkid
 
 --- Formats error message and throws error.
 --
@@ -112,11 +111,10 @@ local chunkid = M.chunkid
 -- @tparam string s
 -- @tparam int line The line number.
 -- @raise
-function M.errorline(s, line)
+local function errorline(s, line)
   local e = M.error or error
   e(fmt("%s:%d: %s", chunkid(), line or ln, s))
 end
-local errorline = M.errorline
 
 --- Counts separators (`="` in a long string delimiter.
 --

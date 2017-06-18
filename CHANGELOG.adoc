@@ -20,6 +20,9 @@ Fixed::
   * Fix missing source file in `samples/Makefile`.
   * Treat local variable/parameter `_ENV` as special, i.e. never rename it.
 
+Removed::
+  * Remove `llex`’s functions `chunkid()` and `errorline(...)` from the module functions (i.e. make them local).
+
 
 == link:{compare}/v0.12.1\...v0.2.0[0.2.0] (2017-07-17)
 
