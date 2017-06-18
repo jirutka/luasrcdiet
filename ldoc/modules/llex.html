@@ -86,12 +86,8 @@ translation operations are performed on them.
 <h2><a href="#Functions">Functions</a></h2>
 <table class="function_list">
 	<tr>
-	<td class="name" nowrap><a href="#init">init (_z, _sourceid)</a></td>
-	<td class="summary">Initializes lexer for given source _z and source name _sourceid.</td>
-	</tr>
-	<tr>
-	<td class="name" nowrap><a href="#llex">llex ()</a></td>
-	<td class="summary">The main lexer function.</td>
+	<td class="name" nowrap><a href="#lex">lex (source, source_name)</a></td>
+	<td class="summary">Runs lexer on the given source code.</td>
 	</tr>
 </table>
 <h2><a href="#Local_Functions">Local Functions</a></h2>
@@ -124,6 +120,10 @@ translation operations are performed on them.
 	<td class="name" nowrap><a href="#read_string">read_string (del)</a></td>
 	<td class="summary">Reads a string.</td>
 	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#init">init (_z, _sourceid)</a></td>
+	<td class="summary">Initializes lexer for given source _z and source name _sourceid.</td>
+	</tr>
 </table>
 
 <br/>
@@ -134,39 +134,37 @@ translation operations are performed on them.
 
     <dl class="function">
     <dt>
-    <a name = "init"></a>
-    <strong>init (_z, _sourceid)</strong>
+    <a name = "lex"></a>
+    <strong>lex (source, source_name)</strong>
     </dt>
     <dd>
-    Initializes lexer for given source _z and source name _sourceid.
+    Runs lexer on the given source code.
 
 
     <h3>Parameters:</h3>
     <ul>
-        <li><span class="parameter">_z</span>
+        <li><span class="parameter">source</span>
             <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
-         The source code.
+         The Lua source to scan.
         </li>
-        <li><span class="parameter">_sourceid</span>
-            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
-         Name of the source.
+        <li><span class="parameter">source_name</span>
+            <span class="types">optional <a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         Name of the source (optional).
         </li>
     </ul>
 
-
-
-
-
-</dd>
-    <dt>
-    <a name = "llex"></a>
-    <strong>llex ()</strong>
-    </dt>
-    <dd>
-    The main lexer function.
-
-
-
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">{string,...}</a></span>
+        A list of lexed tokens.</li>
+        <li>
+           <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">{string,...}</a></span>
+        A list of semantic information (lexed strings).</li>
+        <li>
+           <span class="types"><span class="type">{int,...}</span></span>
+        A list of line numbers.</li>
+    </ol>
 
 
 
@@ -390,6 +388,31 @@ translation operations are performed on them.
 
     <h3>Raises:</h3>
     if unfinished string or too large escape sequence.
+
+
+
+</dd>
+    <dt>
+    <a name = "init"></a>
+    <strong>init (_z, _sourceid)</strong>
+    </dt>
+    <dd>
+    Initializes lexer for given source _z and source name _sourceid.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">_z</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         The source code.
+        </li>
+        <li><span class="parameter">_sourceid</span>
+            <span class="types"><a class="type" href="https://www.lua.org/manual/5.3/manual.html#6.4">string</a></span>
+         Name of the source.
+        </li>
+    </ul>
+
+
 
 
 
