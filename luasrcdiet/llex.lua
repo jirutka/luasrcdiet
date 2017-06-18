@@ -31,14 +31,14 @@ local nil not or repeat return then true until while]]):gmatch("%S+") do
   kw[v] = true
 end
 
--- see init() for module variables (externally visible):
---       tok, seminfo, tokln
-
 local z,                -- source stream
       sourceid,         -- name of source
       I,                -- position of lexer
       buff,             -- buffer for strings
-      ln                -- line number
+      ln,               -- line number
+      tok,              -- lexed token list
+      seminfo,          -- lexed semantic information list
+      tokln             -- line numbers for messages
 
 
 --- Adds information to token listing.
@@ -47,9 +47,9 @@ local z,                -- source stream
 -- @tparam string info
 local function addtoken(token, info)
   local i = #tok + 1
-  M.tok[i] = token
-  M.seminfo[i] = info
-  M.tokln[i] = ln
+  tok[i] = token
+  seminfo[i] = info
+  tokln[i] = ln
 end
 
 --- Handles line number incrementation and end-of-line characters.
@@ -201,10 +201,9 @@ function M.init(_z, _sourceid)
   sourceid = _sourceid          -- name of source
   I = 1                         -- lexer's position in source
   ln = 1                        -- line number
-  M.tok = {}                    -- lexed token list*
-  M.seminfo = {}                -- lexed semantic information list*
-  M.tokln = {}                  -- line numbers for messages*
-                                -- (*) externally visible thru' module
+  tok = {}                      -- lexed token list*
+  seminfo = {}                  -- lexed semantic information list*
+  tokln = {}                    -- line numbers for messages*
 
   -- Initial processing (shbang handling).
   local p, _, q, r = find(z, "^(#[^\r\n]*)(\r?\n?)")
@@ -338,7 +337,7 @@ function M.llex()
         break
       end
       addtoken("TK_EOS", "")                    -- end of stream,
-      return M.tok, M.seminfo, M.tokln          -- exit here
+      return tok, seminfo, tokln                -- exit here
 
     end--while inner
   end--while outer
