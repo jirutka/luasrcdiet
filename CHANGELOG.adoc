@@ -1,10 +1,17 @@
 = Changelog
 :repo-uri: https://github.com/jirutka/luasrcdiet
+:pull: {repo-uri}/pull
 :compare: {repo-uri}/compare
 
 All notable changes to this project will be documented in this file.
 
 Since release 0.2.0 the format of this file is based on http://keepachangelog.com/[Keep a Changelog] and this project adheres to http://semver.org/[Semantic Versioning].
+
+
+== Unreleased
+
+Fixed::
+  * Fix optimisation of long string delimiter. (PR {pull}/1[#1])
 
 
 == link:{compare}/v0.2.0\...v0.3.0[0.3.0] (2017-07-19)
