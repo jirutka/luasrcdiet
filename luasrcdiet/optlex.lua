@@ -490,7 +490,7 @@ local function do_lstring(I)
     -- loop to test ending delimiter with less of '=' down to zero
     while chk >= 2 do
       local delim = "%]"..rep("=", chk - 2).."%]"
-      if not match(y, delim) then okay = chk end
+      if not match(y.."]", delim) then okay = chk end
       chk = chk - 1
     end
     if okay then  -- change delimiters
