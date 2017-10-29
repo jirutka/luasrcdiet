@@ -14,7 +14,7 @@ Such a stupid mistake!
 Unfortunately it already happened and renaming these versions would create even more mess.
 
 
-== Unreleased
+== link:{compare}/v0.3.0\...v1.0.0[1.0.0] (2017-10-29)
 
 Fixed::
   * Fix optimisation of long string delimiter. (PR {pull}/1[#1])

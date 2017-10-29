@@ -33,7 +33,7 @@ local M = {}
 M._NAME = 'luasrcdiet'
 
 --- The module's version number.
-M._VERSION = '0.3.0'
+M._VERSION = '1.0.0'
 
 --- The module's homepage.
 M._HOMEPAGE = 'https://github.com/jirutka/luasrcdiet'
