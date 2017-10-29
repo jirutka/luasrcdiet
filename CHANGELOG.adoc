@@ -5,7 +5,13 @@
 
 All notable changes to this project will be documented in this file.
 
-Since release 0.2.0 the format of this file is based on http://keepachangelog.com/[Keep a Changelog] and this project adheres to http://semver.org/[Semantic Versioning].
+Since release 1.0.0 (plus 0.2.0 and 0.3.0, see below) the format of this file is based on http://keepachangelog.com/[Keep a Changelog] and this project adheres to http://semver.org/[Semantic Versioning].
+
+The last published version from the origin author is 0.12.1.
+When I took over the project, I wrongly tagged the next version as 0.2.0 and then 0.3.0.
+After few months I realized the obvious: 0.2.0 < 0.12.1.
+Such a stupid mistake!
+Unfortunately it already happened and renaming these versions would create even more mess.
 
 
 == Unreleased
