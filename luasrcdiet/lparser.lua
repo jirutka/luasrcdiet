@@ -616,6 +616,7 @@ local function primaryexp(v)
     if c == "." then  -- field
       field(v)
     elseif c == "[" then  -- '[' exp1 ']'
+      v.k = "VLOCAL"
       yindex()
     elseif c == ":" then  -- ':' NAME funcargs
       nextt()
